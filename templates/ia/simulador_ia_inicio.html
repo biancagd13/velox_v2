@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente de Rutas Inteligentes - Velox UTVT</title>
+    
+    <!-- Bootstrap 5 y Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <style>
+        body {
+            background-color: #FFFFFF !important;
+        }
+        #mainContent {
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+        .btn-verde-custom {
+            background-color: #018701 !important;
+            color: #FFFFFF !important;
+            border: none !important;
+            transition: background-color 0.2s ease-in-out !important;
+        }
+        .btn-verde-custom:hover {
+            background-color: #005200 !important;
+            color: #FFFFFF !important;
+        }
+        .paso-nodo {
+            background-color: #E8F5E9;
+            border-left: 4px solid #018701;
+        }
+        .badge-exito {
+            background-color: #018701 !important;
+            color: #FFFFFF !important;
+        }
+        .badge-alerta {
+            background-color: #D9534F !important;
+            color: #FFFFFF !important;
+        }
+        @media (max-width: 768px) {
+            #mainContent {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-white">
+
+    {% include 'components/sidebar.html' %}
+
+    <div id="mainContent" class="p-4 bg-white" style="min-height: 100vh;">
+        <div class="container-fluid">
+            
+            <!-- Encabezado -->
+            <div class="mb-4">
+                <h2 class="fw-bold mb-1" style="color: #005200;">
+                    <i class="bi bi-diagram-3-fill me-2" style="color: #005200;"></i>Optimizador y Simulador de Rutas (IA)
+                </h2>
+                <p class="text-secondary small mb-0">Compara algoritmos de búsqueda ciega e informada (BFS, DFS, UCS, Greedy y A*) para viajes compartidos en la UTVT.</p>
+            </div>
+
+            <!-- Panel de Control -->
+            <div class="card shadow-sm border rounded-4 bg-white mb-4 p-4">
+                <h5 class="fw-bold mb-3" style="color: #005200;"><i class="bi bi-sliders me-2" style="color: #005200;"></i>Configuración de la Búsqueda</h5>
+                
+                <form method="get" action="/simulador-ia" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold text-secondary small">Punto de Partida (Origen):</label>
+                        <select name="origen" class="form-select border shadow-sm py-2">
+                            {% for estado in estados_disponibles %}
+                                <option value="{{ estado }}" {% if estado == origen %}selected{% endif %}>{{ estado }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold text-secondary small">Punto de Llegada (Destino):</label>
+                        <select name="destino" class="form-select border shadow-sm py-2">
+                            {% for estado in estados_disponibles %}
+                                <option value="{{ estado }}" {% if estado == destino %}selected{% endif %}>{{ estado }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold text-secondary small">Algoritmo de IA:</label>
+                        <select name="algoritmo" class="form-select border shadow-sm py-2">
+                            {% for algo in algoritmos_disponibles %}
+                                <option value="{{ algo }}" {% if algo == algoritmo %}selected{% endif %}>{{ algo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-verde-custom w-100 fw-semibold shadow-sm py-2">
+                            <i class="bi bi-search me-1"></i> Ejecutar Algoritmo
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Motor de Reglas (Lógica Proposicional - 10 Premisas) -->
+            <div class="card shadow-sm border rounded-4 bg-white mb-4 p-4 border-start border-4" style="border-left-color: #018701 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-cpu-fill fs-5 me-2" style="color: #005200;"></i>
+                        <h6 class="fw-bold mb-0" style="color: #005200;">Evaluación Formal del Motor de Reglas (Lógica Proposicional - 10 Premisas)</h6>
+                    </div>
+                    <span class="badge {% if evaluacion_logica.viaje_permitido %}bg-success{% else %}bg-danger{% endif %} px-3 py-2">
+                        {% if evaluacion_logica.viaje_permitido %}ESTADO: APROBADO{% else %}ESTADO: RECHAZADO{% endif %}
+                    </span>
+                </div>
+                
+                <p class="text-secondary small mb-3">
+                    <strong>Diagnóstico del Sistema:</strong> {{ evaluacion_logica.explicacion }}
+                </p>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.O %}badge-exito{% else %}badge-alerta{% endif %}">
+                        O (Origen Válido): {{ evaluacion_logica.premisas.O }}
+                    </span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.D %}badge-exito{% else %}badge-alerta{% endif %}">
+                        D (Destino Válido): {{ evaluacion_logica.premisas.D }}
+                    </span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.V %}badge-exito{% else %}badge-alerta{% endif %}">
+                        V (Vía Conectada IA): {{ evaluacion_logica.premisas.V }}
+                    </span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.C %}badge-exito{% else %}badge-alerta{% endif %}">
+                        C (Capacidad Óptima): {{ evaluacion_logica.premisas.C }}
+                    </span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.U %}badge-exito{% else %}badge-alerta{% endif %}">
+                        U (Usuario Verificado): {{ evaluacion_logica.premisas.U }}
+                    </span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.H %}badge-exito{% else %}badge-alerta{% endif %}">
+                        H (Horario Compatible): {{ evaluacion_logica.premisas.H }}
+                    </span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.E %}badge-exito{% else %}badge-alerta{% endif %}">
+                        E (Estatus Conductor): {{ evaluacion_logica.premisas.E }}
+                    </span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.S %}badge-exito{% else %}badge-alerta{% endif %}">
+                        S (Viaje Activo): {{ evaluacion_logica.premisas.S }}
+                    </span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.M %}badge-exito{% else %}badge-alerta{% endif %}">
+                        M (Cuota Aprobada): {{ evaluacion_logica.premisas.M }}
+                    </span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.R %}badge-exito{% else %}badge-alerta{% endif %}">
+                        R (Ruta / Zona Segura): {{ evaluacion_logica.premisas.R }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Mapa Interactivo Leaflet -->
+            <div class="card shadow-sm border rounded-4 bg-white p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-map-fill me-2" style="color: #005200;"></i>Mapa Interactivo de Rutas (Velox UTVT)</h5>
+                    
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge px-3 py-2" style="background-color: #018701; color: white;">Origen</span>
+                        <span class="badge px-3 py-2" style="background-color: #D9534F; color: white;">Destino</span>
+                        <span class="badge px-3 py-2" style="background-color: #6c757d; color: white;">Nodos Viales</span>
+                    </div>
+                </div>
+                <hr class="text-muted opacity-25">
+
+                <div id="mapa-utvt" style="height: 450px; width: 100%; border-radius: 0.75rem;" class="border shadow-sm"></div>
+            </div>
+
+            <!-- Tabla Comparativa (Se muestra cuando el usuario elige "Todos") -->
+            {% if tabla_comparativa %}
+            <div class="card shadow-sm border rounded-4 bg-white p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0" style="color: #005200;">
+                        <i class="bi bi-table me-2" style="color: #005200;"></i>Métrica Comparativa de los 5 Algoritmos
+                    </h5>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 fw-bold">
+                        Modo Comparativo Masivo
+                    </span>
+                </div>
+                <hr class="text-muted opacity-25">
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr style="color: #005200;">
+                                <th>Algoritmo</th>
+                                <th>Ruta Encontrada</th>
+                                <th class="text-center">Nodos Explorados</th>
+                                <th class="text-center">Costo Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fila in tabla_comparativa %}
+                            <tr>
+                                <td class="fw-bold" style="color: #018701;">{{ fila.algoritmo }}</td>
+                                <td class="text-secondary small">{{ fila.ruta }}</td>
+                                <td class="text-center fw-semibold">{{ fila.nodos_explorados }}</td>
+                                <td class="text-center fw-bold" style="color: #005200;">{{ fila.costo }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Resultados y Bitácora -->
+            <div class="row g-4">
+                <div class="col-md-7">
+                    <div class="card shadow-sm border rounded-4 h-100 p-4 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-check2-circle me-2" style="color: #005200;"></i>Resultado del Trayecto</h5>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 fw-bold">
+                                Algoritmo: {{ algoritmo }}
+                            </span>
+                        </div>
+                        
+                        {% if ruta_solucion %}
+                            <div class="alert border-0 bg-light text-success fw-bold p-3 rounded-3 mb-3" style="border-left: 4px solid #018701 !important; color: #018701 !important;">
+                                ¡Solución encontrada satisfactoriamente con {{ algoritmo }}!
+                            </div>
+
+                            <p class="mb-1 text-secondary small"><strong>Trayecto recomendado paso a paso:</strong></p>
+                            <div class="p-3 bg-light border rounded-3 text-center mb-3">
+                                <h4 class="fw-bold mb-0" style="color: #005200;">
+                                    {{ " ➔ ".join(ruta_solucion) }}
+                                </h4>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="p-3 bg-light border rounded-3 text-center">
+                                        <span class="text-secondary small d-block">Costo Total (Distancia):</span>
+                                        <strong class="fs-5" style="color: #018701;">{{ costo_total }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 bg-light border rounded-3 text-center">
+                                        <span class="text-secondary small d-block">Transbordos / Aristas:</span>
+                                        <strong class="fs-5 text-dark">{{ total_movimientos }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="alert border-0 bg-light text-danger fw-bold p-3 rounded-3" style="border-left: 4px solid #D9534F !important;">
+                                No se encontró una ruta válida utilizando {{ algoritmo }} entre estos puntos.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="card shadow-sm border rounded-4 h-100 p-4 bg-white">
+                        <h5 class="fw-bold mb-3" style="color: #005200;"><i class="bi bi-cpu-fill me-2" style="color: #005200;"></i>Bitácora de Exploración</h5>
+                        <p class="text-secondary small">Orden en que la IA expandió y evaluó los nodos:</p>
+                        
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <ul class="list-group list-group-flush">
+                                {% for paso in bitacora %}
+                                    <li class="list-group-item paso-nodo rounded-3 mb-2 py-2 px-3 border shadow-sm d-flex justify-content-between align-items-center bg-white">
+                                        <span class="small text-secondary">Nodo expandido:</span>
+                                        <span class="fw-bold" style="color: #018701;">{{ paso }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // Inicializar mapa
+        var map = L.map('mapa-utvt').setView([19.2848, -99.6552], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors | Velox UTVT'
+        }).addTo(map);
+
+        var coordenadasNodos = {{ coordenadas_nodos | tojson }};
+        var origenActual = "{{ origen }}";
+        var destinoActual = "{{ destino }}";
+        var rutaSolucion = {{ ruta_solucion | tojson }};
+
+        // Renderizar nodos con colores personalizados (círculos)
+        for (var nodo in coordenadasNodos) {
+            if (coordenadasNodos.hasOwnProperty(nodo)) {
+                var coords = coordenadasNodos[nodo];
+                
+                var colorPunto = '#6c757d'; // Gris para nodos normales
+                var radioPunto = 7;
+                var mensajePopup = "<b>Nodo: " + nodo + "</b>";
+
+                if (nodo === origenActual) {
+                    colorPunto = '#018701'; // Verde institucional para Origen
+                    radioPunto = 10;
+                    mensajePopup = "<b style='color:#018701;'>Origen: " + nodo + "</b>";
+                } else if (nodo === destinoActual) {
+                    colorPunto = '#D9534F'; // Rojo para Destino
+                    radioPunto = 10;
+                    mensajePopup = "<b style='color:#D9534F;'>Destino: " + nodo + "</b>";
+                }
+
+                var circleMarker = L.circleMarker(coords, {
+                    radius: radioPunto,
+                    fillColor: colorPunto,
+                    color: '#ffffff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                }).addTo(map);
+
+                circleMarker.bindPopup(mensajePopup);
+            }
+        }
+
+        // Trazar la ruta de solución si existe
+        if (rutaSolucion && rutaSolucion.length > 0) {
+            var puntosRuta = [];
+            rutaSolucion.forEach(function(nodoRuta) {
+                if (coordenadasNodos[nodoRuta]) {
+                    puntosRuta.push(coordenadasNodos[nodoRuta]);
+                }
+            });
+
+            if (puntosRuta.length > 1) {
+                var polyline = L.polyline(puntosRuta, {color: '#018701', weight: 6, opacity: 0.85}).addTo(map);
+                map.fitBounds(polyline.getBounds(), {padding: [50, 50]});
+            }
+        }
+
+        // Forzar a Leaflet a corregir cualquier problema de renderizado gris en los mosaicos
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 200);
+    </script>
+</body>
+</html>

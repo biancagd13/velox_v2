@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Definimos la codificación de caracteres en UTF-8 para soportar acentos y caracteres especiales -->
+    <meta charset="UTF-8">
+    <!-- Configuramos la vista responsiva para adaptarla a diferentes tamaños de pantalla y dispositivos -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Título institucional que aparece en la pestaña del navegador -->
+    <title>LogiSmart Asistente IA - Velox UTVT</title>
+    <!-- Importamos la hoja de estilos de Bootstrap 5 desde CDN para el diseño visual -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Importamos la librería de iconos Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Importamos la librería SweetAlert2 para alertas flotantes interactivas -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Estilos CSS personalizados para la interfaz del chat -->
+    <style>
+        /* Color de fondo principal blanco */
+        body {
+            background-color: #FFFFFF !important;
+        }
+        /* Margen izquierdo para dejar espacio al menú lateral institucional */
+        #mainContent {
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+        /* Clase personalizada para los botones con el verde corporativo de Velox */
+        .btn-verde-custom {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border: none;
+            transition: background-color 0.2s ease-in-out;
+        }
+        /* Efecto hover al pasar el cursor sobre el botón verde */
+        .btn-verde-custom:hover {
+            background-color: #005200 !important;
+            color: #ffffff !important;
+        }
+        /* Contenedor principal donde se listan los mensajes con scroll automático */
+        .chat-container {
+            height: 55vh;
+            overflow-y: auto;
+            background-color: #F8F9FA;
+        }
+        /* Diseño base de las burbujas de texto del chat */
+        .message-bubble {
+            max-width: 75%;
+            border-radius: 1rem;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+        }
+        /* Estilo para las burbujas de los mensajes enviados por el usuario */
+        .user-bubble {
+            background-color: #018701;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 0.2rem;
+        }
+        /* Estilo para las burbujas de los mensajes generados por la Inteligencia Artificial */
+        .ai-bubble {
+            background-color: #E9ECEF;
+            color: #212529;
+            margin-right: auto;
+            border-bottom-left-radius: 0.2rem;
+        }
+        /* Ajuste responsivo para dispositivos móviles (oculta el margen del sidebar) */
+        @media (max-width: 768px) {
+            #mainContent {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Incluimos la barra lateral de navegación común del proyecto -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- Contenedor principal de la vista del asistente -->
+    <div id="mainContent" class="p-4 bg-white">
+        <div class="d-flex align-items-center mb-3">
+            <!-- Botón opcional para mostrar la barra lateral en pantallas pequeñas -->
+            <button class="btn btn-verde-custom p-1 px-2 me-3 shadow-sm rounded-3" id="btnOpenSidebar" title="Mostrar Menú" style="display: none;">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+        </div>
+
+        <div class="container-fluid">
+            <!-- Encabezado superior con título y descripción -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1" style="color: #005200;">
+                        <i class="bi bi-robot me-2" style="color: #005200;"></i>LogiSmart - Asistente IA Velox UTVT
+                    </h2>
+                    <p class="text-muted small mb-0">Consulta en tiempo real rutas, disponibilidad de asientos, costos y recomendaciones del sistema.</p>
+                </div>
+            </div>
+
+            <!-- Tarjeta contenedora del chat virtual -->
+            <div class="card shadow-sm border rounded-4 bg-white">
+                <!-- Cabecera de la tarjeta del chat -->
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center">
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold me-2 shadow-sm" style="width: 40px; height: 40px; background-color: #005200;">
+                        <i class="bi bi-cpu-fill"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0" style="color: #005200;">Asistente Virtual</h6>
+                        <small class="text-muted">Conectado con MongoDB y Ollama (Llama 3.2)</small>
+                    </div>
+                </div>
+
+                <!-- Contenedor dinámico de mensajes -->
+                <div id="chatBox" class="chat-container p-4 d-flex flex-column gap-3">
+                    <!-- Mensaje inicial de bienvenida de la IA -->
+                    <div class="message-bubble ai-bubble shadow-sm">
+                        <b>LogiSmart:</b> ¡A todo dar, usuario! Soy tu asistente experto en logística de Velox UTVT. Pregúntame qué viajes están disponibles, qué ruta te conviene más o cómo andan las calificaciones de los conductores.
+                    </div>
+                </div>
+
+                <!-- Pie de tarjeta con la barra de entrada de texto e input -->
+                <div class="card-footer bg-white border-top p-3">
+                    <div class="input-group">
+                        <!-- Campo de texto donde el usuario escribe su consulta -->
+                        <input type="text" id="userInput" class="form-control py-2 rounded-start-pill border" placeholder="Escribe tu consulta sobre viajes, rutas o asientos..." onkeypress="detectarTeclaEnter(event)">
+                        <!-- Botón para enviar la consulta al servidor -->
+                        <button class="btn btn-verde-custom px-4 rounded-end-pill fw-bold shadow-sm" type="button" id="sendBtn" onclick="enviarMensajeAlAsistente()">
+                            <i class="bi bi-send-fill me-1"></i> Enviar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Bootstrap 5 para componentes interactivos -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Funciones JavaScript para manejar la comunicación asíncrona con el backend -->
+    <script>
+        /* Función para detectar cuando el usuario presiona la tecla 'Enter' en el input */
+        function detectarTeclaEnter(evento_teclado) {
+            if (evento_teclado.key === 'Enter') {
+                enviarMensajeAlAsistente();
+            }
+        }
+
+        /* Función asíncrona para enviar la pregunta al servidor y renderizar las respuestas en tiempo real */
+        async function enviarMensajeAlAsistente() {
+            const input_texto_usuario = document.getElementById('userInput');
+            const contenedor_caja_chat = document.getElementById('chatBox');
+            const boton_enviar = document.getElementById('sendBtn');
+            const texto_mensaje = input_texto_usuario.value.trim();
+
+            /* Si el mensaje está vacío, no realizamos ninguna acción */
+            if (!texto_mensaje) return;
+
+            /* Creamos la burbuja visual del mensaje enviado por el usuario */
+            const div_mensaje_usuario = document.createElement('div');
+            div_mensaje_usuario.className = 'message-bubble user-bubble shadow-sm';
+            div_mensaje_usuario.innerHTML = `<b>Tú:</b> ${texto_mensaje}`;
+            contenedor_caja_chat.appendChild(div_mensaje_usuario);
+
+            /* Limpiamos el campo de texto y hacemos scroll hacia abajo */
+            input_texto_usuario.value = '';
+            contenedor_caja_chat.scrollTop = contenedor_caja_chat.scrollHeight;
+
+            /* Deshabilitamos los controles mientras el modelo genera la respuesta */
+            input_texto_usuario.disabled = true;
+            boton_enviar.disabled = true;
+            boton_enviar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analizando...';
+
+            /* Mostramos una burbuja temporal indicando que el asistente está consultando la base de datos */
+            const div_burbuja_carga = document.createElement('div');
+            div_burbuja_carga.id = 'loadingBubble';
+            div_burbuja_carga.className = 'message-bubble ai-bubble shadow-sm text-muted fst-italic';
+            div_burbuja_carga.innerHTML = 'LogiSmart está consultando la base de datos...';
+            contenedor_caja_chat.appendChild(div_burbuja_carga);
+            contenedor_caja_chat.scrollTop = contenedor_caja_chat.scrollHeight;
+
+            try {
+                /* Realizamos la petición POST asíncrona hacia el endpoint de FastAPI */
+                const respuesta_servidor = await fetch('/asistente/consultar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mensaje: texto_mensaje })
+                });
+
+                const datos_respuesta = await respuesta_servidor.json();
+                div_burbuja_carga.remove();
+
+                /* Creamos la burbuja para mostrar la respuesta generada por la IA */
+                const div_mensaje_ia = document.createElement('div');
+                div_mensaje_ia.className = 'message-bubble ai-bubble shadow-sm';
+                
+                if (respuesta_servidor.ok) {
+                    div_mensaje_ia.innerHTML = `<b>LogiSmart:</b> ${datos_respuesta.respuesta.replace(/\n/g, '<br>')}`;
+                } else {
+                    div_mensaje_ia.innerHTML = `<b>LogiSmart:</b> Ocurrió un error al procesar tu solicitud: ${datos_respuesta.error}`;
+                }
+                contenedor_caja_chat.appendChild(div_mensaje_ia);
+
+            } catch (error_conexion) {
+                div_burbuja_carga.remove();
+                const div_error_conexion = document.createElement('div');
+                div_error_conexion.className = 'message-bubble ai-bubble shadow-sm text-danger';
+                div_error_conexion.innerHTML = `<b>LogiSmart:</b> Error de conexión con el servidor local de Ollama.`;
+                contenedor_caja_chat.appendChild(div_error_conexion);
+            } finally {
+                /* Restauramos los controles de entrada y habilitamos el botón nuevamente */
+                input_texto_usuario.disabled = false;
+                boton_enviar.disabled = false;
+                boton_enviar.innerHTML = '<i class="bi bi-send-fill me-1"></i> Enviar';
+                input_texto_usuario.focus();
+                contenedor_caja_chat.scrollTop = contenedor_caja_chat.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>

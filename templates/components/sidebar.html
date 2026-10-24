@@ -1,0 +1,190 @@
+<!-- Menú lateral flotante y deslizante para la navegación principal del sistema Velox UTVT -->
+<div id="sidebar" class="bg-white text-dark shadow border-end d-flex flex-column p-3" style="width: 280px; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1050; transition: transform 0.3s ease-in-out;">
+    
+    <!-- Encabezado superior del menú lateral que contiene el logotipo institucional y el botón para colapsar -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        
+        <!-- Enlace de la marca institucional redirigido a la vista inicial del módulo de roles -->
+        <a href="/rol" class="d-flex align-items-center text-dark text-decoration-none">
+            <i class="bi bi-car-front-fill fs-4 me-2" style="color: #005200;"></i>
+            <span class="fs-5 fw-bold" style="color: #005200;">Velox UTVT</span>
+        </a>
+
+        <!-- Botón interactivo para ocultar el menú lateral con color institucional y efectos visuales -->
+        <button class="btn btn-verde-custom p-1 px-2 shadow-sm rounded-3" id="botonAlternarMenu" title="Ocultar Menú">
+            <i class="bi bi-list fs-4"></i>
+        </button>
+    </div>
+
+    <!-- Línea divisoria decorativa unificada -->
+    <hr class="text-secondary my-2">
+    
+    <!-- Etiqueta de sección descriptiva para agrupar los apartados funcionales del sistema -->
+    <span class="text-uppercase fs-7 text-muted fw-bold mb-2 px-2" style="font-size: 0.75rem;">Módulos del Sistema</span>
+    
+    <style>
+        /* Estilos base reutilizables para los enlaces de navegación del menú lateral */
+        .enlace-navegacion {
+            color: #333 !important;
+            transition: all 0.2s ease-in-out;
+            border-radius: 8px;
+        }
+
+        /* Efecto hover y clase activa unificada con el color verde fuerte institucional (#005200) */
+        .enlace-navegacion:hover, .enlace-navegacion.activo-personalizado {
+            background-color: #005200 !important;
+            color: #ffffff !important;
+        }
+        
+        /* Estilos de botones institucionales: Verde claro (#018701) con transición y hover a verde fuerte (#005200) */
+        .btn-verde-custom {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border: none !important;
+            transition: background-color 0.2s ease-in-out !important;
+        }
+        .btn-verde-custom:hover {
+            background-color: #005200 !important;
+            color: #ffffff !important;
+        }
+        
+        /* Clase CSS para ocultar el menú lateral deslizándolo completamente hacia la izquierda */
+        .menu-oculto {
+            transform: translateX(-100%);
+        }
+    </style>
+
+    <!-- Lista de opciones y módulos de navegación con validación de ruta activa en Jinja2 -->
+    <ul class="nav nav-pills flex-column mb-auto gap-1">
+        
+        <!-- Módulo de Gestión de Roles -->
+        <li class="nav-item">
+            <a href="/rol" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/rol') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-shield-lock-fill me-2"></i> Gestión de Roles
+            </a>
+        </li>
+
+        <!-- Módulo de Usuarios -->
+        <li class="nav-item">
+            <a href="/usuario" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/usuario') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-people-fill me-2"></i> Usuarios
+            </a>
+        </li>
+
+        <!-- Módulo de Vehículos -->
+        <li class="nav-item">
+            <a href="/vehiculo" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/vehiculo') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-car-front-fill me-2"></i> Vehículos
+            </a>
+        </li>
+        
+        <!-- Módulo de Calificaciones -->
+        <li class="nav-item">
+            <a href="/calificacion" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/calificacion') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-star-fill me-2"></i> Calificaciones
+            </a>
+        </li>
+
+        <!-- Módulo de Rutas -->
+        <li class="nav-item">
+            <a href="/ruta" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/ruta') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-geo-alt-fill me-2"></i> Rutas
+            </a>
+        </li>
+
+        <!-- Módulo de Viajes -->
+        <li class="nav-item">
+            <a href="/viaje" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/viaje') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-signpost-split-fill me-2"></i> Viajes
+            </a>
+        </li>
+
+        <!-- Módulo de Reservas -->
+        <li class="nav-item">
+            <a href="/reserva" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/reserva') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-calendar-check-fill me-2"></i> Reservas
+            </a>
+        </li>
+
+        <!-- Módulo de Asistente IA LogiSmart -->
+        <li class="nav-item">
+            <a href="/asistente" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/asistente') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-robot me-2"></i> Asistente IA
+            </a>
+        </li>
+
+        <!-- Módulo de Simulador de Rutas por IA (Búsqueda Ciega) -->
+        <li class="nav-item">
+            <a href="/simulador-ia" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/simulador-ia') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-diagram-3-fill me-2"></i> Simulador Rutas
+            </a>
+        </li>
+
+        <!-- Módulo de Estadísticas y Gráficas de Rutas -->
+        <li class="nav-item">
+            <a href="/estadisticas" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path == '/estadisticas' else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-bar-chart-fill me-2"></i> Estadística Rutas
+            </a>
+        </li>
+
+        <!-- Módulo de Evaluación de Calificaciones -->
+        <li class="nav-item">
+            <a href="/estadisticas-calificaciones" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/estadisticas-calificaciones') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-bar-chart-fill me-2"></i> Eval. Calificaciones
+            </a>
+        </li>
+
+    </ul>
+    
+    <!-- Línea divisoria decorativa situada antes del bloque de perfil e información de sesión -->
+    <hr class="text-secondary my-2">
+    
+    <!-- Menú desplegable inferior con los datos del usuario o administrador con sesión activa -->
+    <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle p-2 rounded" data-bs-toggle="dropdown" aria-expanded="false">
+            <!-- Círculo de avatar institucional con las iniciales o icono representativo -->
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold me-2 shadow-sm" style="width: 35px; height: 35px; background-color: #005200;">
+                <i class="bi bi-person-fill"></i>
+            </div>
+            <strong>Admin UTVT</strong>
+        </a>
+        
+        <!-- Opciones desplegables del perfil de sesión -->
+        <ul class="dropdown-menu text-small shadow">
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <!-- Opción de cierre de sesión resaltada con el color rojo institucional exacto (#ff0000) -->
+            <li><a class="dropdown-item fw-semibold" style="color: #ff0000;" href="#">Cerrar Sesión</a></li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    /* Script JavaScript encargado de controlar la apertura, cierre y ajuste responsivo de márgenes del menú lateral */
+    document.addEventListener('DOMContentLoaded', () => {
+        const botonAlternar = document.getElementById('botonAlternarMenu');
+        const botonAbrir = document.getElementById('btnOpenSidebar');
+        const menuLateral = document.getElementById('sidebar');
+        const contenidoPrincipal = document.getElementById('mainContent');
+
+        /**
+         * Función lógica para alternar el estado visual del menú lateral (colapsar o expandir).
+         */
+        function alternarMenuLateral() {
+            menuLateral.classList.toggle('menu-oculto');
+            const estaOculto = menuLateral.classList.contains('menu-oculto');
+            
+            if (estaOculto) {
+                if (botonAbrir) botonAbrir.style.display = 'inline-block';
+                if (contenidoPrincipal) contenidoPrincipal.style.marginLeft = '0';
+            } else {
+                if (botonAbrir) botonAbrir.style.display = 'none';
+                if (contenidoPrincipal) contenidoPrincipal.style.marginLeft = '280px';
+            }
+        }
+
+        /* Asignación de eventos de escucha (click) para los botones de control de apertura y cierre del menú */
+        if (botonAlternar) botonAlternar.addEventListener('click', alternarMenuLateral);
+        if (botonAbrir) botonAbrir.addEventListener('click', alternarMenuLateral);
+    });
+</script>

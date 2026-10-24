@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!-- Declaración del tipo de documento indicando que es un archivo HTML5 estándar -->
+<html lang="es">
+<!-- Elemento raíz de la página HTML con el idioma configurado en español -->
+<head>
+    <!-- Definimos la codificación de caracteres en UTF-8 para garantizar acentos y caracteres especiales -->
+    <meta charset="UTF-8">
+    <!-- Configuramos la vista responsiva para adaptar el diseño a dispositivos móviles y escritorios -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Título institucional que aparece en la pestaña del navegador -->
+    <title>Estadísticas y Gráficas - Velox UTVT</title>
+    <!-- Importamos la hoja de estilos de Bootstrap 5 desde una red de distribución de contenido (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Importamos la librería de iconos de Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Estilos CSS personalizados para la interfaz institucional -->
+    <style>
+        /* Definimos el fondo blanco general de la página */
+        body {
+            background-color: #FFFFFF !important;
+        }
+        /* Ajustamos el margen izquierdo del contenido principal para dar espacio a la barra lateral */
+        #mainContent {
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+        /* Clase personalizada para los botones con el color verde institucional de Velox */
+        .btn-verde-custom {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border: none;
+        }
+        /* Efecto de cambio de color al pasar el cursor sobre el botón verde */
+        .btn-verde-custom:hover {
+            background-color: #005200 !important;
+            color: #ffffff !important;
+        }
+        /* Regla responsiva para dispositivos móviles: elimina el margen izquierdo del contenido */
+        @media (max-width: 768px) {
+            #mainContent {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Incluimos la barra lateral de navegación común del sistema Velox UTVT -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- Contenedor principal de la vista de estadísticas -->
+    <div id="mainContent" class="p-4 bg-white">
+        <div class="container-fluid">
+            <!-- Encabezado superior con el título del módulo y los botones de acción -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1" style="color: #005200;">
+                        <i class="bi bi-bar-chart-fill me-2" style="color: #005200;"></i>Estadísticas y Análisis de Rutas
+                    </h2>
+                    <p class="text-muted small mb-0">Análisis de rutas del sistema Velox UTVT.</p>
+                </div>
+                
+                <!-- Contenedor para los botones de control de la gráfica -->
+                <div class="d-flex gap-2">
+                    <!-- Botón para recargar y actualizar la gráfica con datos frescos de MongoDB -->
+                    <a href="/estadisticas" class="btn btn-verde-custom shadow-sm rounded-3 fw-semibold">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
+                    </a>
+                    
+                    <!-- Botón de descarga directa (Equivalente web al botón de guardar imagen de Matplotlib) -->
+                    <a href="{{ imagen_grafica }}" download="Grafica_Rutas_Velox_UTVT.png" class="btn btn-outline-success shadow-sm rounded-3 fw-semibold" title="Guardar imagen de la gráfica">
+                        <i class="bi bi-download me-1"></i> Guardar Gráfica
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tarjeta contenedora visual para la gráfica estadística -->
+            <div class="card shadow-sm border rounded-4 bg-white text-center p-4">
+                <div class="card-body">
+                    
+                    <!-- Contenedor estilizado para mostrar la imagen generada dinámicamente por Matplotlib -->
+                    <div class="p-2 border rounded-4 bg-light shadow-sm d-inline-block">
+                        <!-- Imagen de la gráfica con un parámetro de tiempo único para evitar conflictos de caché -->
+                        <img src="{{ imagen_grafica }}?t=1" alt="Gráfica de Rutas Más Usadas" class="img-fluid rounded-3" style="max-height: 500px; cursor: zoom-in;" id="imagenGraficaEstadistica">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Bootstrap 5 para el funcionamiento de componentes interactivos -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script interactivo para permitir hacer zoom en la gráfica al hacer clic sobre ella -->
+    <script>
+        /* Escuchamos el evento de carga completa del DOM antes de ejecutar cualquier lógica */
+        document.addEventListener("DOMContentLoaded", function() {
+            /* Obtenemos la referencia al elemento de imagen mediante su ID único */
+            const imagenElemento = document.getElementById("imagenGraficaEstadistica");
+            /* Validamos que el elemento exista efectivamente en el documento */
+            if (imagenElemento) {
+                /* Agregamos un escuchador de eventos para detectar clics sobre la imagen */
+                imagenElemento.addEventListener("click", function() {
+                    /* Verificamos si la imagen está en su tamaño estándar para aplicar el zoom */
+                    if (imagenElemento.style.maxHeight === "500px") {
+                        /* Quitamos la restricción de altura máxima para mostrarla ampliada */
+                        imagenElemento.style.maxHeight = "none";
+                        /* Aplicamos una escala visual de zoom del 3% */
+                        imagenElemento.style.transform = "scale(1.03)";
+                        /* Configuramos una transición suave para el cambio de escala */
+                        imagenElemento.style.transition = "transform 0.3s ease";
+                    } else {
+                        /* Restauramos la altura máxima original de la imagen */
+                        imagenElemento.style.maxHeight = "500px";
+                        /* Restablecemos la escala visual a su tamaño normal */
+                        imagenElemento.style.transform = "scale(1)";
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
