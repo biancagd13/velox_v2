@@ -1,0 +1,4 @@
+algoritmo,exactitud,precision,recall,f1_score
+Decision Tree,63.64,60.0,100.0,75.0
+Random Forest,63.64,60.0,100.0,75.0
+KNN,63.64,60.0,100.0,75.0

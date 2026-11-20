@@ -1,0 +1,494 @@
+# ================================================================
+# PROYECTO: VELOX UTVT
+# PRACTICA 07: SEGMENTACION DE VIAJES MEDIANTE K-MEANS
+# ARCHIVO: p07segmentacion_kmeans.py
+#
+# OBJETIVO:
+# Implementar un algoritmo K-Means para identificar grupos de viajes 
+# con características operativas similares, utilizando técnicas de 
+# agrupamiento (clustering), escalamiento de variables, selección del 
+# número de grupos e interpretación de resultados a partir de MongoDB.
+
+# Caso de estudio:
+# Velox UTVT ha recopilado información de los viajes en su base de datos. 
+# La institución desea identificar perfiles operativos para diseñar estrategias de carpooling.
+
+# Sin embargo, existe un problema: no sabemos previamente cuántos perfiles de viajes existen.
+
+# Queremos que el algoritmo encuentre agrupaciones como:
+# - Viajes con alta disponibilidad y costos accesibles.
+# - Viajes con características intermedias.
+# - Viajes de menor disponibilidad y costos elevados.
+
+# Una diferencia fundamental: no vamos a utilizar la columna de estado para formar los grupos. 
+# K-Means buscará similitudes a partir de las características operativas de los viajes.
+
+# Fundamentos teóricos: ¿qué es K-Means?
+# K-Means es un algoritmo de aprendizaje no supervisado que agrupa registros de acuerdo 
+# con la similitud de sus características.
+
+# La letra K representa el número de grupos que queremos encontrar.
+
+# La palabra Means hace referencia a la media o promedio que se utiliza para calcular 
+# el centro de cada grupo, conocido como centroide.
+
+# El algoritmo trabaja mediante cuatro etapas:
+# 1. Inicialización: selecciona K centroides iniciales.
+# 2. Asignación: asigna cada viaje al centroide más cercano.
+# 3. Actualización: calcula nuevamente el centro de cada grupo utilizando el promedio de sus integrantes.
+# 4. Convergencia: repite la asignación y actualización hasta que los grupos dejan de 
+#                  cambiar significativamente o se alcanza el límite de iteraciones.
+
+# Ejemplo sencillo
+
+# Imaginemos que tenemos tres viajes:
+# Viaje     Costo     Asientos Disponibles
+#   A        20.0             3
+#   B        25.0             4
+#   C       150.0             1
+
+# Es probable que A y B sean agrupados juntos porque tienen características similares, 
+# mientras que C pertenezca a otro grupo.
+
+# K-Means no conoce previamente los nombres de los grupos ni sabe si un viaje es exitoso. 
+# Solamente calcula distancias y busca agrupaciones.
+
+#   Concepto                Descripción
+
+#   Clustering              Proceso de agrupar registros similares.
+#   K                       Número de grupos que se desean encontrar.
+#   Centroide               Centro matemático de un grupo.
+#   Distancia euclidiana    Medida de distancia entre registros y centroides.
+#   WCSS                    Suma de las distancias cuadráticas de los registros a su centroide.
+#   Inercia                 Valor WCSS que calcula K-Means.
+#   Silhouette Score        Métrica que evalúa qué tan bien separados y cohesionados están los grupos.
+
+# ¿Por qué debemos escalar los datos?
+# En nuestro caso tenemos variables con diferentes escalas:
+# - Costo: por ejemplo, de 10 a 500.
+# - Asientos disponibles: de 1 a 6.
+
+# Si calculamos distancias directamente, las variables con valores numéricos más grandes 
+# podrían tener demasiada influencia.
+
+# Por ello utilizaremos StandardScaler, que transforma las variables para que tengan 
+# aproximadamente media 0 y desviación estándar 1.
+
+# IMPORTANTE:
+# No utilizaremos una variable objetivo como "estado" o éxito.
+# El algoritmo descubrirá los grupos utilizando las características operativas.
+
+# ================================================================
+
+# ================================================================
+# 1. IMPORTAR LAS BIBLIOTECAS
+# ================================================================
+
+import os
+import sys
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Herramienta para asegurar la importación de 'database.py' desde la raíz del proyecto
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from database import db
+
+# StandardScaler permite estandarizar las variables.
+from sklearn.preprocessing import StandardScaler
+
+# KMeans es el algoritmo de agrupamiento.
+from sklearn.cluster import KMeans
+
+# silhouette_score permite evaluar la calidad de los grupos.
+from sklearn.metrics import silhouette_score
+
+
+# ================================================================
+# 2. CONFIGURAR LA EXTRACCION DE DATOS DE MONGODB
+# ================================================================
+
+SEMILLA = 42
+rng = np.random.default_rng(SEMILLA)
+
+os.makedirs("resultados", exist_ok=True)
+os.makedirs("static/img/ia", exist_ok=True)
+
+print("\n==========================================")
+print("VELOX UTVT - INTELIGENCIA ARTIFICIAL")
+print("PRACTICA 07: SEGMENTACION DE VIAJES MEDIANTE K-MEANS")
+print("==========================================")
+
+
+def extraer_datos_mongodb():
+    """Función para extraer los registros reales de viajes desde MongoDB."""
+    lista_viajes = []
+    try:
+        cursor = db.viaje.find({}, {"_id": 0, "costo": 1, "asientos_disponibles": 1, "estado": 1})
+        for documento in cursor:
+            costo = float(documento.get("costo", 0))
+            asientos = int(documento.get("asientos_disponibles", 0))
+            
+            lista_viajes.append({
+                "costo": costo,
+                "asientos_disponibles": asientos
+            })
+    except Exception as error:
+        print(f"Error al conectar con MongoDB: {error}")
+        
+    return pd.DataFrame(lista_viajes) if lista_viajes else pd.DataFrame(columns=["costo", "asientos_disponibles"])
+
+df = extraer_datos_mongodb()
+
+# Si la base de datos está vacía o tiene muy pocos registros para pruebas locales, generamos respaldo sintético con las mismas columnas
+if df.empty or len(df) < 50:
+    print("\nAviso: Pocos registros en MongoDB, completando dataset sintético para demostración robusta...")
+    n_sinteticos = 500 - len(df) if len(df) < 500 else 0
+    if n_sinteticos > 0:
+        sintetico_costo = rng.uniform(20, 200, n_sinteticos)
+        sintetico_asientos = rng.integers(1, 6, n_sinteticos)
+        df_ext = pd.DataFrame({"costo": sintetico_costo, "asientos_disponibles": sintetico_asientos})
+        df = pd.concat([df, df_ext], ignore_index=True)
+
+
+# ================================================================
+# 3. CREAR EL DATAFRAME Y AJUSTAR RANGOS
+# ================================================================
+
+# Ajustamos valores a rangos realistas del sistema de carpooling
+df["costo"] = df["costo"].clip(10, 500)
+df["asientos_disponibles"] = df["asientos_disponibles"].clip(1, 6)
+
+
+# ================================================================
+# 4. EXPLORAR LOS DATOS
+# ================================================================
+
+print("\n==========================================")
+print("1. DATOS EXTRAIDOS / GENERADOS")
+print("==========================================")
+
+print(df.head(10))
+
+print("\nCantidad de viajes:")
+print(len(df))
+
+print("\nInformacion estadistica:")
+print(df.describe().round(2))
+
+
+# ================================================================
+# 5. SELECCIONAR LAS VARIABLES
+# ================================================================
+
+# Seleccionamos únicamente las características operativas para el agrupamiento.
+X = df[
+    [
+        "costo",
+        "asientos_disponibles"
+    ]
+]
+
+
+# ================================================================
+# 6. ESCALAR LOS DATOS
+# ================================================================
+
+# Creamos el objeto StandardScaler.
+escalador = StandardScaler()
+
+# Calculamos la media y desviacion estandar de cada variable
+# y transformamos los registros.
+X_escalado = escalador.fit_transform(X)
+
+print("\n==========================================")
+print("2. DATOS ESCALADOS")
+print("==========================================")
+
+print("Media aproximada de las variables:")
+print(X_escalado.mean(axis=0).round(2))
+
+print("\nDesviacion estandar aproximada:")
+print(X_escalado.std(axis=0).round(2))
+
+
+# ================================================================
+# 7. METODO DEL CODO (ELBOW METHOD)
+# ================================================================
+
+valores_k = range(1, 9)
+inercias = []
+
+for k in valores_k:
+    modelo = KMeans(
+        n_clusters=k,
+        random_state=42,
+        n_init=20
+    )
+    modelo.fit(X_escalado)
+    inercias.append(modelo.inertia_)
+    print(f"K={k} | Inercia={modelo.inertia_:.2f}")
+
+
+# ------------------------------------------------
+# 7.1 Graficar el metodo del codo
+# ------------------------------------------------
+
+plt.figure(figsize=(9, 5))
+plt.plot(
+    list(valores_k),
+    inercias,
+    marker="o",
+    linewidth=2,
+    color="#27ae60"
+)
+plt.title("Velox UTVT - Metodo del codo")
+plt.xlabel("Cantidad de grupos (K)")
+plt.ylabel("Inercia (WCSS)")
+plt.xticks(list(valores_k))
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("resultados/p07_metodo_del_codo.png", dpi=300)
+plt.show()  # Muestra la ventana interactiva y pausa hasta cerrarla
+
+
+# ================================================================
+# 8. EVALUAR LOS GRUPOS CON SILHOUETTE SCORE
+# ================================================================
+
+resultados_silhouette = []
+
+for k in range(2, 9):
+    modelo = KMeans(
+        n_clusters=k,
+        random_state=42,
+        n_init=20
+    )
+    etiquetas = modelo.fit_predict(X_escalado)
+    puntuacion = silhouette_score(
+        X_escalado,
+        etiquetas
+    )
+    resultados_silhouette.append(puntuacion)
+    print(f"K={k} | Silhouette Score={puntuacion:.4f}")
+
+
+# ------------------------------------------------
+# 8.1 Graficar los resultados
+# ------------------------------------------------
+
+plt.figure(figsize=(9, 5))
+plt.plot(
+    list(range(2, 9)),
+    resultados_silhouette,
+    marker="o",
+    linewidth=2,
+    color="#27ae60"
+)
+plt.title("Velox UTVT - Evaluacion Silhouette")
+plt.xlabel("Cantidad de grupos (K)")
+plt.ylabel("Silhouette Score")
+plt.xticks(list(range(2, 9)))
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("resultados/p07_silhouette.png", dpi=300)
+plt.show()  # Muestra la ventana interactiva y pausa hasta cerrarla
+
+
+# ================================================================
+# 9. ENTRENAR EL MODELO FINAL
+# ================================================================
+
+K_FINAL = 3
+
+modelo_final = KMeans(
+    n_clusters=K_FINAL,
+    random_state=42,
+    n_init=20
+)
+
+df["cluster"] = modelo_final.fit_predict(X_escalado)
+
+
+# ================================================================
+# 10. INTERPRETAR LOS GRUPOS
+# ================================================================
+
+print("\n==========================================")
+print("3. CANTIDAD DE VIAJES POR GRUPO")
+print("==========================================")
+
+print(df["cluster"].value_counts().sort_index())
+
+
+# ------------------------------------------------
+# 10.1 Calcular los perfiles promedio
+# ------------------------------------------------
+
+perfiles = df.groupby("cluster")[
+    [
+        "costo",
+        "asientos_disponibles"
+    ]
+].mean().round(2)
+
+print("\n==========================================")
+print("4. PERFIL OPERATIVO DE CADA GRUPO")
+print("==========================================")
+
+print(perfiles)
+
+
+# ------------------------------------------------
+# 10.2 Asignar nombres descriptivos a los grupos
+# ------------------------------------------------
+
+orden = perfiles["costo"].sort_values().index.tolist()
+
+nombres = [
+    "Demanda Baja / Económico",
+    "Compromiso Intermedio",
+    "Alta Demanda / Premium"
+]
+
+mapa_nombres = {
+    cluster: nombre
+    for cluster, nombre in zip(orden, nombres)
+}
+
+df["perfil"] = df["cluster"].map(mapa_nombres)
+
+print("\n==========================================")
+print("5. INTERPRETACION DE LOS PERFILES")
+print("==========================================")
+
+print(
+    df[
+        [
+            "costo",
+            "asientos_disponibles",
+            "cluster",
+            "perfil"
+        ]
+    ].head(15)
+)
+
+
+# ================================================================
+# 11. VISUALIZAR LOS GRUPOS
+# ================================================================
+
+plt.figure(figsize=(10, 6))
+
+for cluster in sorted(df["cluster"].unique()):
+    datos_cluster = df[df["cluster"] == cluster]
+    plt.scatter(
+        datos_cluster["costo"],
+        datos_cluster["asientos_disponibles"],
+        label=mapa_nombres[cluster],
+        alpha=0.65
+    )
+
+
+# ------------------------------------------------
+# 11.1 Recuperar los centroides a escala original
+# ------------------------------------------------
+
+centroides_originales = escalador.inverse_transform(
+    modelo_final.cluster_centers_
+)
+
+centroides_df = pd.DataFrame(
+    centroides_originales,
+    columns=X.columns
+)
+
+
+# ------------------------------------------------
+# 11.2 Mostrar los centroides en la grafica
+# ------------------------------------------------
+
+plt.scatter(
+    centroides_df["costo"],
+    centroides_df["asientos_disponibles"],
+    marker="X",
+    s=250,
+    edgecolor="black",
+    linewidth=1.5,
+    color="black",
+    label="Centroides"
+)
+
+plt.title("Velox UTVT - Segmentacion de Viajes")
+plt.xlabel("Costo del Viaje ($)")
+plt.ylabel("Asientos Disponibles")
+plt.legend()
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("resultados/p07_segmentacion_viajes.png", dpi=300)
+plt.show()  # Muestra la ventana interactiva y pausa hasta cerrarla
+
+
+# ================================================================
+# 12. MOSTRAR LOS CENTROIDES
+# ================================================================
+
+print("\n==========================================")
+print("6. CENTROIDES EN ESCALA ORIGINAL")
+print("==========================================")
+
+print(centroides_df.round(2))
+
+
+# ================================================================
+# 13. EVALUAR EL MODELO FINAL
+# ================================================================
+
+silhouette_final = silhouette_score(
+    X_escalado,
+    df["cluster"]
+)
+
+print("\n==========================================")
+print("7. EVALUACION FINAL DEL MODELO")
+print("==========================================")
+
+print("Numero de grupos:", K_FINAL)
+print("Inercia final:", round(modelo_final.inertia_, 2))
+print("Silhouette Score:", round(silhouette_final, 4))
+
+
+# ================================================================
+# 14. EXPORTAR LOS RESULTADOS
+# ================================================================
+
+df.to_csv(
+    "resultados/p07_viajes_segmentados.csv",
+    index=False,
+    encoding="utf-8-sig"
+)
+
+perfiles.to_csv(
+    "resultados/p07_perfiles_operativos.csv",
+    encoding="utf-8-sig"
+)
+
+
+# ================================================================
+# 15. MENSAJE FINAL
+# ================================================================
+
+print("\n==========================================")
+print("PRACTICA 07 FINALIZADA")
+print("==========================================")
+
+print("Archivos generados en la carpeta 'resultados/':")
+print("1. p07_metodo_del_codo.png")
+print("2. p07_silhouette.png")
+print("3. p07_segmentacion_viajes.png")
+print("4. p07_viajes_segmentados.csv")
+print("5. p07_perfiles_operativos.csv")
+
+print("\nVelox UTVT ha segmentado sus viajes.")
+print("El proceso se realizo mediante aprendizaje no supervisado.")
+print("==========================================")

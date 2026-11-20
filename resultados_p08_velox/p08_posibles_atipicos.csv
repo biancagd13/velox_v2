@@ -1,0 +1,4 @@
+﻿id_viaje,costo,asientos_disponibles,cluster,silhouette_individual,perfil_operativo,distancia_centroide,posible_atipico
+VIAJE-0051,10.0,3,2,0.635337521255264,Compromiso Intermedio,0.8456536073598113,True
+VIAJE-0053,10.0,3,2,0.635337521255264,Compromiso Intermedio,0.8456536073598113,True
+VIAJE-0055,10.0,2,2,0.0,Compromiso Intermedio,1.6913072147196226,True

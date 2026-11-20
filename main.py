@@ -32,6 +32,14 @@ from routers import asistente_router
 from routers import estadisticas_router
 from routers import calificaciones_estadisticas_router
 from routers import simulador_ia_router
+from routers import ia_modelo_router
+from routers import practica04_router
+from routers import practica05_router
+from routers import practica06_router
+from routers import practica07_router
+from routers import practica08_router
+from routers import practica09_router
+
 
 
 # ==========================================================
@@ -58,6 +66,15 @@ app.include_router(asistente_router.router_asistente)
 app.include_router(estadisticas_router.router_estadisticas)
 app.include_router(calificaciones_estadisticas_router.router_calificaciones_estadisticas)
 app.include_router(simulador_ia_router.router_simulador_ia)
+app.include_router(ia_modelo_router.router_ia_modelo)
+app.include_router(practica04_router.router)
+app.include_router(practica05_router.router)
+app.include_router(practica06_router.router)
+app.include_router(practica07_router.router)
+app.include_router(practica08_router.router)
+app.include_router(practica09_router.router)
+
+
 
 # Montaje de la carpeta estática para estilos CSS y recursos visuales
 app.mount("/static", StaticFiles(directory="static"), name="static")

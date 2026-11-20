@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica 05: Comparación de Algoritmos - Velox UTVT</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        body { background-color: #FFFFFF !important; }
+        #mainContent { margin-left: 280px; transition: margin-left 0.3s ease-in-out; }
+        .card-metrica { border-left: 4px solid #018701 !important; }
+        @media (max-width: 768px) { #mainContent { margin-left: 0 !important; } }
+    </style>
+</head>
+<body>
+
+    {% include 'components/sidebar.html' %}
+
+    <div id="mainContent" class="p-4 bg-white" style="min-height: 100vh;">
+        <div class="container-fluid px-3">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1" style="color: #005200;">
+                        <i class="bi bi-cpu-fill me-2"></i>Práctica 05: Comparación de Algoritmos de Machine Learning
+                    </h3>
+                    <p class="text-muted small mb-0">VELOX UTVT - Inteligencia Artificial y Análisis de Carpooling.</p>
+                </div>
+                <div>
+                    <a href="/ia/practica05/exportar_csv" class="btn btn-success rounded-pill px-4 shadow-sm" style="background-color: #018701; border: none;">
+                        <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Descargar CSV
+                    </a>
+                </div>
+            </div>
+
+            {% if error %}
+                <div class="alert alert-warning rounded-4 shadow-sm">{{ error }}</div>
+            {% else %}
+
+            <!-- 1. DATOS EXTRAÍDOS DE MONGODB -->
+            <div class="card shadow-sm border rounded-4 p-4 bg-white mb-4">
+                <h5 class="fw-bold mb-3" style="color: #005200;">
+                    <i class="bi bi-database-fill me-2"></i>1. Datos Extraídos de MongoDB (Total: {{ total_registros }} viajes)
+                </h5>
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead class="table-light text-secondary small">
+                                    <tr>
+                                        <th>Costo ($)</th>
+                                        <th>Asientos Disponibles</th>
+                                        <th>Viaje Exitoso (Objetivo)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in primeros_datos %}
+                                    <tr>
+                                        <td>${{ row.costo }}</td>
+                                        <td>{{ row.asientos_disponibles }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-success' if row.viaje_exitoso == 1 else 'bg-danger' }}">
+                                                {{ row.viaje_exitoso }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-5 d-flex align-items-center">
+                        <div class="p-3 bg-light rounded-3 border w-100">
+                            <span class="text-muted small fw-semibold d-block mb-2">Distribución de Resultados (viaje_exitoso):</span>
+                            <p class="mb-1"><strong>No exitoso (0):</strong> {{ distribucion_y.get(0, 0) }} registros</p>
+                            <p class="mb-0"><strong>Exitoso (1):</strong> {{ distribucion_y.get(1, 0) }} registros</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. DISTRIBUCIÓN DE CONJUNTOS -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card shadow-sm border rounded-4 p-3 bg-white card-metrica">
+                        <span class="text-muted small fw-semibold">Entrenamiento (60%)</span>
+                        <h4 class="fw-bold mb-0 mt-1" style="color: #005200;">{{ conteos.entrenamiento }} filas</h4>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border rounded-4 p-3 bg-white card-metrica">
+                        <span class="text-muted small fw-semibold">Validación (20%)</span>
+                        <h4 class="fw-bold mb-0 mt-1 text-secondary">{{ conteos.validacion }} filas</h4>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border rounded-4 p-3 bg-white card-metrica">
+                        <span class="text-muted small fw-semibold">Prueba Final (20%)</span>
+                        <h4 class="fw-bold mb-0 mt-1" style="color: #005200;">{{ conteos.prueba }} filas</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 y 4. TABLA COMPARATIVA -->
+            <div class="card shadow-sm border rounded-4 p-4 bg-white mb-4">
+                <h5 class="fw-bold mb-3" style="color: #005200;">
+                    <i class="bi bi-table me-2"></i>3 & 4. Entrenamiento y Tabla Comparativa de Algoritmos
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-secondary small">
+                            <tr>
+                                <th>Algoritmo</th>
+                                <th>Exactitud</th>
+                                <th>Precisión</th>
+                                <th>Recall</th>
+                                <th>F1-Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fila in resultados %}
+                            <tr>
+                                <td class="fw-bold">{{ fila.algoritmo }}</td>
+                                <td>{{ fila.exactitud }}%</td>
+                                <td>{{ fila.precision }}%</td>
+                                <td>{{ fila.recall }}%</td>
+                                <td><span class="badge bg-success rounded-pill px-3">{{ fila.f1_score }}%</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- GRÁFICAS -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-7">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100 text-center">
+                        <h6 class="fw-bold mb-3 text-start text-success">Gráfica Comparativa de Métricas</h6>
+                        <img src="{{ img_barras }}" class="img-fluid rounded border" alt="Gráfica de Barras">
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100 text-center">
+                        <h6 class="fw-bold mb-3 text-start text-success">Matriz de Confusión ({{ metricas.algoritmo }})</h6>
+                        <img src="{{ img_matriz }}" class="img-fluid rounded border" alt="Matriz de Confusión">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5, 6, 7 y 8. MODELO SELECCIONADO, EVALUACIÓN, REPORTE Y MATRIZ -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100">
+                        <h5 class="fw-bold mb-3" style="color: #005200;">
+                            <i class="bi bi-file-earmark-text-fill me-2"></i>5, 6 & 7. Evaluación Final y Reporte
+                        </h5>
+                        <p class="mb-2"><strong>Modelo Ganador:</strong> {{ metricas.algoritmo }} (F1-score: {{ metricas.f1 }}%)</p>
+                        <pre class="bg-light p-3 rounded-3 border small text-dark mb-0" style="font-family: monospace;">{{ reporte_str }}</pre>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100">
+                        <h5 class="fw-bold mb-3" style="color: #005200;">
+                            <i class="bi bi-grid-3x3-gap-fill me-2"></i>8. Matriz de Confusión (Numérica)
+                        </h5>
+                        <div class="table-responsive mt-4">
+                            <table class="table table-bordered text-center align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th></th>
+                                        <th>Predicho: 0</th>
+                                        <th>Predicho: 1</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th class="table-light">Real: 0</th>
+                                        <td class="fw-bold text-success fs-5">{{ matriz[0][0] }}</td>
+                                        <td class="fw-bold text-muted fs-5">{{ matriz[0][1] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="table-light">Real: 1</th>
+                                        <td class="fw-bold text-muted fs-5">{{ matriz[1][0] }}</td>
+                                        <td class="fw-bold text-success fs-5">{{ matriz[1][1] }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. VALIDACIÓN CRUZADA -->
+            <div class="card shadow-sm border rounded-4 p-4 bg-white mb-4">
+                <h5 class="fw-bold mb-3" style="color: #005200;">
+                    <i class="bi bi-check2-all me-2"></i>9. Validación Cruzada (F1-Score)
+                </h5>
+                <p class="mb-2"><strong>Resultados por partición:</strong></p>
+                <p class="text-muted font-monospace bg-light p-2 rounded">{{ cv.particiones }}</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1">Promedio F1: <strong class="text-success">{{ cv.promedio }}%</strong></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-0">Desviación estándar: <strong>±{{ cv.desviacion }}%</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVIDAD DE MODIFICACIÓN: EXPERIMENTOS -->
+            <div class="card shadow-sm border rounded-4 p-4 bg-white mb-4">
+                <h5 class="fw-bold mb-3" style="color: #005200;">
+                    <i class="bi bi-sliders me-2"></i>Actividad de Modificación: Experimentos de Hiperparámetros
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border h-100">
+                            <h6 class="fw-bold text-secondary">Experimento A (KNN)</h6>
+                            <ul class="list-unstyled small mb-0 mt-2">
+                                {% for exp in experimentos.knn %}
+                                <li>n_neighbors={{ exp.param }} → F1: <strong>{{ exp.f1 }}%</strong></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border h-100">
+                            <h6 class="fw-bold text-secondary">Experimento B (Random Forest)</h6>
+                            <ul class="list-unstyled small mb-0 mt-2">
+                                {% for exp in experimentos.rf %}
+                                <li>n_estimators={{ exp.param }} → F1: <strong>{{ exp.f1 }}%</strong></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border h-100">
+                            <h6 class="fw-bold text-secondary">Experimento C (Decision Tree)</h6>
+                            <ul class="list-unstyled small mb-0 mt-2">
+                                {% for exp in experimentos.dt %}
+                                <li>max_depth={{ exp.param }} → F1: <strong>{{ exp.f1 }}%</strong></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONCLUSIÓN -->
+            <div class="card shadow-sm border rounded-4 p-4 bg-white">
+                <h5 class="fw-bold mb-3" style="color: #005200;">
+                    <i class="bi bi-journal-check me-2"></i>Conclusion
+                </h5>
+                <p class="mb-1">El algoritmo seleccionado fue: <strong>{{ metricas.algoritmo }}</strong></p>
+                <p class="mb-2">Su F1-score final fue: <strong>{{ metricas.f1 }}%</strong></p>
+                <p class="text-muted small mb-0">Velox UTVT ha completado exitosamente la comparacion de algoritmos de Machine Learning. Recuerda: el mejor modelo depende de los datos reales del carpooling y de la métrica a optimizar.</p>
+            </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

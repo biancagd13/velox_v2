@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Configuración inicial de codificación y diseño responsivo -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica 04: Entrenamiento, Validación y Prueba - Velox UTVT</title>
+    
+    <!-- Importamos los estilos de Bootstrap 5 y los iconos de Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Estilos CSS personalizados para la interfaz institucional de Velox -->
+    <style>
+        body { background-color: #FFFFFF !important; }
+        #mainContent { margin-left: 280px; transition: margin-left 0.3s ease-in-out; }
+        .card-metrica { border-left: 4px solid #018701 !important; }
+        @media (max-width: 768px) { #mainContent { margin-left: 0 !important; } }
+    </style>
+</head>
+<body>
+
+    <!-- Incluimos la barra de navegación lateral (Sidebar) reutilizable -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- Contenedor principal de la vista del dashboard -->
+    <div id="mainContent" class="p-4 bg-white" style="min-height: 100vh;">
+        <div class="container-fluid px-3">
+            
+            <!-- ENCABEZADO DE LA VISTA CON BOTÓN DE ACCIÓN -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1" style="color: #005200;">
+                        <i class="bi bi-diagram-3-fill me-2"></i>Práctica 04: Entrenamiento, Validación y Prueba (Velox UTVT)
+                    </h3>
+                    <p class="text-muted small mb-0">Evaluación metodológica de modelos de Machine Learning y detección de Overfitting / Underfitting con datos de MongoDB.</p>
+                </div>
+                <div>
+                    <!-- Botón para actualizar y recalcular con datos en vivo de la BD -->
+                    <a href="/ia/practica04/" class="btn btn-success rounded-pill px-4 shadow-sm" style="background-color: #018701; border: none;">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Actualizar Datos
+                    </a>
+                </div>
+            </div>
+
+            {% if error %}
+                <div class="alert alert-warning rounded-4 shadow-sm">{{ error }}</div>
+            {% else %}
+
+            <!-- 1. TARJETAS DE ESTADÍSTICAS Y PARTICIÓN DE DATOS -->
+            <div class="row g-3 mb-4">
+                <!-- Total Registros -->
+                <div class="col-md-3">
+                    <div class="card shadow-sm border rounded-4 p-3 bg-white card-metrica">
+                        <span class="text-muted small fw-semibold">Total Viajes (MongoDB)</span>
+                        <h4 class="fw-bold mb-0 mt-1" style="color: #005200;">{{ total_registros }} registros</h4>
+                    </div>
+                </div>
+                <!-- Entrenamiento -->
+                <div class="col-md-3">
+                    <div class="card shadow-sm border rounded-4 p-3 bg-white card-metrica">
+                        <span class="text-muted small fw-semibold">Entrenamiento (60%)</span>
+                        <h4 class="fw-bold mb-0 mt-1" style="color: #005200;">{{ conteos.entrenamiento }} filas</h4>
+                    </div>
+                </div>
+                <!-- Validación -->
+                <div class="col-md-3">
+                    <div class="card shadow-sm border rounded-4 p-3 bg-white card-metrica">
+                        <span class="text-muted small fw-semibold">Validación (20%)</span>
+                        <h4 class="fw-bold mb-0 mt-1 text-secondary">{{ conteos.validacion }} filas</h4>
+                    </div>
+                </div>
+                <!-- Prueba -->
+                <div class="col-md-3">
+                    <div class="card shadow-sm border rounded-4 p-3 bg-white card-metrica">
+                        <span class="text-muted small fw-semibold">Prueba Final (20%)</span>
+                        <h4 class="fw-bold mb-0 mt-1" style="color: #005200;">{{ conteos.prueba }} filas</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. TABLA COMPARATIVA DE PROFUNDIDADES Y DIAGNÓSTICO DE AJUSTE -->
+            <div class="card shadow-sm border rounded-4 p-4 bg-white mb-4">
+                <h5 class="fw-bold mb-3" style="color: #005200;">
+                    <i class="bi bi-table me-2"></i>Comparación de Profundidades y Diagnóstico de Ajuste
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr class="small text-secondary">
+                                <th>Profundidad del Árbol</th>
+                                <th>Exactitud Entrenamiento</th>
+                                <th>Exactitud Validación</th>
+                                <th>Brecha (Diferencia)</th>
+                                <th>Diagnóstico</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fila in resultados %}
+                            <tr>
+                                <td class="fw-bold">{{ fila.profundidad }}</td>
+                                <td>{{ fila.entrenamiento }}%</td>
+                                <td>{{ fila.validacion }}%</td>
+                                <td>{{ fila.diferencia }}%</td>
+                                <td>
+                                    <span class="badge bg-{{ fila.badge }} rounded-pill px-3">
+                                        {{ fila.diagnostico }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. GRÁFICAS VISUALES (CURVA DE APRENDIZAJE Y MATRIZ DE CONFUSIÓN) -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-7">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100 text-center">
+                        <h5 class="fw-bold mb-3 text-start" style="color: #005200;">
+                            <i class="bi bi-graph-up-arrow me-2"></i>Curva de Aprendizaje (Entrenamiento vs Validación)
+                        </h5>
+                        <img src="{{ img_curva }}" class="img-fluid rounded border" alt="Curva Entrenamiento vs Validación">
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100 text-center">
+                        <h5 class="fw-bold mb-3 text-start" style="color: #005200;">
+                            <i class="bi bi-grid-3x3-gap-fill me-2"></i>Matriz de Confusión
+                        </h5>
+                        <img src="{{ img_matriz }}" class="img-fluid rounded border" alt="Matriz de Confusión">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. EVALUACIÓN FINAL Y VALIDACIÓN CRUZADA -->
+            <div class="row g-4">
+                <!-- Métricas finales con el mejor modelo -->
+                <div class="col-md-8">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100">
+                        <h5 class="fw-bold mb-3" style="color: #005200;">
+                            <i class="bi bi-award-fill me-2"></i>Evaluación Final (Mejor Modelo: Profundidad {{ metricas.profundidad }})
+                        </h5>
+                        <div class="row text-center mt-3 g-2">
+                            <div class="col-3">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <span class="text-muted small d-block">Exactitud</span>
+                                    <h4 class="fw-bold mb-0 text-dark">{{ metricas.exactitud }}%</h4>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <span class="text-muted small d-block">Precisión</span>
+                                    <h4 class="fw-bold mb-0 text-dark">{{ metricas.precision }}%</h4>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <span class="text-muted small d-block">Recall</span>
+                                    <h4 class="fw-bold mb-0 text-dark">{{ metricas.recall }}%</h4>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <span class="text-muted small d-block">F1-Score</span>
+                                    <h4 class="fw-bold mb-0" style="color: #018701;">{{ metricas.f1 }}%</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Validación Cruzada -->
+                <div class="col-md-4">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100 text-white" style="background: linear-gradient(135deg, #018701, #005200);">
+                        <h5 class="fw-bold mb-3">
+                            <i class="bi bi-check2-all me-2"></i>Validación Cruzada (K-Fold)
+                        </h5>
+                        <div class="mt-3">
+                            <p class="mb-1 opacity-75">Promedio de Exactitud:</p>
+                            <h3 class="fw-bold mb-3">{{ cv.promedio }}%</h3>
+                            <p class="mb-1 opacity-75">Desviación Estándar:</p>
+                            <h5 class="fw-bold mb-0">±{{ cv.desviacion }}%</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. CONCLUSIONES ANALÍTICAS -->
+            <div class="card shadow-sm border rounded-4 p-4 bg-white mt-4">
+                <h5 class="fw-bold mb-3" style="color: #005200;">
+                    <i class="bi bi-journal-check me-2"></i>Conclusiones del Modelo
+                </h5>
+                <ul class="mb-0 ps-3">
+                    <li class="text-muted small mb-2">El entrenamiento permite aprender patrones a partir de los datos reales extraídos de MongoDB.</li>
+                    <li class="text-muted small mb-2">La validación ayuda a seleccionar la profundidad óptima sin tocar ni sesgar los datos de prueba.</li>
+                    <li class="text-muted small mb-2">La prueba evalúa el comportamiento final del modelo utilizando datos totalmente nuevos.</li>
+                    <li class="text-muted small mb-0">Una brecha alta entre el rendimiento de entrenamiento y validación indica problemas de sobreajuste (overfitting).</li>
+                </ul>
+            </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Importamos el script de Bootstrap 5 para componentes interactivos -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
