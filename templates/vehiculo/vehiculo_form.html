@@ -1,51 +1,36 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- Declaración del juego de caracteres UTF-8 para garantizar el soporte de acentos y eñes -->
+    <!-- Declaración de formato y diseño responsivo para móviles -->
     <meta charset="UTF-8">
-
-    <!-- Configuración del diseño responsivo para asegurar adaptabilidad en dispositivos móviles y escritorios -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Título dinámico de la pestaña del navegador: cambia entre 'Editar' o 'Registrar' según el contexto -->
     <title>{{ "Editar Vehículo" if vehiculo else "Nuevo Vehículo" }} - Velox UTVT</title>
-
-    <!-- Importación de la hoja de estilos oficial de Bootstrap 5 para el diseño de componentes -->
+    
+    <!-- Archivos CSS y utilidades base (Bootstrap y SweetAlert2) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Importación de Bootstrap Icons para los iconos institucionales del sistema -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- Importación de la librería SweetAlert2 para la gestión de alertas y modales interactivos -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    
     <style>
-        /* Definición estricta del color de fondo general de la página en blanco puro */
-        body {
-            background-color: #FFFFFF !important;
-        }
-
-        /* Margen izquierdo para evitar que el formulario se encime con el menú lateral fijo */
-        #mainContent {
+        /* Fondo blanco para diseño institucional limpio */
+        body { background-color: #FFFFFF !important; }
+        
+        /* Ajuste del contenido general para que no se encime al menú lateral */
+        #contenidoPrincipal {
             margin-left: 280px;
             transition: margin-left 0.3s ease-in-out;
         }
-
-        /* Clase personalizada para botones verdes primarios institucionales (#018701) */
-        .btn-verde-custom {
+        
+        /* Estilos del botón principal verde (color Velox) */
+        .boton-verde {
             background-color: #018701 !important;
             color: #ffffff !important;
             border: none;
             transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
         }
-
-        /* Efecto hover hacia el verde institucional fuerte (#005200) */
-        .btn-verde-custom:hover {
-            background-color: #005200 !important;
-            color: #ffffff !important;
-        }
-
-        /* Estilo personalizado y unificado para los botones de confirmación positivos en las modales */
+        .boton-verde:hover { background-color: #005200 !important; color: #ffffff !important; }
+        
+        /* Diseño unificado para los botones de las alertas modales */
         .swal2-confirm.btn-verde-modal {
             background-color: #018701 !important;
             color: #ffffff !important;
@@ -54,46 +39,52 @@
             font-weight: bold !important;
             box-shadow: none !important;
         }
-
-        /* Efecto hover del botón de la modal hacia el verde institucional fuerte (#005200) */
-        .swal2-confirm.btn-verde-modal:hover {
-            background-color: #005200 !important;
-        }
-
-        /* Regla responsiva para dispositivos móviles: elimina el margen izquierdo cuando el menú se oculta */
+        .swal2-confirm.btn-verde-modal:hover { background-color: #005200 !important; }
+        
+        /* --- DISEÑO RESPONSIVO PARA DISPOSITIVOS MÓVILES --- */
         @media (max-width: 768px) {
-            #mainContent {
+            /* Eliminamos el margen del menú en pantallas pequeñas */
+            #contenidoPrincipal {
                 margin-left: 0 !important;
+            }
+            /* Apilamos los botones de acción para que no se deformen y sean fáciles de tocar */
+            .grupo-botones {
+                flex-direction: column;
+                gap: 10px !important;
+                width: 100%;
+            }
+            .grupo-botones a, .grupo-botones button {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- Inclusión modular del componente de navegación lateral flotante institucional -->
+    <!-- Integración del Menú Lateral (Sidebar) mediante Jinja2 -->
     {% include 'components/sidebar.html' %}
 
-    <!-- Contenedor principal del formulario con alineación centrada y diseño fluido -->
-    <div id="mainContent" class="p-4 d-flex flex-column align-items-center justify-content-center bg-white" style="min-height: 100vh;">
+    <!-- Contenedor general centrado en la pantalla -->
+    <div id="contenidoPrincipal" class="p-4 d-flex flex-column align-items-center justify-content-center bg-white" style="min-height: 100vh;">
+        
+        <!-- Restricción de ancho para mantener el formato en PC -->
         <div class="container px-3" style="max-width: 600px;">
-            
-            <!-- Tarjeta contenedora con bordes redondeados (rounded-4) y sombra suave -->
             <div class="card shadow-sm border rounded-4 p-5 bg-white">
                 
-                <!-- Encabezado superior de la tarjeta con icono institucional y títulos dinámicos -->
+                <!-- Encabezado del Formulario -->
                 <div class="d-flex align-items-center mb-4">
                     <div>
                         <h3 class="fw-bold mb-1" style="color: #005200;">
-                            <i class="bi bi-car-front-fill me-2" style="color: #005200;"></i>{{ "Editar Vehículo #" ~ vehiculo.id_vehiculo if vehiculo else "Registrar Nuevo Vehículo" }}
+                            <i class="bi bi-car-front-fill me-2"></i>{{ "Editar Vehículo #" ~ vehiculo.id_vehiculo if vehiculo else "Registrar Nuevo Vehículo" }}
                         </h3>
                         <p class="text-muted small mb-0">Completa la información del automóvil en el sistema institucional.</p>
                     </div>
                 </div>
 
-                <!-- Formulario HTML principal: apunta de manera dinámica a la ruta de actualizar o guardar según el estado -->
+                <!-- Formulario dinámico: Selecciona la ruta de guardado o actualización según el contexto -->
                 <form id="formularioVehiculo" action="{{ '/vehiculo/actualizar' if vehiculo else '/vehiculo/guardar' }}" method="POST">
                     
-                    <!-- Campo oculto para enviar el ID del registro en caso de actualización -->
+                    <!-- Campo oculto y solo lectura del ID (Visible solo en Edición) -->
                     {% if vehiculo %}
                     <input type="hidden" name="id_vehiculo" value="{{ vehiculo.id_vehiculo }}">
                     <div class="mb-3">
@@ -102,40 +93,40 @@
                     </div>
                     {% endif %}
 
-                    <!-- Campo de texto para la Placa -->
+                    <!-- Campo de texto para la placa del vehículo -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Placa</label>
-                        <input type="text" id="placa" name="placa" class="form-control py-2" value="{{ vehiculo.placa if vehiculo else '' }}" placeholder="Ej. ABC-123-A" required>
+                        <input type="text" id="placaVehiculo" name="placa" class="form-control py-2" value="{{ vehiculo.placa if vehiculo else '' }}" placeholder="Ej. ABC-123-A" required>
                     </div>
 
-                    <!-- Campo de texto para el Nombre / Marca del Auto -->
+                    <!-- Campo de texto para Marca / Nombre -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Nombre / Marca</label>
-                        <input type="text" id="nombre" name="nombre" class="form-control py-2" value="{{ vehiculo.nombre if vehiculo else '' }}" placeholder="Ej. Chevrolet Aveo" required>
+                        <input type="text" id="nombreVehiculo" name="nombre" class="form-control py-2" value="{{ vehiculo.nombre if vehiculo else '' }}" placeholder="Ej. Chevrolet Aveo" required>
                     </div>
 
-                    <!-- Campo de texto para el Modelo -->
+                    <!-- Campo de texto para Modelo o Año -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Modelo (Año)</label>
-                        <input type="text" id="modelo" name="modelo" class="form-control py-2" value="{{ vehiculo.modelo if vehiculo else '' }}" placeholder="Ej. 2023" required>
+                        <input type="text" id="modeloVehiculo" name="modelo" class="form-control py-2" value="{{ vehiculo.modelo if vehiculo else '' }}" placeholder="Ej. 2023" required>
                     </div>
 
                     <!-- Campo de texto para el Color -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Color</label>
-                        <input type="text" id="color" name="color" class="form-control py-2" value="{{ vehiculo.color if vehiculo else '' }}" placeholder="Ej. Blanco Platino" required>
+                        <input type="text" id="colorVehiculo" name="color" class="form-control py-2" value="{{ vehiculo.color if vehiculo else '' }}" placeholder="Ej. Blanco Platino" required>
                     </div>
 
-                    <!-- Campo numérico para la Capacidad de Asientos -->
+                    <!-- Campo numérico (Limitado a 10 asientos) -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Capacidad de Asientos</label>
-                        <input type="number" id="capacidad_asientos" name="capacidad_asientos" min="1" max="10" class="form-control py-2" value="{{ vehiculo.capacidad_asientos if vehiculo else '' }}" placeholder="Ej. 4" required>
+                        <input type="number" id="capacidadVehiculo" name="capacidad_asientos" min="1" max="10" class="form-control py-2" value="{{ vehiculo.capacidad_asientos if vehiculo else '' }}" placeholder="Ej. 4" required>
                     </div>
 
-                    <!-- Selector dinámico para elegir el Propietario (Usuario) -->
+                    <!-- Lista desplegable para asignar al Usuario Conductor/Dueño -->
                     <div class="mb-4">
                         <label class="form-label fw-semibold text-secondary small">Propietario (Conductor)</label>
-                        <select id="id_usuario" name="id_usuario" class="form-select py-2" required>
+                        <select id="idUsuario" name="id_usuario" class="form-select py-2" required>
                             <option value="" disabled selected>Selecciona un usuario...</option>
                             {% for usuario in usuarios %}
                             <option value="{{ usuario.id_usuario }}" {% if vehiculo and vehiculo.id_usuario == usuario.id_usuario %}selected{% endif %}>
@@ -145,13 +136,10 @@
                         </select>
                     </div>
 
-                    <!-- Botones de navegación y envío del formulario alineados a la derecha -->
-                    <div class="d-flex justify-content-end gap-2">
-                        <!-- Botón de cancelación -->
+                    <!-- Grupo de botones (Responsivos en celular) -->
+                    <div class="grupo-botones d-flex justify-content-end gap-2">
                         <a href="/vehiculo" class="btn btn-outline-secondary px-4 fw-semibold rounded-pill">Cancelar</a>
-                        
-                        <!-- Botón de envío que dispara la validación interactiva por JavaScript -->
-                        <button type="button" onclick="confirmarGuardado()" class="btn px-5 fw-bold shadow-sm rounded-pill btn-verde-custom">
+                        <button type="button" onclick="confirmarGuardado()" class="btn boton-verde px-5 fw-bold shadow-sm rounded-pill">
                             {{ "Guardar Cambios" if vehiculo else "Registrar Vehículo" }}
                         </button>
                     </div>
@@ -160,27 +148,29 @@
         </div>
     </div>
 
-    <!-- Importación del bundle de scripts de Bootstrap 5 -->
+    <!-- Script de Bootstrap para componentes de interfaz -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     <script>
         /**
-         * Función JavaScript encargada de validar los campos obligatorios del formulario 
-         * y desplegar un flujo interactivo de ventanas modales mediante SweetAlert2.
+         * Función JS para validar los datos e invocar las alertas modales interactivas (SweetAlert2).
          */
         function confirmarGuardado() {
-            const placa = document.getElementById('placa').value;
-            const nombre = document.getElementById('nombre').value;
-            const modelo = document.getElementById('modelo').value;
-            const color = document.getElementById('color').value;
-            const capacidad = document.getElementById('capacidad_asientos').value;
-            const idUsuario = document.getElementById('id_usuario').value;
+            // Extracción de datos del formulario eliminando espacios en blanco extra
+            const placa = document.getElementById('placaVehiculo').value.trim();
+            const nombre = document.getElementById('nombreVehiculo').value.trim();
+            const modelo = document.getElementById('modeloVehiculo').value.trim();
+            const color = document.getElementById('colorVehiculo').value.trim();
+            const capacidad = document.getElementById('capacidadVehiculo').value;
+            const usuario = document.getElementById('idUsuario').value;
             
-            if(!placa.trim() || !nombre.trim() || !modelo.trim() || !color.trim() || !capacidad || !idUsuario) {
+            // Validación nativa si faltan campos
+            if(!placa || !nombre || !modelo || !color || !capacidad || !usuario) {
                 document.getElementById('formularioVehiculo').reportValidity();
                 return;
             }
 
+            // Primera Modal: Confirmación de guardado
             Swal.fire({
                 title: '¿Guardar cambios?',
                 text: 'Se registrarán los datos del vehículo en el sistema.',
@@ -194,8 +184,10 @@
                     confirmButton: 'btn-verde-modal',
                     cancelButton: 'rounded-3 px-4 fw-bold'
                 }
-            }).then((resultado_confirmacion) => {
-                if (resultado_confirmacion.isConfirmed) {
+            }).then((resultadoConfirmacion) => {
+                if (resultadoConfirmacion.isConfirmed) {
+                    
+                    // Segunda Modal: Mensaje temporal de éxito
                     Swal.fire({
                         title: '¡Operación Exitosa!',
                         text: 'El vehículo se ha registrado correctamente.',
@@ -207,6 +199,7 @@
                             confirmButton: 'btn-verde-modal'
                         }
                     }).then(() => {
+                        // Invocación del evento POST hacia el backend
                         document.getElementById('formularioVehiculo').submit();
                     });
                 }

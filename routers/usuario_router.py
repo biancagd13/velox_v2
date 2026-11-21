@@ -170,3 +170,84 @@ def eliminar_usuario(id_usuario: int):
         url="/usuario",
         status_code=status.HTTP_303_SEE_OTHER,
     )
+
+
+# =========================================================================
+# NUEVA RUTA: PERFIL DEL CONDUCTOR E HISTORIAL DE CALIFICACIONES
+# =========================================================================
+@router.get("/perfil-conductor")
+def vista_perfil_conductor(solicitud: Request):
+    """
+    Ruta HTTP GET para mostrar el perfil dinámico del conductor.
+    Extrae su información personal, busca los viajes que ha realizado y recupera 
+    los comentarios/calificaciones emitidos por los pasajeros en dichos viajes.
+    """
+    
+    # 1. Buscamos en MongoDB al conductor (Para demostración, tomamos el primero con rol "Conductor")
+    # Cuando implementes inicio de sesión (Login), aquí sacarás el ID directamente de la sesión
+    conductor = db["usuario"].find_one({"rol": "Conductor"}, {"_id": 0})
+    
+    # Respaldo de seguridad: Si la base de datos de usuarios está vacía, cargamos un perfil simulado
+    if not conductor:
+        conductor = {
+            "id_usuario": 1,
+            "nombre": "Brandon Rivera",
+            "apellido_paterno": "Martínez",
+            "rol": "Conductor",
+            "matricula": "222010145",
+            "correo_institucional": "al222010145@gmail.com",
+            "telefono": "722 000 0000",
+            "calificacion": 4.8,
+            "viajes_completados": 12,
+            "ganancias_estimadas": 350,
+            "vehiculo_principal": "Nissan Versa 2020",
+            "placas": "NXY-1234",
+            "color_vehiculo": "Gris Plata"
+        }
+
+    id_conductor = conductor.get("id_usuario", 1)
+
+    # 2. Buscamos todos los viajes donde este usuario fue el conductor registrado
+    viajes = list(db["viaje"].find({"id_usuario": id_conductor}, {"_id": 0}))
+    # Extraemos únicamente los IDs de esos viajes en una lista plana
+    ids_viajes = [v.get("id_viaje") for v in viajes if v.get("id_viaje") is not None]
+
+    # 3. Buscamos las calificaciones vinculadas a los viajes de este conductor
+    historial_calificaciones = []
+    
+    if ids_viajes:
+        # Consultamos las reseñas asociadas (Límite 10, ordenadas de la más reciente a la más antigua)
+        calificaciones_raw = list(db["calificacion"].find(
+            {"id_viaje": {"$in": ids_viajes}}, 
+            {"_id": 0}
+        ).sort("id_calificacion", -1).limit(10))
+
+        # 4. Cruzamos datos: Enriquecemos cada calificación con la información del pasajero
+        for calif in calificaciones_raw:
+            id_pasajero = calif.get("id_usuario")
+            # Buscamos al pasajero que dejó el comentario en la colección de usuarios
+            pasajero = db["usuario"].find_one({"id_usuario": id_pasajero}, {"_id": 0})
+            
+            if pasajero:
+                nombre = pasajero.get("nombre", "")
+                apellido = pasajero.get("apellido_paterno", "")
+                calif["nombre_pasajero"] = f"{nombre} {apellido}".strip()
+                calif["matricula_pasajero"] = pasajero.get("matricula", "Sin matrícula")
+            else:
+                calif["nombre_pasajero"] = "Usuario Anónimo"
+                calif["matricula_pasajero"] = "Sin registro"
+            
+            # Aseguramos que la puntuación exista para que Jinja2 pueda renderizar las estrellas
+            calif["puntuacion"] = calif.get("puntuacion", 5)
+            
+            historial_calificaciones.append(calif)
+
+    # 5. Renderizamos la plantilla HTML enviando el usuario y su historial estructurado
+    return motor_plantillas.TemplateResponse(
+        solicitud,
+        "perfiles/perfil_conductor.html",
+        {
+            "usuario": conductor,
+            "historial_calificaciones": historial_calificaciones
+        }
+    )

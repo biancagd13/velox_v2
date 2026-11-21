@@ -1,239 +1,247 @@
-<!-- Menú lateral flotante y deslizante para la navegación principal del sistema Velox UTVT -->
-<div id="sidebar" class="bg-white text-dark shadow border-end d-flex flex-column p-3" style="width: 280px; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1050; transition: transform 0.3s ease-in-out;">
-    
-    <!-- Encabezado superior del menú lateral que contiene el logotipo institucional y el botón para colapsar -->
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        
-        <!-- Enlace de la marca institucional redirigido a la vista inicial del módulo de roles -->
-        <a href="/rol" class="d-flex align-items-center text-dark text-decoration-none">
-            <i class="bi bi-car-front-fill fs-4 me-2" style="color: #005200;"></i>
-            <span class="fs-5 fw-bold" style="color: #005200;">Velox UTVT</span>
-        </a>
+<!-- Menú lateral unificado (Administrador / Conductor) de Velox UTVT -->
+<div id="menuLateral" class="bg-white text-dark shadow border-end d-flex flex-column p-3"
+     style="width: 280px; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1050; transition: transform 0.3s ease-in-out; overflow-y: auto;">
 
-        <!-- Botón interactivo para ocultar el menú lateral con color institucional y efectos visuales -->
-        <button class="btn btn-verde-custom p-1 px-2 shadow-sm rounded-3" id="botonAlternarMenu" title="Ocultar Menú">
-            <i class="bi bi-list fs-4"></i>
+    <div class="d-flex align-items-center justify-content-between mb-4 mt-2">
+        <a href="/perfil" id="enlaceLogoSidebar" class="d-flex align-items-center text-dark text-decoration-none">
+            <i class="bi bi-car-front-fill fs-3 me-2" style="color: #018701;"></i>
+            <span class="fs-4 fw-bold" style="color: #005200; letter-spacing: -0.5px;">Velox UTVT</span>
+        </a>
+        <button class="btn btn-sm btn-light d-md-none rounded-circle p-2 shadow-sm border" id="btnCerrarMenu" title="Cerrar Menú">
+            <i class="bi bi-x-lg text-secondary"></i>
         </button>
     </div>
 
-    <!-- Línea divisoria decorativa unificada -->
-    <hr class="text-secondary my-2">
-    
-    <!-- Etiqueta de sección descriptiva para agrupar los apartados funcionales del sistema -->
-    <span class="text-uppercase fs-7 text-muted fw-bold mb-2 px-2" style="font-size: 0.75rem;">Módulos del Sistema</span>
-    
-    <style>
-        /* Estilos base reutilizables para los enlaces de navegación del menú lateral */
-        .enlace-navegacion {
-            color: #333 !important;
-            transition: all 0.2s ease-in-out;
-            border-radius: 8px;
-        }
+    <hr class="text-secondary opacity-25 mt-0 mb-3">
 
-        /* Efecto hover y clase activa unificada con el color verde fuerte institucional (#005200) */
-        .enlace-navegacion:hover, .enlace-navegacion.activo-personalizado {
-            background-color: #005200 !important;
-            color: #ffffff !important;
-        }
-        
-        /* Estilos de botones institucionales: Verde claro (#018701) con transición y hover a verde fuerte (#005200) */
-        .btn-verde-custom {
-            background-color: #018701 !important;
-            color: #ffffff !important;
-            border: none !important;
-            transition: background-color 0.2s ease-in-out !important;
-        }
-        .btn-verde-custom:hover {
-            background-color: #005200 !important;
-            color: #ffffff !important;
-        }
-        
-        /* Clase CSS para ocultar el menú lateral deslizándolo completamente hacia la izquierda */
-        .menu-oculto {
-            transform: translateX(-100%);
-        }
-    </style>
-
-    <!-- Lista de opciones y módulos de navegación con validación de ruta activa en Jinja2 -->
     <ul class="nav nav-pills flex-column mb-auto gap-1">
-        
-        <!-- Módulo de Gestión de Roles -->
         <li class="nav-item">
-            <a href="/rol" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/rol') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-shield-lock-fill me-2"></i> Gestión de Roles
+            <a href="/perfil" id="enlaceInicioSidebar" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-house-door me-3 fs-5" style="color: #018701;"></i>Inicio
             </a>
         </li>
 
-        <!-- Módulo de Usuarios -->
-        <li class="nav-item">
-            <a href="/usuario" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/usuario') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-people-fill me-2"></i> Usuarios
+        <!-- SECCIÓN EXCLUSIVA PARA ADMINISTRADORES -->
+        <li class="nav-item mt-2 admin-only">
+            <span class="text-uppercase text-secondary fw-bold small ms-3" style="font-size: 0.7rem; letter-spacing: 1px;">Gestión Principal</span>
+        </li>
+        <li class="nav-item admin-only">
+            <a href="/rol" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-shield-lock me-3 fs-5" style="color: #018701;"></i>Dashboard
+            </a>
+        </li>
+        <li class="nav-item admin-only">
+            <a href="/usuario" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-people me-3 fs-5" style="color: #018701;"></i>Usuarios
             </a>
         </li>
 
-        <!-- Módulo de Vehículos -->
+        <!-- SECCIÓN COMPARTIDA (OPERACIONES) -->
+        <li class="nav-item mt-3">
+            <span class="text-uppercase text-secondary fw-bold small ms-3" style="font-size: 0.7rem; letter-spacing: 1px;">Operaciones</span>
+        </li>
         <li class="nav-item">
-            <a href="/vehiculo" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/vehiculo') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-car-front-fill me-2"></i> Vehículos
+            <a href="/vehiculo" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-car-front me-3 fs-5" style="color: #018701;"></i><span id="txtMenuVehiculo">Vehículos</span>
             </a>
         </li>
-        
-        <!-- Módulo de Calificaciones -->
         <li class="nav-item">
-            <a href="/calificacion" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/calificacion') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-star-fill me-2"></i> Calificaciones
+            <a href="/ruta" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-geo-alt me-3 fs-5" style="color: #018701;"></i><span id="txtMenuRuta">Rutas</span>
             </a>
         </li>
-
-        <!-- Módulo de Rutas -->
         <li class="nav-item">
-            <a href="/ruta" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/ruta') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-geo-alt-fill me-2"></i> Rutas
+            <a href="/viaje" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-signpost-split me-3 fs-5" style="color: #018701;"></i><span id="txtMenuViaje">Viajes</span>
             </a>
         </li>
-
-        <!-- Módulo de Viajes -->
         <li class="nav-item">
-            <a href="/viaje" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/viaje') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-signpost-split-fill me-2"></i> Viajes
+            <a href="/reserva" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-calendar-check me-3 fs-5" style="color: #018701;"></i><span id="txtMenuReserva">Reservas</span>
             </a>
         </li>
-
-        <!-- Módulo de Reservas -->
         <li class="nav-item">
-            <a href="/reserva" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/reserva') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-calendar-check-fill me-2"></i> Reservas
+            <a href="/calificacion" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-star-half me-3 fs-5" style="color: #018701;"></i>Calificaciones
             </a>
         </li>
 
-        <!-- Módulo de Asistente IA LogiSmart -->
-        <li class="nav-item">
-            <a href="/asistente" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/asistente') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-robot me-2"></i> Asistente IA
+        <!-- ANALÍTICA Y ASISTENTE (SOLO ADMINISTRADOR) -->
+        <li class="nav-item mt-3 admin-only">
+            <span class="text-uppercase text-secondary fw-bold small ms-3" style="font-size: 0.7rem; letter-spacing: 1px;">Analítica</span>
+        </li>
+        <li class="nav-item admin-only">
+            <a href="/estadisticas" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-bar-chart-line me-3 fs-5" style="color: #018701;"></i>Estadística Rutas
+            </a>
+        </li>
+        <li class="nav-item admin-only">
+            <a href="/estadisticas-calificaciones" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-graph-up-arrow me-3 fs-5" style="color: #018701;"></i>Eval. Calificaciones
+            </a>
+        </li>
+        <li class="nav-item admin-only">
+            <a href="/asistente" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-robot me-3 fs-5" style="color: #018701;"></i>Asistente IA
             </a>
         </li>
 
-        <!-- Módulo de Simulador de Rutas por IA (Búsqueda Ciega) -->
+        <!-- INTELIGENCIA ARTIFICIAL -->
+        <li class="nav-item mt-3">
+            <span class="text-uppercase text-secondary fw-bold small ms-3" style="font-size: 0.7rem; letter-spacing: 1px;">Inteligencia Artificial</span>
+        </li>
         <li class="nav-item">
-            <a href="/simulador-ia" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/simulador-ia') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-diagram-3-fill me-2"></i> Simulador Rutas
+            <a href="/simulador-ia" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-cpu me-3 fs-5" style="color: #018701;"></i>Simulador de Rutas IA
             </a>
         </li>
-
-        <!-- Módulo de Estadísticas y Gráficas de Rutas -->
-        <li class="nav-item">
-            <a href="/estadisticas" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path == '/estadisticas' else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-bar-chart-fill me-2"></i> Estadística Rutas
+        <li class="nav-item admin-only">
+            <a href="/modulo_ia" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-speedometer2 me-3 fs-5" style="color: #018701;"></i>Dashboard IA
             </a>
         </li>
-
-        <!-- Módulo de Evaluación de Calificaciones -->
-        <li class="nav-item">
-            <a href="/estadisticas-calificaciones" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/estadisticas-calificaciones') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-bar-chart-fill me-2"></i> Eval. Calificaciones
+        <li class="nav-item admin-only">
+            <a href="/ia/practica04/" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-diagram-3 me-3 fs-5" style="color: #018701;"></i>Práctica 04 (Árboles)
             </a>
         </li>
-
-        <!-- Módulo de Dashboard de IA (Machine Learning / Práctica 3) -->
-        <li class="nav-item">
-            <a href="/modulo_ia" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/modulo_ia') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-cpu-fill me-2"></i> Dashboard IA
+        <li class="nav-item admin-only">
+            <a href="/ia/practica05/" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-collection me-3 fs-5" style="color: #018701;"></i>Práctica 05 (Modelos)
             </a>
         </li>
-
-        <li class="nav-item">
-            <a href="/ia/practica04/" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/ia/practica04') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-diagram-3-fill me-2"></i> Práctica 04 (Árboles)
+        <li class="nav-item admin-only">
+            <a href="/ia/practica06/" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-sliders me-3 fs-5" style="color: #018701;"></i>Práctica 06 (Hiperparám.)
             </a>
         </li>
-        
-
-        <!--
-
-        <li class="nav-item">
-            <a href="/ia/practica05/" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/ia/practica05') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-collection-fill me-2"></i> Práctica 05 (Comparación)
+        <li class="nav-item admin-only">
+            <a href="/ia/practica07/" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-bezier2 me-3 fs-5" style="color: #018701;"></i>Práctica 07 (K-Means)
             </a>
         </li>
-
-        <li class="nav-item">
-            <a href="/ia/practica06/" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/ia/practica06') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-sliders me-2"></i> Práctica 06 (Optimización)
+        <li class="nav-item admin-only">
+            <a href="/ia/practica08/" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-sliders2 me-3 fs-5" style="color: #018701;"></i>Práctica 08 (Optimización)
             </a>
         </li>
-
-        -->
-
-        <li class="nav-item">
-            <a href="/ia/practica07/" class="nav-link enlace-navegacion py-2 px-3 fw-semibold">
-                <i class="bi bi-diagram-3-fill me-2"></i> Práctica 07 (K-Means)
+        <li class="nav-item admin-only">
+            <a href="/ia/practica09/" class="nav-link text-dark fw-medium px-3 py-2 rounded-3 d-flex align-items-center sidebar-link">
+                <i class="bi bi-bullseye me-3 fs-5" style="color: #018701;"></i>Práctica 09 (PCA)
             </a>
         </li>
-
-        <li class="nav-item">
-            <a href="/ia/practica08/" class="nav-link enlace-navegacion py-2 px-3 fw-semibold">
-                <i class="bi bi-sliders me-2"></i> Práctica 08 (Optimización)
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="/ia/practica09/" class="nav-link enlace-navegacion py-2 px-3 fw-semibold">
-                <i class="bi bi-sliders me-2"></i> Práctica 09 (PCA)
-            </a>
-        </li>
-
-
     </ul>
-    
-    <!-- Línea divisoria decorativa situada antes del bloque de perfil e información de sesión -->
-    <hr class="text-secondary my-2">
-    
-    <!-- Menú desplegable inferior con los datos del usuario o administrador con sesión activa -->
-    <div class="dropdown">
-        <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle p-2 rounded" data-bs-toggle="dropdown" aria-expanded="false">
-            <!-- Círculo de avatar institucional con las iniciales o icono representativo -->
-            <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold me-2 shadow-sm" style="width: 35px; height: 35px; background-color: #005200;">
-                <i class="bi bi-person-fill"></i>
+
+    <hr class="text-secondary opacity-25 mt-4 mb-3">
+
+    <!-- Sección inferior dinámica del Perfil -->
+    <div class="dropup mt-2 mb-2">
+        <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle px-2 py-1 rounded-3 hover-profile" id="dropdownPerfil" data-bs-toggle="dropdown" aria-expanded="false" style="transition: background-color 0.2s;">
+            <div id="uiInicial" class="bg-success text-white rounded-circle d-flex justify-content-center align-items-center me-2 fw-bold shadow-sm" style="width: 38px; height: 38px; background-color: #018701 !important;">
+                B
             </div>
-            <strong>Admin UTVT</strong>
+            <div class="d-flex flex-column overflow-hidden">
+                <strong id="uiNombre" class="fs-6 text-truncate" style="color: #005200;">Cargando...</strong>
+                <span id="uiRol" class="text-secondary small text-truncate" style="font-size: 0.75rem;">...</span>
+            </div>
         </a>
-        
-        <!-- Opciones desplegables del perfil de sesión -->
-        <ul class="dropdown-menu text-small shadow">
-            <li><a class="dropdown-item" href="#">Configuración</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <!-- Opción de cierre de sesión resaltada con el color rojo institucional exacto (#ff0000) -->
-            <li><a class="dropdown-item fw-semibold" style="color: #ff0000;" href="#">Cerrar Sesión</a></li>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow border-0 rounded-3 mb-2" aria-labelledby="dropdownPerfil">
+            <li><a class="dropdown-item py-2 d-flex align-items-center" href="/perfil" id="enlacePerfilDinamico"><i class="bi bi-person me-2"></i>Mi Perfil</a></li>
+            <li><hr class="dropdown-divider border-secondary opacity-50"></li>
+            <li><a class="dropdown-item py-2 d-flex align-items-center text-danger" href="/logout" onclick="limpiarSesionVelox()"><i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión</a></li>
         </ul>
     </div>
 </div>
 
-<script>
-    /* Script JavaScript encargado de controlar la apertura, cierre y ajuste responsivo de márgenes del menú lateral */
-    document.addEventListener('DOMContentLoaded', () => {
-        const botonAlternar = document.getElementById('botonAlternarMenu');
-        const botonAbrir = document.getElementById('btnOpenSidebar');
-        const menuLateral = document.getElementById('sidebar');
-        const contenidoPrincipal = document.getElementById('mainContent');
+<style>
+    .sidebar-link:hover,
+    .sidebar-link.activo-sidebar {
+        background-color: #E8F5E9 !important;
+        color: #005200 !important;
+        font-weight: 600 !important;
+    }
+    .hover-profile:hover { background-color: #f8f9fa !important; }
+    #menuLateral::-webkit-scrollbar { width: 6px; }
+    #menuLateral::-webkit-scrollbar-track { background: transparent; }
+    #menuLateral::-webkit-scrollbar-thumb { background-color: #cccccc; border-radius: 10px; }
+</style>
 
-        /**
-         * Función lógica para alternar el estado visual del menú lateral (colapsar o expandir).
-         */
-        function alternarMenuLateral() {
-            menuLateral.classList.toggle('menu-oculto');
-            const estaOculto = menuLateral.classList.contains('menu-oculto');
-            
-            if (estaOculto) {
-                if (botonAbrir) botonAbrir.style.display = 'inline-block';
-                if (contenidoPrincipal) contenidoPrincipal.style.marginLeft = '0';
+<script>
+    function limpiarSesionVelox() {
+        localStorage.removeItem('velox_usuario_nombre');
+        localStorage.removeItem('velox_usuario_rol');
+        localStorage.removeItem('velox_usuario_inicial');
+        localStorage.removeItem('velox_usuario_id');
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const nombre = localStorage.getItem('velox_usuario_nombre') || 'Brandon Rivera';
+        const rol = localStorage.getItem('velox_usuario_rol') || 'Conductor';
+        const inicial = localStorage.getItem('velox_usuario_inicial') || 'B';
+
+        document.getElementById('uiNombre').textContent = nombre;
+        document.getElementById('uiRol').textContent = rol;
+        document.getElementById('uiInicial').textContent = inicial;
+
+        const enlacePerfil = document.getElementById('enlacePerfilDinamico');
+        const enlaceInicio = document.getElementById('enlaceInicioSidebar');
+        const enlaceLogo = document.getElementById('enlaceLogoSidebar');
+
+        if (rol === 'Conductor') {
+            if (enlacePerfil) enlacePerfil.href = "/perfil-conductor";
+            if (enlaceInicio) enlaceInicio.href = "/perfil-conductor";
+            if (enlaceLogo) enlaceLogo.href = "/perfil-conductor";
+
+            if (document.getElementById('txtMenuVehiculo')) document.getElementById('txtMenuVehiculo').textContent = 'Mi Vehículo';
+            if (document.getElementById('txtMenuRuta')) document.getElementById('txtMenuRuta').textContent = 'Mis Rutas';
+            if (document.getElementById('txtMenuViaje')) document.getElementById('txtMenuViaje').textContent = 'Mis Viajes';
+            if (document.getElementById('txtMenuReserva')) document.getElementById('txtMenuReserva').textContent = 'Solicitudes';
+        } else {
+            if (enlacePerfil) enlacePerfil.href = "/perfil";
+            if (enlaceInicio) enlaceInicio.href = "/perfil";
+            if (enlaceLogo) enlaceLogo.href = "/perfil";
+        }
+
+        if (rol !== 'Administrador') {
+            document.querySelectorAll('.admin-only').forEach(function(elemento) {
+                elemento.remove();
+            });
+        }
+
+        // Resaltado automático de la ruta activa
+        const rutaActual = window.location.pathname;
+        document.querySelectorAll('#menuLateral a.sidebar-link').forEach(function(link) {
+            const href = link.getAttribute('href');
+            if (!href) return;
+            if (href === rutaActual || (href !== '/' && href !== '/perfil' && rutaActual.startsWith(href))) {
+                link.classList.add('activo-sidebar');
+            }
+        });
+
+        const menuLateral = document.getElementById("menuLateral");
+        const btnCerrar = document.getElementById("btnCerrarMenu");
+
+        function ajustarMenu() {
+            if (window.innerWidth <= 768) {
+                menuLateral.style.transform = "translateX(-100%)";
             } else {
-                if (botonAbrir) botonAbrir.style.display = 'none';
-                if (contenidoPrincipal) contenidoPrincipal.style.marginLeft = '280px';
+                menuLateral.style.transform = "translateX(0)";
             }
         }
 
-        /* Asignación de eventos de escucha (click) para los botones de control de apertura y cierre del menú */
-        if (botonAlternar) botonAlternar.addEventListener('click', alternarMenuLateral);
-        if (botonAbrir) botonAbrir.addEventListener('click', alternarMenuLateral);
+        ajustarMenu();
+        window.addEventListener("resize", ajustarMenu);
+
+        document.addEventListener("click", function(event) {
+            if (event.target.closest('#btnAbrirMenu') || event.target.closest('#btnOpenSidebar')) {
+                menuLateral.style.transform = "translateX(0)";
+            }
+        });
+
+        if (btnCerrar) {
+            btnCerrar.addEventListener("click", function() {
+                menuLateral.style.transform = "translateX(-100%)";
+            });
+        }
     });
 </script>

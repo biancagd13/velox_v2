@@ -1,180 +1,399 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- Declaración del juego de caracteres UTF-8 para soporte de acentos y caracteres especiales -->
     <meta charset="UTF-8">
-    <!-- Configuración del diseño responsivo para adaptabilidad en dispositivos móviles -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Roles - Velox UTVT</title>
-    <!-- Importación de la hoja de estilos de Bootstrap 5 -->
+    <title>Panel de Conductor - Velox UTVT</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Importación de Bootstrap Icons para iconos oficiales -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Importación de la librería SweetAlert2 para modales emergentes personalizados -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Librería Chart.js para las gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
-        /* Definición del fondo general de la página en blanco puro */
-        body {
-            background-color: #FFFFFF !important;
-        }
-        /* Margen izquierdo para separar el contenido principal del menú lateral fijo */
-        #mainContent {
+        body { background-color: #F8F9FA !important; }
+        
+        #contenidoPrincipal {
             margin-left: 280px;
             transition: margin-left 0.3s ease-in-out;
         }
-        /* Estilo personalizado para el botón de eliminación en color rojo exacto (#ff0000) */
-        .btn-danger-custom {
-            background-color: #ff0000 !important;
-            color: #ffffff !important;
-            border: none;
-            transition: opacity 0.2s ease-in-out;
-        }
-        /* Efecto hover al pasar el cursor sobre el botón de eliminar */
-        .btn-danger-custom:hover {
-            opacity: 0.85;
-            color: #ffffff !important;
-        }
-        /* Estilos personalizados para los botones de confirmación de las alertas modales */
-        .swal2-confirm.btn-verde-modal {
+        
+        .boton-verde {
             background-color: #018701 !important;
             color: #ffffff !important;
-            border-radius: 8px !important;
-            padding: 8px 24px !important;
-            font-weight: bold !important;
-            box-shadow: none !important;
+            border: none;
+            transition: all 0.2s ease-in-out;
         }
-        /* Efecto hover del botón modal a verde fuerte institucional (#005200) */
-        .swal2-confirm.btn-verde-modal:hover {
-            background-color: #005200 !important;
+        .boton-verde:hover { 
+            background-color: #005200 !important; 
+            color: #ffffff !important;
+            transform: translateY(-2px);
         }
-        /* Ajuste responsivo para pantallas pequeñas: elimina el margen izquierdo del contenido */
+
+        .stat-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-left: 4px solid #018701;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        }
+
+        /* Línea de tiempo visual para Origen -> Destino */
+        .ruta-timeline {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        .ruta-timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.4rem;
+            top: 0.5rem;
+            bottom: 0.5rem;
+            width: 2px;
+            background-color: #dee2e6;
+        }
+        .ruta-punto {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .ruta-punto::before {
+            content: '';
+            position: absolute;
+            left: -1.45rem;
+            top: 0.25rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: white;
+            border: 3px solid #018701;
+            z-index: 1;
+        }
+        .ruta-punto.destino::before { border-color: #dc3545; }
+
         @media (max-width: 768px) {
-            #mainContent {
-                margin-left: 0 !important;
-            }
+            #contenidoPrincipal { margin-left: 0 !important; padding: 15px !important; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Inclusión del componente del menú lateral flotante -->
+    <!-- Menú Lateral -->
     {% include 'components/sidebar.html' %}
 
-    <!-- Contenedor principal de la interfaz -->
-    <div id="mainContent" class="p-4 bg-white">
+    <div id="contenidoPrincipal" class="p-4 min-vh-100">
         
-        <!-- Barra superior limpia para albergar el botón de apertura del menú lateral si está oculto -->
+        <!-- Botón menú móvil -->
         <div class="d-flex align-items-center mb-3">
-            <button class="btn btn-verde-custom p-1 px-2 me-3 shadow-sm rounded-3" id="btnOpenSidebar" title="Mostrar Menú" style="display: none;">
+            <button class="btn boton-verde p-1 px-2 me-3 shadow-sm rounded-3 d-block d-md-none" id="btnAbrirMenu">
                 <i class="bi bi-list fs-4"></i>
             </button>
         </div>
 
-        <div class="container-fluid">
-            <!-- Encabezado superior con título institucional e ícono -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2 class="fw-bold mb-1" style="color: #005200;">
-                        <i class="bi bi-shield-lock-fill me-2" style="color: #005200;"></i>Módulo de Roles
-                    </h2>
-                    <p class="text-muted small mb-0">Administra los perfiles de acceso para el sistema de carpooling Velox UTVT.</p>
-                </div>
-                <!-- Botón de acción para redirigir a la vista de creación de un nuevo rol -->
-                <a href="/rol/nuevo" class="btn fw-bold px-4 py-2 shadow-sm rounded-pill btn-verde-custom">
-                    <i class="bi bi-plus-lg me-2"></i>Nuevo rol
-                </a>
+        <div class="container-fluid px-0" style="max-width: 1200px;">
+            
+            <!-- Saludo de Bienvenida -->
+            <div class="mb-4 pb-2 border-bottom">
+                <h2 class="fw-bold mb-1" style="color: #005200;">
+                    ¡Hola, {{ usuario.nombre | default('Brandon') }}! 
+                </h2>
+                <p class="text-muted">Bienvenido a tu panel de control. Aquí tienes el resumen de tu actividad en Velox UTVT.</p>
             </div>
 
-            <!-- Tarjeta contenedora de la tabla de registros -->
-            <div class="card shadow-sm border rounded-4 p-4 bg-white">
-                <h5 class="fw-bold mb-3" style="color: #005200;">Roles Registrados en el Sistema</h5>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <!-- Cabecera de la tabla -->
-                        <thead class="text-uppercase fs-7 text-secondary bg-light">
-                            <tr>
-                                <th scope="col" class="py-3 text-center">ID Rol</th>
-                                <th scope="col" class="py-3">Nombre del Rol</th>
-                                <th scope="col" class="py-3 text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <!-- Cuerpo de la tabla alimentado mediante iteración de Jinja2 -->
-                        <tbody>
-                            {% for rol in roles %}
-                            <tr>
-                                <!-- Columna de ID con formato numérico estilizado -->
-                                <td class="text-center fw-bold" style="color: #018701;">#{{ rol.id_rol }}</td>
-                                <!-- Columna que muestra el nombre del rol registrado -->
-                                <td class="fw-semibold text-dark">{{ rol.nombre_rol }}</td>
-                                <!-- Columna de botones de acción (Editar y Eliminar) -->
-                                <td class="text-center">
-                                    <!-- Enlace/Botón para editar el registro actual -->
-                                    <a href="/rol/editar/{{ rol.id_rol }}" class="btn btn-sm btn-light border shadow-sm me-1" style="color: #018701;" title="Editar">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </a>
-                                    <!-- Botón para disparar la ventana modal de confirmación de eliminación -->
-                                    <button class="btn btn-sm btn-danger-custom shadow-sm" onclick="confirmarEliminacion('{{ rol.id_rol }}', '{{ rol.nombre_rol }}')" title="Eliminar">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <!-- Fila mostrada en caso de que no existan registros en la base de datos -->
-                            <tr>
-                                <td colspan="3" class="text-center py-4 text-muted">No hay roles registrados por el momento.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <!-- FILA 1: TARJETAS DE RESUMEN RÁPIDO (KPIs) -->
+            <div class="row g-4 mb-4">
+                <!-- Viajes Activos -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Viajes Hoy</p>
+                                <h3 class="fw-bold text-dark mb-0">1</h3>
+                            </div>
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex justify-content-center align-items-center" style="width: 50px; height: 50px;">
+                                <i class="bi bi-car-front-fill fs-4" style="color: #018701;"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                
+                <!-- Solicitudes Pendientes -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100" style="border-left-color: #ffc107;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Solicitudes</p>
+                                <h3 class="fw-bold text-dark mb-0">3</h3>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-flex justify-content-center align-items-center" style="width: 50px; height: 50px;">
+                                <i class="bi bi-person-raised-hand fs-4 text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reputación -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Calificación</p>
+                                <h3 class="fw-bold text-dark mb-0">4.8 <span class="fs-6 text-warning"><i class="bi bi-star-fill"></i></span></h3>
+                            </div>
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex justify-content-center align-items-center" style="width: 50px; height: 50px;">
+                                <i class="bi bi-star-half fs-4" style="color: #018701;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ganancias Estimadas -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Ganancias Mes</p>
+                                <h3 class="fw-bold text-dark mb-0">${{ usuario.ganancias_estimadas | default('350') }}</h3>
+                            </div>
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex justify-content-center align-items-center" style="width: 50px; height: 50px;">
+                                <i class="bi bi-wallet2 fs-4" style="color: #018701;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FILA 2: VIAJE ACTIVO Y SOLICITUDES -->
+            <div class="row g-4 mb-4">
+                
+                <!-- COLUMNA IZQUIERDA: Viaje Activo -->
+                <div class="col-lg-8">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-signpost-split me-2"></i>Tu Próximo Viaje</h5>
+                        <span class="badge bg-success rounded-pill px-3 py-2 fw-bold"><i class="bi bi-circle-fill me-2 small"></i>Activo para Hoy</span>
+                    </div>
+                    
+                    <div class="card shadow-sm border-0 rounded-4 bg-white overflow-hidden border-top border-4 border-success h-100">
+                        <div class="p-4">
+                            <div class="row align-items-center h-100">
+                                <!-- Ruta -->
+                                <div class="col-md-7 border-end">
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span class="badge bg-light text-dark border"><i class="bi bi-calendar-event me-2"></i>Hoy, 14:30 hrs</span>
+                                        <span class="badge bg-light text-dark border"><i class="bi bi-car-front-fill me-2" style="color: #018701;"></i>Nissan Versa</span>
+                                    </div>
+                                    
+                                    <div class="ruta-timeline mt-4">
+                                        <div class="ruta-punto">
+                                            <span class="text-secondary small fw-bold d-block" style="font-size: 0.7rem;">ORIGEN</span>
+                                            <span class="fw-bold text-dark fs-5">Rectoría UTVT</span>
+                                        </div>
+                                        <div class="ruta-punto destino mb-0">
+                                            <span class="text-secondary small fw-bold d-block" style="font-size: 0.7rem;">DESTINO</span>
+                                            <span class="fw-bold text-dark fs-5">Terminal Toluca</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Detalles -->
+                                <div class="col-md-5 text-center mt-4 mt-md-0">
+                                    <div class="mb-4">
+                                        <span class="d-block text-muted small fw-bold mb-1">LUGARES OCUPADOS</span>
+                                        <h1 class="fw-bold mb-0 text-success" style="font-size: 3rem;">2 <span class="fs-4 text-secondary">/ 4</span></h1>
+                                    </div>
+                                    <a href="/viaje" class="btn btn-outline-success fw-bold rounded-pill w-100 shadow-sm">
+                                        <i class="bi bi-gear-fill me-2"></i>Administrar viaje
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: Botón Solicitudes y Acceso Rápido -->
+                <div class="col-lg-4">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-ui-checks-grid me-2"></i>Gestión</h5>
+                    </div>
+
+                    <!-- Botón de Solicitudes -->
+                    <div class="card shadow-sm border-0 rounded-4 bg-white mb-3">
+                        <div class="p-4 text-center">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3" style="width: 60px; height: 60px;">
+                                <i class="bi bi-bell-fill fs-3"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark">Solicitudes de Viaje</h5>
+                            <p class="text-muted small mb-3">Tienes pasajeros esperando confirmación.</p>
+                            <a href="/reserva" class="btn btn-warning fw-bold rounded-pill w-100 text-dark border border-warning shadow-sm">
+                                Ver todas las solicitudes <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Acceso Rápido (Simulador IA) -->
+                    <a href="/simulador-ia" class="text-decoration-none">
+                        <div class="card shadow-sm border-0 rounded-4 p-3 bg-light stat-card" style="border-left-color: #0d6efd;">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-cpu-fill text-primary me-3" style="font-size: 2.2rem;"></i>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0">Simulador IA</h6>
+                                    <span class="text-muted small">Predecir ruta y costo</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- FILA 3: SECCIÓN DE GRÁFICAS -->
+            <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
+                <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-bar-chart-line-fill me-2"></i>Métricas de Rendimiento</h5>
+            </div>
+
+            <div class="row g-4 mb-4">
+                
+                <!-- Gráfica de Ganancias -->
+                <div class="col-lg-6">
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-graph-up text-success me-2"></i>Historial de Ganancias</h6>
+                            <select class="form-select form-select-sm w-auto shadow-sm border-secondary-subtle text-secondary fw-semibold" id="filtroGanancias">
+                                <option value="dias">Últimos 3 días</option>
+                                <option value="semana" selected>Última semana</option>
+                                <option value="mes">Último mes</option>
+                            </select>
+                        </div>
+                        <div style="height: 250px;">
+                            <canvas id="graficaGanancias"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfica de Viajes Totales -->
+                <div class="col-lg-6">
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-car-front text-primary me-2"></i>Viajes Completados</h6>
+                            <select class="form-select form-select-sm w-auto shadow-sm border-secondary-subtle text-secondary fw-semibold" id="filtroViajes">
+                                <option value="dias">Últimos 3 días</option>
+                                <option value="semana" selected>Última semana</option>
+                                <option value="mes">Último mes</option>
+                            </select>
+                        </div>
+                        <div style="height: 250px;">
+                            <canvas id="graficaViajes"></canvas>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>
     </div>
 
-    <!-- Importación del script empaquetado de Bootstrap -->
+    <!-- Scripts Base -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script para inicializar y controlar las gráficas -->
     <script>
-        /* Función de JavaScript para gestionar la ventana modal de confirmación y eliminación mediante SweetAlert2 */
-        function confirmarEliminacion(id_rol, nombre_rol) {
-            // Despliega la primera modal de advertencia de seguridad
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: 'Se eliminará este contenido de forma permanente.',
-                icon: 'warning',
-                iconColor: '#f8bb86',
-                showCancelButton: true,
-                confirmButtonColor: '#ff0000',
-                cancelButtonColor: '#555555',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar',
-                customClass: {
-                    popup: 'rounded-4 p-4',
-                    confirmButton: 'rounded-3 px-4 fw-bold',
-                    cancelButton: 'rounded-3 px-4 fw-bold'
-                }
-            }).then((resultado_confirmacion) => {
-                // Si el usuario confirma la acción de borrado
-                if (resultado_confirmacion.isConfirmed) {
-                    // Muestra la segunda modal de éxito notificando la operación completada
-                    Swal.fire({
-                        title: '¡Operación Exitosa!',
-                        text: 'Contenido eliminado correctamente.',
-                        icon: 'success',
-                        iconColor: '#018701',
-                        confirmButtonText: 'Aceptar',
-                        customClass: {
-                            popup: 'rounded-4 p-4',
-                            confirmButton: 'btn-verde-modal',
-                            cancelButton: 'rounded-3 px-4 fw-bold'
-                        }
-                    }).then(() => {
-                        // Redirige al endpoint del backend encargado de ejecutar la baja física o lógica
-                        window.location.href = "/rol/eliminar/" + id_rol;
-                    });
+        document.addEventListener("DOMContentLoaded", function() {
+            
+            // Toggle del menú lateral en móviles
+            const menuLateral = document.getElementById("menuLateral");
+            const btnAbrir = document.getElementById("btnAbrirMenu");
+            if(btnAbrir && menuLateral) {
+                btnAbrir.addEventListener("click", function() { 
+                    menuLateral.style.transform = "translateX(0)"; 
+                });
+            }
+
+            // ==========================================
+            // LÓGICA DE LAS GRÁFICAS Y FILTROS
+            // ==========================================
+
+            // Datos simulados para las Ganancias
+            const datosGanancias = {
+                dias: { labels: ['Ayer', 'Hoy', 'Mañana'], data: [80, 150, 0] },
+                semana: { labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'], data: [120, 250, 180, 0, 300, 150, 0] },
+                mes: { labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'], data: [450, 800, 600, 950] }
+            };
+
+            // Datos simulados para los Viajes
+            const datosViajes = {
+                dias: { labels: ['Ayer', 'Hoy', 'Mañana'], data: [1, 2, 0] },
+                semana: { labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'], data: [1, 2, 1, 0, 3, 1, 0] },
+                mes: { labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'], data: [4, 7, 5, 8] }
+            };
+
+            // 1. Configuración de Gráfica de Ganancias (Línea)
+            const ctxGanancias = document.getElementById('graficaGanancias').getContext('2d');
+            let chartGanancias = new Chart(ctxGanancias, {
+                type: 'line',
+                data: {
+                    labels: datosGanancias.semana.labels, // Inicia en "semana" por defecto
+                    datasets: [{
+                        label: 'Ganancias ($)',
+                        data: datosGanancias.semana.data,
+                        borderColor: '#018701',
+                        backgroundColor: 'rgba(1, 135, 1, 0.15)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4, // Suaviza la línea
+                        pointBackgroundColor: '#018701',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
                 }
             });
-        }
+
+            // 2. Configuración de Gráfica de Viajes (Barras)
+            const ctxViajes = document.getElementById('graficaViajes').getContext('2d');
+            let chartViajes = new Chart(ctxViajes, {
+                type: 'bar',
+                data: {
+                    labels: datosViajes.semana.labels, // Inicia en "semana" por defecto
+                    datasets: [{
+                        label: 'Viajes',
+                        data: datosViajes.semana.data,
+                        backgroundColor: '#0d6efd',
+                        borderRadius: 6, // Redondea las puntas de las barras
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } // stepSize evita decimales en conteos
+                }
+            });
+
+            // 3. Evento para cambiar el filtro de Ganancias
+            document.getElementById('filtroGanancias').addEventListener('change', function(e) {
+                const seleccion = e.target.value;
+                chartGanancias.data.labels = datosGanancias[seleccion].labels;
+                chartGanancias.data.datasets[0].data = datosGanancias[seleccion].data;
+                chartGanancias.update();
+            });
+
+            // 4. Evento para cambiar el filtro de Viajes
+            document.getElementById('filtroViajes').addEventListener('change', function(e) {
+                const seleccion = e.target.value;
+                chartViajes.data.labels = datosViajes[seleccion].labels;
+                chartViajes.data.datasets[0].data = datosViajes[seleccion].data;
+                chartViajes.update();
+            });
+
+        });
     </script>
 </body>
 </html>

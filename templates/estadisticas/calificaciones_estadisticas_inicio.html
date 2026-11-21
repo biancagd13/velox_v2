@@ -1,88 +1,151 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Configuración básica y adaptación responsiva para dispositivos móviles -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas de Calificaciones - Velox UTVT</title>
+    
+    <!-- Importación de librerías base: Bootstrap 5 e Iconos -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <style>
-        body {
-            background-color: #FFFFFF !important;
-        }
-        #mainContent {
+        /* Forzamos el fondo blanco puro para una apariencia limpia */
+        body { background-color: #FFFFFF !important; }
+        
+        /* Ajuste del contenedor principal para que no colisione con el menú lateral en PC */
+        #contenidoPrincipal {
             margin-left: 280px;
             transition: margin-left 0.3s ease-in-out;
         }
-        .btn-verde-custom {
+        
+        /* Estilos institucionales para botones primarios (Verde Velox) */
+        .boton-verde {
             background-color: #018701 !important;
             color: #ffffff !important;
             border: none;
+            transition: background-color 0.2s ease-in-out;
         }
-        .btn-verde-custom:hover {
-            background-color: #005200 !important;
+        .boton-verde:hover { background-color: #005200 !important; }
+        
+        /* Estilos para el botón secundario (outline verde) */
+        .boton-contorno-verde {
+            color: #018701 !important;
+            border-color: #018701 !important;
+            transition: all 0.2s ease-in-out;
+        }
+        .boton-contorno-verde:hover {
+            background-color: #018701 !important;
             color: #ffffff !important;
         }
+
+        /* --- MODO RESPONSIVO PARA CELULARES --- */
         @media (max-width: 768px) {
-            #mainContent {
+            /* Eliminamos el margen del menú en pantallas móviles */
+            #contenidoPrincipal {
                 margin-left: 0 !important;
+                padding: 15px !important;
+            }
+            /* Apilamos los elementos del encabezado para evitar amontonamiento */
+            .encabezado-estadisticas {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 15px;
+            }
+            /* Ajustamos los botones de acción para que ocupen todo el ancho y sean más fáciles de tocar */
+            .grupo-botones {
+                flex-direction: column;
+                width: 100%;
+            }
+            .grupo-botones .btn {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- Incluimos la barra lateral institucional -->
+    <!-- Integración dinámica del menú lateral institucional -->
     {% include 'components/sidebar.html' %}
 
-    <div id="mainContent" class="p-4 bg-white">
-        <div class="container-fluid">
-            <!-- Encabezado del Módulo -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Contenedor principal de la vista -->
+    <div id="contenidoPrincipal" class="p-4 bg-white">
+        
+        <!-- Botón superior para desplegar el menú exclusivamente en dispositivos móviles -->
+        <div class="d-flex align-items-center mb-3">
+            <button class="btn boton-verde p-1 px-2 me-3 shadow-sm rounded-3 d-block d-md-none" id="btnAbrirMenu" title="Mostrar Menú">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+        </div>
+
+        <div class="container-fluid px-0">
+            
+            <!-- Encabezado responsivo: en PC se ve lado a lado, en celular se apila -->
+            <div class="encabezado-estadisticas d-flex justify-content-between align-items-center mb-4">
+                
+                <!-- Títulos y descripción del módulo -->
                 <div>
                     <h2 class="fw-bold mb-1" style="color: #005200;">
-                        <i class="bi bi-star-fill me-2"></i>Estadísticas y Desempeño de Calificaciones
+                        <i class="bi bi-star-fill me-2"></i>Desempeño de Calificaciones
                     </h2>
-                    <p class="text-muted small mb-0">Análisis de calificaciones del servicio en Velox UTVT.</p>
+                    <p class="text-muted small mb-0">Análisis gráfico del servicio brindado en el sistema Velox UTVT.</p>
                 </div>
                 
-                <div class="d-flex gap-2">
-                    <a href="/estadisticas-calificaciones" class="btn btn-verde-custom shadow-sm rounded-3 fw-semibold">
+                <!-- Grupo de botones de acción: Actualizar y Descargar (adaptables a móvil) -->
+                <div class="grupo-botones d-flex gap-2">
+                    <a href="/estadisticas-calificaciones" class="btn boton-verde shadow-sm rounded-3 fw-semibold">
                         <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
                     </a>
-                    <a href="{{ imagen_grafica }}" download="Calificaciones_Velox_UTVT.png" class="btn btn-outline-success shadow-sm rounded-3 fw-semibold">
+                    <a href="{{ imagen_grafica }}" download="Calificaciones_Velox_UTVT.png" class="btn btn-outline-success boton-contorno-verde shadow-sm rounded-3 fw-semibold">
                         <i class="bi bi-download me-1"></i> Guardar Gráfica
                     </a>
                 </div>
             </div>
 
-            <!-- Tarjeta Contenedora -->
+            <!-- Tarjeta contenedora de la gráfica estadística -->
             <div class="card shadow-sm border rounded-4 bg-white text-center p-4">
                 <div class="card-body">
                     
-                    <!-- Contenedor estilizado para mostrar la imagen generada dinámicamente -->
-                    <div class="p-2 border rounded-4 bg-light shadow-sm d-inline-block">
-                        <!-- Limitamos la altura y el ancho máximo para que no se vea exageradamente grande -->
-                        <img src="{{ imagen_grafica }}?t=1" alt="Gráfica de Calificaciones" class="img-fluid rounded-3" style="max-height: 400px; max-width: 100%; width: auto; cursor: zoom-in;" id="imagenCalificaciones">
+                    <!-- Marco estilizado para resaltar la imagen de Matplotlib generada por el servidor -->
+                    <div class="p-2 border rounded-4 bg-light shadow-sm d-inline-block" style="width: 100%; max-width: 800px;">
+                        
+                        <!-- Imagen dinámica con restricción de tamaño y efecto de zoom básico -->
+                        <img src="{{ imagen_grafica }}?t=1" alt="Gráfica de Calificaciones del Sistema" class="img-fluid rounded-3" 
+                             style="max-height: 400px; width: 100%; object-fit: contain; cursor: zoom-in; transition: transform 0.3s ease;" 
+                             id="imagenCalificaciones">
                     </div>
+                    
                 </div>
             </div>
+            
         </div>
     </div>
 
+    <!-- Script oficial de Bootstrap para componentes -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
+        // Funcionalidad interactiva de zoom para la gráfica de calificaciones
         document.addEventListener("DOMContentLoaded", function() {
-            const img = document.getElementById("imagenCalificaciones");
-            if (img) {
-                img.addEventListener("click", function() {
-                    if (img.style.maxHeight === "700px") {
-                        img.style.maxHeight = "none";
-                        img.style.transform = "scale(1.02)";
-                        img.style.transition = "transform 0.3s ease";
+            const imagenGrafica = document.getElementById("imagenCalificaciones");
+            
+            // Verificamos que la imagen exista en el DOM antes de agregar eventos
+            if (imagenGrafica) {
+                // Alternar zoom al hacer clic en la imagen
+                imagenGrafica.addEventListener("click", function() {
+                    const estaAmpliada = imagenGrafica.style.maxHeight === "none";
+                    
+                    if (estaAmpliada) {
+                        // Restaurar al tamaño original y cursor por defecto
+                        imagenGrafica.style.maxHeight = "400px";
+                        imagenGrafica.style.transform = "scale(1)";
+                        imagenGrafica.style.cursor = "zoom-in";
                     } else {
-                        img.style.maxHeight = "700px";
-                        img.style.transform = "scale(1)";
+                        // Ampliar para visualizar los detalles y cambiar cursor
+                        imagenGrafica.style.maxHeight = "none";
+                        imagenGrafica.style.transform = "scale(1.05)";
+                        imagenGrafica.style.cursor = "zoom-out";
                     }
                 });
             }

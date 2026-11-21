@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Conductor - Velox UTVT</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body { background-color: #F8F9FA !important; }
+
+        #contenidoPrincipal {
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+
+        .boton-verde {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border: none;
+            transition: all 0.2s ease-in-out;
+        }
+        .boton-verde:hover { background-color: #005200 !important; color: #ffffff !important; }
+
+        .avatar-circle {
+            width: 120px;
+            height: 120px;
+            background-color: #018701;
+            color: white;
+            font-size: 3.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin: 0 auto;
+            border: 4px solid #E8F5E9;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-card {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+
+        @media (max-width: 768px) {
+            #contenidoPrincipal {
+                margin-left: 0 !important;
+                padding: 15px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'components/sidebar.html' %}
+
+    <div id="contenidoPrincipal" class="p-4">
+
+        <div class="d-flex align-items-center mb-3">
+            <button class="btn boton-verde p-1 px-2 me-3 shadow-sm rounded-3 d-block d-md-none" id="btnAbrirMenu" title="Mostrar Menú">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+        </div>
+
+        <div class="container-fluid px-0" style="max-width: 1100px;">
+
+            <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+                <div>
+                    <h2 class="fw-bold mb-1" style="color: #005200;">
+                        <i class="bi bi-person-vcard me-2"></i>Mi Perfil de Conductor
+                    </h2>
+                    <p class="text-muted small mb-0">Gestiona tu información personal y los detalles de tu vehículo.</p>
+                </div>
+                <a href="/viaje/nuevo" class="btn boton-verde fw-bold shadow-sm rounded-pill px-4 py-2">
+                    <i class="bi bi-car-front-fill me-2"></i>Publicar Nuevo Viaje
+                </a>
+            </div>
+
+            <div class="row g-4">
+
+                <!-- COLUMNA IZQUIERDA -->
+                <div class="col-lg-4">
+                    <div class="card shadow-sm border-0 rounded-4 p-4 text-center bg-white h-100">
+                        <div class="avatar-circle mb-3 fw-bold shadow-sm">
+                            {{ (usuario.nombre | default('U'))[0] | upper }}
+                        </div>
+
+                        <h4 class="fw-bold text-dark mb-1">{{ usuario.nombre | default('Conductor') }} {{ usuario.apellido_paterno | default('') }}</h4>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill fw-bold mb-4">
+                            <i class="bi bi-steering me-1"></i>{{ usuario.rol | default('Conductor') }} Activo
+                        </span>
+
+                        <hr class="text-secondary opacity-25 my-2">
+
+                        <h6 class="fw-bold text-secondary text-uppercase small mt-3 mb-3" style="letter-spacing: 1px;">Rendimiento Velox</h6>
+
+                        <div class="d-flex justify-content-between gap-2 mb-3">
+                            <div class="stat-card flex-fill">
+                                <i class="bi bi-star-fill text-warning fs-4 mb-1 d-block"></i>
+                                <h5 class="fw-bold mb-0 text-dark">{{ usuario.calificacion | default('5.0') }}</h5>
+                                <span class="text-muted" style="font-size: 0.7rem;">Estrellas</span>
+                            </div>
+                            <div class="stat-card flex-fill">
+                                <i class="bi bi-signpost-split-fill text-success fs-4 mb-1 d-block"></i>
+                                <h5 class="fw-bold mb-0 text-dark">{{ usuario.viajes_completados | default('0') }}</h5>
+                                <span class="text-muted" style="font-size: 0.7rem;">Viajes</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card w-100 text-center py-3">
+                            <h6 class="text-muted small mb-1">Aportación Generada</h6>
+                            <h4 class="fw-bold mb-0" style="color: #018701;">${{ usuario.ganancias_estimadas | default('0') }} <span class="fs-6 text-muted">MXN</span></h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA -->
+                <div class="col-lg-8">
+
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mb-4 border-start border-4" style="border-left-color: #018701 !important;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-shield-check me-2"></i>Vehículo Asignado</h5>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1 small">
+                                <i class="bi bi-lock-fill me-1"></i>Datos bloqueados por seguridad
+                            </span>
+                        </div>
+
+                        <div class="row g-4 align-items-center">
+                            <div class="col-md-4 text-center">
+                                <div class="bg-light rounded-3 p-2 border d-flex align-items-center justify-content-center mb-2" style="height: 120px; overflow: hidden;">
+                                    <i class="bi bi-car-front text-secondary opacity-50" style="font-size: 4rem;"></i>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary w-100 fw-semibold" onclick="verGaleria()">
+                                    <i class="bi bi-images me-1"></i>Ver fotos
+                                </button>
+                            </div>
+
+                            <div class="col-md-8">
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <span class="text-secondary fw-semibold small d-block mb-1">PLACA OFICIAL</span>
+                                        <div class="bg-light border rounded-3 px-3 py-2 text-center">
+                                            <span class="fw-bold text-dark font-monospace fs-6">{{ usuario.placas | default('SIN PLACA') }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-secondary fw-semibold small d-block mb-1">COLOR</span>
+                                        <div class="bg-light border rounded-3 px-3 py-2">
+                                            <span class="fw-bold text-dark fs-6">{{ usuario.color_vehiculo | default('No especificado') }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <span class="text-secondary fw-semibold small d-block mb-1">MODELO Y MARCA</span>
+                                        <div class="bg-light border rounded-3 px-3 py-2">
+                                            <span class="fw-bold text-dark fs-6">{{ usuario.vehiculo_principal | default('Vehículo no registrado') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end mt-2">
+                                    <button class="btn btn-sm btn-danger px-3 py-2 fw-bold rounded-pill shadow-sm" onclick="confirmarBajaVehiculo()">
+                                        <i class="bi bi-x-circle-fill me-1"></i>Dar de baja vehículo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-building me-2"></i>Información Institucional</h5>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" onclick="mostrarAlertaProx()">
+                                <i class="bi bi-pencil-fill me-1"></i>Editar
+                            </button>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small mb-1">Matrícula Escolar</label>
+                                <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
+                                    <i class="bi bi-credit-card-2-front text-muted me-3 fs-5"></i>
+                                    <span class="fw-bold text-dark fs-6">{{ usuario.matricula | default('N/A') }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small mb-1">Correo Institucional</label>
+                                <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
+                                    <i class="bi bi-envelope-at text-muted me-3 fs-5"></i>
+                                    <span class="fw-bold text-dark fs-6 text-truncate" title="{{ usuario.correo_institucional }}">{{ usuario.correo_institucional | default('Sin correo') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function mostrarAlertaProx() {
+            Swal.fire({
+                title: 'Próximamente',
+                text: 'La edición de datos se habilitará en la próxima fase de desarrollo.',
+                icon: 'info',
+                confirmButtonColor: '#018701',
+                customClass: { popup: 'rounded-4' }
+            });
+        }
+
+        function verGaleria() {
+            Swal.fire({
+                title: 'Galería del Vehículo',
+                text: 'Las fotografías laterales, frontales y traseras del vehículo se mostrarán aquí.',
+                icon: 'info',
+                confirmButtonColor: '#018701',
+                customClass: { popup: 'rounded-4' }
+            });
+        }
+
+        function confirmarBajaVehiculo() {
+            Swal.fire({
+                title: '¿Dar de baja este vehículo?',
+                text: 'No podrás publicar viajes hasta que registres uno nuevo y sea validado por la universidad.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff0000',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, dar de baja',
+                cancelButtonText: 'Cancelar',
+                customClass: { popup: 'rounded-4' }
+            });
+        }   
+    </script>
+</body>
+</html>

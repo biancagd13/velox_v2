@@ -1,29 +1,36 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- Declaración del juego de caracteres para soporte de acentos -->
+    <!-- Declaración de formato y diseño responsivo para móviles -->
     <meta charset="UTF-8">
-    <!-- Configuración del diseño responsivo para diferentes dispositivos -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Título dinámico que cambia dependiendo si se está editando o creando un usuario -->
     <title>{{ "Editar Usuario" if usuario else "Nuevo Usuario" }} - Velox UTVT</title>
-    <!-- Importación de Bootstrap 5 -->
+    
+    <!-- Archivos CSS y utilidades base (Bootstrap y SweetAlert2) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Importación de Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Importación de la librería SweetAlert2 para alertas interactivas -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
-        /* Fondo blanco puro para la página */
-        body {
-            background-color: #FFFFFF !important;
-        }
-        /* Margen para evitar que el contenido se encime con el menú lateral fijo */
-        #mainContent {
+        /* Fondo blanco para diseño institucional */
+        body { background-color: #FFFFFF !important; }
+        
+        /* Ajuste del contenido general para que no se encime al menú lateral */
+        #contenidoPrincipal {
             margin-left: 280px;
             transition: margin-left 0.3s ease-in-out;
         }
-        /* Estilos universales para los botones de confirmación de las modales */
+        
+        /* Estilos del botón principal verde (color Velox) */
+        .boton-verde {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border: none !important;
+            transition: background-color 0.2s ease-in-out !important;
+        }
+        .boton-verde:hover { background-color: #005200 !important; color: #ffffff !important; }
+        
+        /* Diseño unificado para los botones de las alertas modales */
         .swal2-confirm.btn-verde-modal {
             background-color: #018701 !important;
             color: #ffffff !important;
@@ -32,53 +39,53 @@
             font-weight: bold !important;
             box-shadow: none !important;
         }
-        /* Efecto hover del botón de la modal a verde fuerte institucional (#005200) */
-        .swal2-confirm.btn-verde-modal:hover {
-            background-color: #005200 !important;
-        }
-        /* Estilo para los botones principales con color verde institucional */
-        .btn-verde-custom {
-            background-color: #018701 !important;
-            color: #ffffff !important;
-            border: none !important;
-            transition: background-color 0.2s ease-in-out !important;
-        }
-        .btn-verde-custom:hover {
-            background-color: #005200 !important;
-            color: #ffffff !important;
-        }
-        /* Ajuste responsivo para pantallas móviles */
+        .swal2-confirm.btn-verde-modal:hover { background-color: #005200 !important; }
+        
+        /* --- DISEÑO RESPONSIVO PARA DISPOSITIVOS MÓVILES --- */
         @media (max-width: 768px) {
-            #mainContent {
+            /* Eliminamos el margen del menú en pantallas pequeñas */
+            #contenidoPrincipal {
                 margin-left: 0 !important;
+                padding: 15px !important;
+            }
+            /* Apilamos los botones de acción para que no se deformen y sean fáciles de tocar */
+            .grupo-botones {
+                flex-direction: column;
+                gap: 10px !important;
+                width: 100%;
+            }
+            .grupo-botones a, .grupo-botones button {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- Inclusión del componente de menú lateral flotante -->
+    <!-- Integración del Menú Lateral (Sidebar) mediante Jinja2 -->
     {% include 'components/sidebar.html' %}
 
-    <!-- Contenedor principal del formulario centrado -->
-    <div id="mainContent" class="p-4 d-flex flex-column align-items-center justify-content-center bg-white" style="min-height: 100vh;">
+    <!-- Contenedor general centrado en la pantalla -->
+    <div id="contenidoPrincipal" class="p-4 d-flex flex-column align-items-center justify-content-center bg-white" style="min-height: 100vh;">
+        
+        <!-- Restricción de ancho para mantener el formato en PC -->
         <div class="container px-3" style="max-width: 650px;">
-            <!-- Tarjeta contenedora con bordes redondeados -->
             <div class="card shadow-sm border rounded-4 p-5 bg-white">
-                <!-- Encabezado del formulario con su icono institucional -->
+                
+                <!-- Encabezado del Formulario -->
                 <div class="d-flex align-items-center mb-4">
                     <div>
                         <h3 class="fw-bold mb-1" style="color: #005200;">
-                            <i class="bi bi-people-fill me-2" style="color: #005200;"></i>{{ "Editar Usuario #" ~ usuario.id_usuario if usuario else "Registrar Nuevo Usuario" }}
+                            <i class="bi bi-people-fill me-2"></i>{{ "Editar Usuario #" ~ usuario.id_usuario if usuario else "Registrar Nuevo Usuario" }}
                         </h3>
                         <p class="text-muted small mb-0">Completa la información institucional solicitada en el formulario.</p>
                     </div>
                 </div>
 
-                <!-- Formulario HTML apuntando al endpoint correspondiente según sea edición o creación -->
+                <!-- Formulario dinámico: Selecciona la ruta de guardado o actualización según el contexto -->
                 <form id="formularioUsuario" action="{{ '/usuario/actualizar' if usuario else '/usuario/guardar' }}" method="POST">
                     
-                    <!-- Campo oculto para enviar el ID del usuario en caso de actualización -->
+                    <!-- Campo oculto y solo lectura del ID (Visible solo en Edición) -->
                     {% if usuario %}
                     <input type="hidden" name="id_usuario" value="{{ usuario.id_usuario }}">
                     <div class="mb-3">
@@ -87,52 +94,52 @@
                     </div>
                     {% endif %}
 
-                    <!-- Matrícula -->
+                    <!-- Campo de Matrícula Institucional -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Matrícula</label>
-                        <input type="text" id="matricula" name="matricula" class="form-control py-2" value="{{ usuario.matricula if usuario else '' }}" placeholder="Ej. 222310001" required>
+                        <input type="text" id="matriculaUtvt" name="matricula" class="form-control py-2" value="{{ usuario.matricula if usuario else '' }}" placeholder="Ej. 222310001" required>
                     </div>
 
-                    <!-- Nombre -->
+                    <!-- Nombres del usuario -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Nombre(s)</label>
-                        <input type="text" id="nombre" name="nombre" class="form-control py-2" value="{{ usuario.nombre if usuario else '' }}" placeholder="Ej. Bianca" required>
+                        <input type="text" id="nombreUsuario" name="nombre" class="form-control py-2" value="{{ usuario.nombre if usuario else '' }}" placeholder="Ej. Bianca" required>
                     </div>
 
                     <!-- Apellido Paterno -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Apellido Paterno</label>
-                        <input type="text" id="apellido_paterno" name="apellido_paterno" class="form-control py-2" value="{{ usuario.apellido_paterno if usuario else '' }}" placeholder="Ej. Gutiérrez" required>
+                        <input type="text" id="apellidoPaterno" name="apellido_paterno" class="form-control py-2" value="{{ usuario.apellido_paterno if usuario else '' }}" placeholder="Ej. Gutiérrez" required>
                     </div>
 
-                    <!-- Apellido Materno -->
+                    <!-- Apellido Materno (Opcional) -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Apellido Materno (Opcional)</label>
-                        <input type="text" id="apellido_materno" name="apellido_materno" class="form-control py-2" value="{{ usuario.apellido_materno if usuario else '' }}" placeholder="Ej. Díaz">
+                        <input type="text" id="apellidoMaterno" name="apellido_materno" class="form-control py-2" value="{{ usuario.apellido_materno if usuario else '' }}" placeholder="Ej. Díaz">
                     </div>
 
-                    <!-- Correo Institucional -->
+                    <!-- Correo electrónico de la universidad -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Correo Institucional</label>
-                        <input type="email" id="correo_institucional" name="correo_institucional" class="form-control py-2" value="{{ usuario.correo_institucional if usuario else '' }}" placeholder="Ej. al222@utvt.edu.mx" required>
+                        <input type="email" id="correoInstitucional" name="correo_institucional" class="form-control py-2" value="{{ usuario.correo_institucional if usuario else '' }}" placeholder="Ej. al222@utvt.edu.mx" required>
                     </div>
 
-                    <!-- Teléfono -->
+                    <!-- Teléfono de contacto -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Teléfono / Celular (Opcional)</label>
-                        <input type="text" id="telefono" name="telefono" class="form-control py-2" value="{{ usuario.telefono if usuario else '' }}" placeholder="Ej. 7221234567">
+                        <input type="text" id="telefonoContacto" name="telefono" class="form-control py-2" value="{{ usuario.telefono if usuario else '' }}" placeholder="Ej. 7221234567">
                     </div>
 
-                    <!-- Contraseña -->
+                    <!-- Contraseña para iniciar sesión -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Contraseña</label>
-                        <input type="password" id="contrasena" name="contrasena" class="form-control py-2" value="{{ usuario.contrasena if usuario else '' }}" placeholder="••••••••" required>
+                        <input type="password" id="contrasenaUsuario" name="contrasena" class="form-control py-2" value="{{ usuario.contrasena if usuario else '' }}" placeholder="••••••••" required>
                     </div>
 
-                    <!-- Selector Dinámico de Roles -->
+                    <!-- Lista desplegable (Select) para asignar el nivel de acceso / Rol -->
                     <div class="mb-4">
                         <label class="form-label fw-semibold text-secondary small">Rol del Usuario</label>
-                        <select id="id_rol" name="id_rol" class="form-select py-2" required>
+                        <select id="idRolAsignado" name="id_rol" class="form-select py-2" required>
                             <option value="" disabled selected>Selecciona un rol...</option>
                             {% for rol in roles %}
                             <option value="{{ rol.id_rol }}" {% if usuario and usuario.id_rol == rol.id_rol %}selected{% endif %}>
@@ -142,10 +149,10 @@
                         </select>
                     </div>
 
-                    <!-- Botones de navegación y envío del formulario -->
-                    <div class="d-flex justify-content-end gap-2">
+                    <!-- Grupo de botones (Responsivos en celular) -->
+                    <div class="grupo-botones d-flex justify-content-end gap-2">
                         <a href="/usuario" class="btn btn-outline-secondary px-4 fw-semibold rounded-pill">Cancelar</a>
-                        <button type="button" onclick="confirmarGuardado()" class="btn px-5 fw-bold shadow-sm rounded-pill btn-verde-custom">
+                        <button type="button" onclick="confirmarGuardado()" class="btn boton-verde px-5 fw-bold shadow-sm rounded-pill">
                             {{ "Guardar Cambios" if usuario else "Registrar Usuario" }}
                         </button>
                     </div>
@@ -154,28 +161,32 @@
         </div>
     </div>
 
-    <!-- Script de Bootstrap -->
+    <!-- Script de Bootstrap para componentes de interfaz -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        /* Función para validar los campos del formulario y desplegar las modales de confirmación con SweetAlert2 */
+        /**
+         * Función JS para validar los datos e invocar las alertas modales interactivas (SweetAlert2).
+         */
         function confirmarGuardado() {
-            const matricula = document.getElementById('matricula').value;
-            const nombre = document.getElementById('nombre').value;
-            const apPaterno = document.getElementById('apellido_paterno').value;
-            const correoInst = document.getElementById('correo_institucional').value;
-            const contrasena = document.getElementById('contrasena').value;
-            const idRol = document.getElementById('id_rol').value;
+            // Extracción de datos del formulario eliminando espacios extra al inicio y final
+            const matricula = document.getElementById('matriculaUtvt').value.trim();
+            const nombre = document.getElementById('nombreUsuario').value.trim();
+            const apellidoPat = document.getElementById('apellidoPaterno').value.trim();
+            const correo = document.getElementById('correoInstitucional').value.trim();
+            const clave = document.getElementById('contrasenaUsuario').value.trim();
+            const rol = document.getElementById('idRolAsignado').value;
             
-            /* Validamos si algún campo requerido está vacío mediante la validación nativa del navegador */
-            if(!matricula.trim() || !nombre.trim() || !apPaterno.trim() || !correoInst.trim() || !contrasena.trim() || !idRol) {
+            // Validación nativa si faltan campos obligatorios
+            if(!matricula || !nombre || !apellidoPat || !correo || !clave || !rol) {
                 document.getElementById('formularioUsuario').reportValidity();
                 return;
             }
 
-            /* Despliega la primera ventana modal preguntando si desea guardar los cambios */
+            // Primera Modal: Confirmación de guardado
             Swal.fire({
                 title: '¿Guardar cambios?',
-                text: 'Se registrarán tus datos en el sistema.',
+                text: 'Se registrarán tus datos en el sistema de manera segura.',
                 icon: 'question',
                 iconColor: '#7097a8',
                 showCancelButton: true,
@@ -186,11 +197,13 @@
                     confirmButton: 'btn-verde-modal',
                     cancelButton: 'rounded-3 px-4 fw-bold'
                 }
-            }).then((resultado_confirmacion) => {
-                if (resultado_confirmacion.isConfirmed) {
+            }).then((resultadoConfirmacion) => {
+                if (resultadoConfirmacion.isConfirmed) {
+                    
+                    // Segunda Modal: Mensaje temporal de éxito
                     Swal.fire({
                         title: '¡Operación Exitosa!',
-                        text: 'Usuario registrado correctamente.',
+                        text: 'El registro se ha completado correctamente.',
                         icon: 'success',
                         iconColor: '#018701',
                         confirmButtonText: 'Aceptar',
@@ -199,6 +212,7 @@
                             confirmButton: 'btn-verde-modal'
                         }
                     }).then(() => {
+                        // Invocación del evento POST hacia el backend
                         document.getElementById('formularioUsuario').submit();
                     });
                 }

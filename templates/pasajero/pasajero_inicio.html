@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Metadatos base del panel de Pasajero -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Pasajero - Velox UTVT</title>
+
+    <!-- Bootstrap 5, Bootstrap Icons, Leaflet (mapas) y SweetAlert2 (alertas de cancelación) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* Fondo general claro */
+        body { background-color: #F8F9FA !important; }
+
+        /* Barra lateral fija de 280px homologada visualmente con el perfil de Conductor */
+        .sidebar-pasajero {
+            width: 280px;
+            min-height: 100vh;
+            background-color: #FFFFFF;
+            border-right: 1px solid #EAECEF;
+            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1030;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Cabecera del logo Velox UTVT */
+        .sidebar-header {
+            padding: 1.5rem 1.5rem 1.25rem 1.5rem;
+            border-bottom: 1px solid #EAECEF;
+        }
+
+        /* Títulos de grupo dentro del menú lateral */
+        .sidebar-seccion {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #6C757D;
+            padding: 0 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Enlaces de navegación lateral */
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 1rem;
+            color: #212529;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border-radius: 0.6rem;
+            white-space: nowrap;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        .sidebar-link-izquierda {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .sidebar-link i {
+            color: #018701;
+            font-size: 1.15rem;
+            width: 22px;
+            text-align: center;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.activo {
+            background-color: #F1F8F1;
+            color: #005200;
+            font-weight: 600;
+        }
+
+        /* Bloque inferior de perfil y cierre de sesión */
+        .sidebar-footer {
+            padding: 1.15rem 1.25rem;
+            border-top: 1px solid #EAECEF;
+        }
+
+        .perfil-trigger {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 0.35rem 0.4rem;
+            border-radius: 0.6rem;
+            text-align: left;
+            transition: background-color 0.15s ease;
+        }
+
+        .perfil-trigger:hover { background-color: #F4F6F8; }
+        .perfil-trigger::after { display: none; }
+
+        /* Avatar verde circular con inicial */
+        .avatar-verde {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #018701;
+            color: #FFFFFF;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .nombre-perfil { color: #005200; font-weight: 700; font-size: 0.95rem; line-height: 1.2; }
+        .rol-perfil { color: #6C757D; font-size: 0.78rem; line-height: 1.2; }
+
+        /* Área de contenido desplazada a la derecha del menú */
+        #contenidoPasajero {
+            margin-left: 280px;
+            padding: 2rem 2.25rem;
+            min-height: 100vh;
+        }
+
+        /* Colores institucionales */
+        .boton-verde {
+            background-color: #018701 !important;
+            color: #FFFFFF !important;
+            border: none;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .boton-verde:hover { background-color: #005200 !important; color: #FFFFFF !important; }
+        .texto-verde { color: #005200; }
+
+        /* Dimensiones para los distintos mapas Leaflet */
+        .mapa-contenedor { height: 260px; width: 100%; border-radius: 0.85rem; border: 1px solid #E5E7EB; z-index: 1; }
+        .mapa-modal { height: 300px; width: 100%; border-radius: 0.85rem; border: 1px solid #E5E7EB; z-index: 1; }
+        .mapa-simulador { height: 330px; width: 100%; border-radius: 0.85rem; border: 1px solid #E5E7EB; z-index: 1; }
+
+        /* Miniaturas de fotografías del vehículo asignado */
+        .foto-auto {
+            width: 100%;
+            height: 135px;
+            object-fit: cover;
+            border-radius: 0.75rem;
+            border: 1px solid #E5E7EB;
+            background-color: #F1F3F5;
+        }
+
+        /* Píldoras de indicadores (km, tiempo, tarifa, PCA) */
+        .metrica-pill {
+            background-color: #F8F9FA;
+            border: 1px solid #E9ECEF;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        /* Cajas de dictamen IA según nivel de conveniencia */
+        .dictamen-box {
+            border-radius: 0.9rem;
+            padding: 1rem 1.25rem;
+            border-left: 5px solid #018701;
+            background-color: #F2F9F2;
+        }
+
+        .dictamen-box.moderado { border-left-color: #E0A800; background-color: #FFFBEB; }
+        .dictamen-box.no-conviene { border-left-color: #DC3545; background-color: #FFF5F5; }
+
+        /* Caja de aviso rojo para viajes cancelados con motivo */
+        .caja-cancelacion {
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            background-color: #FFF5F5;
+            border: 1px solid #F5C2C7;
+            border-left: 4px solid #DC3545;
+        }
+
+        /* Caja verde para reseñas otorgadas por el conductor al pasajero */
+        .caja-resena-conductor {
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            background-color: #F2F9F2;
+            border: 1px solid #C8E6C9;
+            border-left: 4px solid #018701;
+        }
+
+        /* Botones interactivos de 1 a 5 estrellas */
+        .estrella-btn {
+            background: transparent;
+            border: none;
+            font-size: 2rem;
+            color: #D1D5DB;
+            cursor: pointer;
+            padding: 0 0.2rem;
+            transition: transform 0.15s ease, color 0.15s ease;
+        }
+
+        .estrella-btn.activa,
+        .estrella-btn:hover {
+            color: #FFC107;
+            transform: scale(1.12);
+        }
+
+        /* Comportamiento colapsable en pantallas pequeñas */
+        @media (max-width: 768px) {
+            .sidebar-pasajero { transform: translateX(-100%); }
+            .sidebar-pasajero.abierto { transform: translateX(0); }
+            #contenidoPasajero { margin-left: 0; padding: 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Menú lateral exclusivo del Pasajero (sin acceso directo al panel de Conductor) -->
+    <aside id="menuPasajero" class="sidebar-pasajero d-flex flex-column justify-content-between">
+        <div>
+            <!-- Encabezado institucional -->
+            <div class="sidebar-header d-flex align-items-center justify-content-between">
+                <a href="/pasajero/" class="text-decoration-none d-flex align-items-center">
+                    <i class="bi bi-car-front-fill fs-4 me-2" style="color: #018701;"></i>
+                    <span class="fw-bold fs-4 texto-verde" style="letter-spacing: -0.3px;">Velox UTVT</span>
+                </a>
+                <button type="button" class="btn btn-sm btn-light d-md-none" id="btnCerrarMenu">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- Enlaces de navegación del Pasajero -->
+            <div class="px-3 pt-4">
+                <div class="sidebar-seccion">Pasajero</div>
+                <nav class="d-flex flex-column gap-1 mb-4">
+                    <a href="/pasajero/" class="sidebar-link {% if vista == 'buscar' %}activo{% endif %}">
+                        <span class="sidebar-link-izquierda">
+                            <i class="bi bi-search"></i>
+                            <span>Buscar Viajes</span>
+                        </span>
+                    </a>
+                    <a href="/pasajero/mi-viaje" class="sidebar-link {% if vista == 'detalle' %}activo{% endif %}">
+                        <span class="sidebar-link-izquierda">
+                            <i class="bi bi-card-checklist"></i>
+                            <span>Detalle de mi Viaje</span>
+                        </span>
+                        {% if total_activos > 0 %}
+                            <span class="badge rounded-pill" style="background-color: #018701;">{{ total_activos }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="/pasajero/historial" class="sidebar-link {% if vista == 'historial' %}activo{% endif %}">
+                        <span class="sidebar-link-izquierda">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Historial de Viajes</span>
+                        </span>
+                    </a>
+                    <a href="/pasajero/#mis-solicitudes" class="sidebar-link">
+                        <span class="sidebar-link-izquierda">
+                            <i class="bi bi-ticket-perforated"></i>
+                            <span>Mis Reservas</span>
+                        </span>
+                    </a>
+                </nav>
+
+                <!-- Módulo de consulta de Inteligencia Artificial dentro del mismo perfil -->
+                <div class="sidebar-seccion">Inteligencia Artificial</div>
+                <nav class="d-flex flex-column gap-1">
+                    <a href="/pasajero/simulador-ia" class="sidebar-link {% if vista == 'simulador' %}activo{% endif %}">
+                        <span class="sidebar-link-izquierda">
+                            <i class="bi bi-cpu"></i>
+                            <span>Simulador de Rutas IA</span>
+                        </span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Perfil inferior con calificación actual y únicamente Cerrar Sesión -->
+        <div class="sidebar-footer">
+            <div class="dropup">
+                <button class="perfil-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="avatar-verde me-3">
+                        {{ pasajero.inicial | default('J') }}
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="nombre-perfil d-flex align-items-center">
+                            <span class="text-truncate">{{ pasajero.nombre }}</span>
+                            <i class="bi bi-caret-down-fill ms-1 text-dark" style="font-size: 0.65rem;"></i>
+                        </div>
+                        <div class="rol-perfil">Pasajero &bull; {{ pasajero.calificacion }} &#9733;</div>
+                    </div>
+                </button>
+                <ul class="dropdown-menu shadow border-0 rounded-3 w-100 mb-2 py-2">
+                    <li>
+                        <a class="dropdown-item text-danger fw-semibold d-flex align-items-center py-2" href="/logout" onclick="limpiarSesion()">
+                            <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Contenedor dinámico principal (cambia según la variable Jinja2 'vista') -->
+    <main id="contenidoPasajero">
+        <!-- Botón de apertura de menú en móviles -->
+        <div class="d-md-none mb-3">
+            <button type="button" class="btn boton-verde btn-sm px-2 py-1 rounded-3 shadow-sm" id="btnAbrirMenu">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- VISTA 1: BUSCAR VIAJES (CON MAPA Y CONVENIENCIA PREVIA)        -->
+        <!-- ============================================================== -->
+        {% if vista == 'buscar' %}
+            <div class="mb-4">
+                <h2 class="fw-bold texto-verde mb-1">¡Hola, {{ pasajero.nombre }}!</h2>
+                <p class="text-secondary small mb-0">Revisa el mapa de la ruta del conductor y el análisis IA para evaluar si te conviene antes de reservar tu asiento.</p>
+            </div>
+
+            <!-- Tarjetas de viajes publicados por conductores -->
+            <h5 class="fw-bold texto-verde mb-3"><i class="bi bi-geo-alt-fill me-2"></i>Viajes Disponibles</h5>
+            <div class="row g-4 mb-5">
+                {% for viaje in viajes %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 p-3 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-light text-dark border">
+                                <i class="bi bi-clock me-1"></i>{{ viaje.horario }}
+                            </span>
+                            <span class="fw-bold text-success fs-5">${{ viaje.costo }}</span>
+                        </div>
+
+                        <div class="my-3">
+                            <div class="small text-muted">ORIGEN</div>
+                            <div class="fw-bold mb-2">{{ viaje.origen }}</div>
+                            <div class="small text-muted">DESTINO</div>
+                            <div class="fw-bold">{{ viaje.destino }}</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between text-secondary small mb-2">
+                            <span><i class="bi bi-signpost-2 me-1"></i>{{ viaje.distancia_km }} km</span>
+                            <span><i class="bi bi-stopwatch me-1"></i>~{{ viaje.tiempo_min }} min</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between text-secondary small border-top pt-2 mb-3">
+                            <span><i class="bi bi-person-badge me-1"></i>{{ viaje.conductor }} ({{ viaje.calificacion_conductor }} &#9733;)</span>
+                            <span><i class="bi bi-people me-1"></i>{{ viaje.asientos_disponibles }} lugares</span>
+                        </div>
+
+                        <div class="mt-auto d-grid gap-2">
+                            <!-- Abre el modal con mapa Leaflet y dictamen IA antes de comprometer la reserva -->
+                            <button type="button" class="btn btn-outline-success btn-sm fw-semibold rounded-3 py-2"
+                                    onclick="abrirModalRutaConductor({{ viaje.id_viaje }})">
+                                <i class="bi bi-map me-1"></i>Ver Mapa y Conveniencia
+                            </button>
+
+                            <!-- Formulario POST directo para solicitar un asiento -->
+                            <form method="post" action="/pasajero/solicitar">
+                                <input type="hidden" name="id_viaje" value="{{ viaje.id_viaje }}">
+                                <input type="hidden" name="origen" value="{{ viaje.origen }}">
+                                <input type="hidden" name="destino" value="{{ viaje.destino }}">
+                                <input type="hidden" name="id_usuario" value="{{ pasajero.id_usuario }}">
+                                <input type="hidden" name="nombre_pasajero" value="{{ pasajero.nombre }}">
+                                {% if viaje.asientos_disponibles > 0 %}
+                                    <button type="submit" class="btn boton-verde w-100 fw-semibold rounded-3">
+                                        <i class="bi bi-send-check me-1"></i>Solicitar Asiento
+                                    </button>
+                                {% else %}
+                                    <button type="button" class="btn btn-secondary w-100 fw-semibold rounded-3" disabled>
+                                        Sin lugares disponibles
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="alert alert-light border rounded-4 text-center py-4 text-muted">
+                        <i class="bi bi-check-circle fs-3 d-block mb-2 text-success"></i>
+                        No hay más viajes disponibles por el momento (los viajes que ya solicitaste se encuentran en <strong>Detalle de mi Viaje</strong>).
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Tabla resumen de solicitudes enviadas -->
+            <div id="mis-solicitudes" class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h5 class="fw-bold texto-verde mb-0"><i class="bi bi-list-check me-2"></i>Mis Solicitudes de Viaje</h5>
+                    <a href="/pasajero/historial" class="btn btn-outline-success btn-sm rounded-3">
+                        Ver historial y calificaciones <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr class="texto-verde">
+                                <th>#</th>
+                                <th>Ruta</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for res in mis_reservas %}
+                            {% set est = (res.estado or 'pendiente') | lower %}
+                            <tr>
+                                <td class="fw-bold">{{ res.id_reserva }}</td>
+                                <td>{{ res.origen }} &rarr; {{ res.destino }}</td>
+                                <td class="text-secondary small">{{ res.fecha_solicitud | default('Reciente') }}</td>
+                                <td>
+                                    {% if est in ['aceptada', 'confirmada'] %}
+                                        <span class="badge bg-success px-3 py-2 rounded-pill">Aceptada</span>
+                                    {% elif est == 'finalizada' %}
+                                        <span class="badge bg-primary px-3 py-2 rounded-pill">Finalizada</span>
+                                    {% elif est == 'cancelada' %}
+                                        <span class="badge bg-danger px-3 py-2 rounded-pill">Viaje Cancelado</span>
+                                    {% elif est == 'rechazada' %}
+                                        <span class="badge bg-secondary px-3 py-2 rounded-pill">Rechazada</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pendiente</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1">
+                                        <a href="/pasajero/mi-viaje#viaje-{{ res.id_reserva }}" class="btn btn-sm btn-light border rounded-pill px-3">
+                                            <i class="bi bi-eye me-1"></i>Ver
+                                        </a>
+                                        {% if est in ['pendiente', 'aceptada', 'confirmada'] %}
+                                            <form id="formCancelarTabla_{{ res.id_reserva }}" method="post" action="/pasajero/cancelar/{{ res.id_reserva }}" class="d-inline">
+                                                <input type="hidden" name="id_usuario" value="{{ pasajero.id_usuario }}">
+                                                <input type="hidden" name="motivo_cancelacion" id="motivo_formCancelarTabla_{{ res.id_reserva }}" value="">
+                                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                                        onclick="confirmarCancelacion('formCancelarTabla_{{ res.id_reserva }}', '{{ res.origen }} → {{ res.destino }}')">
+                                                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">Aún no has solicitado ningún viaje.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        <!-- ============================================================== -->
+        <!-- VISTA 2: DETALLE DE MI VIAJE (MAPA, CONDUCTOR, VEHÍCULO)       -->
+        <!-- ============================================================== -->
+        {% elif vista == 'detalle' %}
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                <div>
+                    <h2 class="fw-bold texto-verde mb-1">
+                        <i class="bi bi-card-checklist me-2"></i>Detalle de mi Viaje
+                    </h2>
+                    <p class="text-secondary small mb-0">Consulta ruta, distancia, tiempo, conductor, placas, fotos o cancela tu solicitud indicando el motivo.</p>
+                </div>
+                <a href="/pasajero/" class="btn btn-outline-success btn-sm rounded-3 fw-semibold">
+                    <i class="bi bi-arrow-left me-1"></i>Volver a Buscar Viajes
+                </a>
+            </div>
+
+            {% if mis_reservas %}
+                <div class="d-flex flex-column gap-4">
+                    {% for res in mis_reservas %}
+                        {% set est = (res.estado or 'pendiente') | lower %}
+                        {% set d = res.detalle_viaje %}
+                        <div id="viaje-{{ res.id_reserva }}" class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+                            <!-- Cabecera con estatus actual del viaje -->
+                            <div class="px-4 py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2" style="background-color: #F4F9F4;">
+                                <div>
+                                    <span class="text-muted small fw-bold text-uppercase">Solicitud #{{ res.id_reserva }} &bull; Viaje #{{ res.id_viaje }}</span>
+                                    <h5 class="fw-bold texto-verde mb-0 mt-1">
+                                        {{ d.origen }} <i class="bi bi-arrow-right mx-1"></i> {{ d.destino }}
+                                    </h5>
+                                </div>
+                                <div class="d-flex align-items-center flex-wrap gap-2">
+                                    {% if est in ['aceptada', 'confirmada'] %}
+                                        <span class="badge bg-success px-3 py-2 rounded-pill fs-6">
+                                            <i class="bi bi-check-circle-fill me-1"></i>Aceptada
+                                        </span>
+                                    {% elif est == 'finalizada' %}
+                                        <span class="badge bg-primary px-3 py-2 rounded-pill fs-6">
+                                            <i class="bi bi-flag-fill me-1"></i>Finalizada
+                                        </span>
+                                    {% elif est == 'cancelada' %}
+                                        <span class="badge bg-danger px-3 py-2 rounded-pill fs-6">
+                                            <i class="bi bi-slash-circle me-1"></i>Viaje Cancelado
+                                        </span>
+                                    {% elif est == 'rechazada' %}
+                                        <span class="badge bg-secondary px-3 py-2 rounded-pill fs-6">
+                                            <i class="bi bi-x-circle-fill me-1"></i>Rechazada
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fs-6">
+                                            <i class="bi bi-hourglass-split me-1"></i>Pendiente de Confirmación
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="card-body p-4">
+                                <!-- Muestra motivo de cancelación si el viaje fue cancelado -->
+                                {% if est == 'cancelada' %}
+                                    <div class="caja-cancelacion mb-4 small">
+                                        <div class="fw-bold text-danger mb-1">
+                                            <i class="bi bi-x-octagon-fill me-1"></i>Viaje cancelado el {{ res.fecha_cancelacion | default('recientemente') }}
+                                        </div>
+                                        <div class="text-dark">
+                                            <strong>Motivo de cancelación:</strong> "{{ res.motivo_cancelacion | default('Sin motivo registrado') }}"
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Métricas generales del trayecto -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col-6 col-md-3">
+                                        <div class="metrica-pill">
+                                            <div class="small text-muted fw-bold">DISTANCIA</div>
+                                            <div class="fs-5 fw-bold texto-verde">{{ d.distancia_km }} km</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="metrica-pill">
+                                            <div class="small text-muted fw-bold">TIEMPO EST.</div>
+                                            <div class="fs-5 fw-bold texto-verde">{{ d.tiempo_min }} min</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="metrica-pill">
+                                            <div class="small text-muted fw-bold">HORARIO</div>
+                                            <div class="fs-6 fw-bold text-dark mt-1">{{ d.horario }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="metrica-pill">
+                                            <div class="small text-muted fw-bold">APORTACIÓN</div>
+                                            <div class="fs-5 fw-bold text-success">${{ d.costo }} MXN</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-4">
+                                    <!-- Mapa interactivo y botones de acción -->
+                                    <div class="col-lg-6">
+                                        <h6 class="fw-bold texto-verde mb-2">
+                                            <i class="bi bi-map me-2"></i>Trazado de la Ruta del Conductor
+                                        </h6>
+                                        <div id="mapaDetalle_{{ res.id_reserva }}" class="mapa-contenedor"></div>
+                                        <div class="text-muted small mt-2">
+                                            <strong>Recorrido:</strong> {{ d.ruta_nodos | join(' → ') }}
+                                        </div>
+
+                                        <div class="mt-3 pt-3 border-top d-flex flex-wrap gap-2">
+                                            {% if est in ['aceptada', 'confirmada'] and not res.calificado %}
+                                                <button type="button" class="btn boton-verde btn-sm rounded-3 fw-semibold px-3 py-2"
+                                                        onclick="abrirModalCalificar('{{ res.id_reserva }}', '{{ d.conductor }}', '{{ d.origen }} → {{ d.destino }}')">
+                                                    <i class="bi bi-star-fill me-1"></i>Finalizar y Calificar Conductor
+                                                </button>
+                                            {% endif %}
+
+                                            {% if est in ['pendiente', 'aceptada', 'confirmada'] %}
+                                                <form id="formCancelarDetalle_{{ res.id_reserva }}" method="post" action="/pasajero/cancelar/{{ res.id_reserva }}">
+                                                    <input type="hidden" name="id_usuario" value="{{ pasajero.id_usuario }}">
+                                                    <input type="hidden" name="motivo_cancelacion" id="motivo_formCancelarDetalle_{{ res.id_reserva }}" value="">
+                                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-3 fw-semibold px-3 py-2"
+                                                            onclick="confirmarCancelacion('formCancelarDetalle_{{ res.id_reserva }}', '{{ d.origen }} → {{ d.destino }}')">
+                                                        <i class="bi bi-x-octagon me-1"></i>Cancelar Viaje
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Fichas detalladas del conductor y del vehículo -->
+                                    <div class="col-lg-6">
+                                        <div class="border rounded-4 p-3 mb-3 bg-light bg-opacity-50">
+                                            <h6 class="fw-bold texto-verde mb-3">
+                                                <i class="bi bi-person-vcard me-2"></i>Datos del Conductor
+                                            </h6>
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="avatar-verde me-3" style="width: 50px; height: 50px; font-size: 1.25rem;">
+                                                    {{ d.conductor[0] }}
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark fs-6">{{ d.conductor }}</div>
+                                                    <div class="small text-secondary">
+                                                        <i class="bi bi-star-fill text-warning me-1"></i><strong>{{ d.calificacion_conductor }} / 5.0</strong> &bull; Conductor Verificado UTVT
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row g-2 small">
+                                                <div class="col-sm-6">
+                                                    <span class="text-muted d-block">Matrícula Escolar</span>
+                                                    <span class="fw-bold font-monospace text-dark">{{ d.matricula_conductor }}</span>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <span class="text-muted d-block">Teléfono</span>
+                                                    <span class="fw-bold text-dark">{{ d.telefono_conductor }}</span>
+                                                </div>
+                                                <div class="col-12">
+                                                    <span class="text-muted d-block">Correo Institucional</span>
+                                                    <span class="fw-semibold text-dark">{{ d.correo_conductor }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="border rounded-4 p-3 bg-white">
+                                            <h6 class="fw-bold texto-verde mb-3">
+                                                <i class="bi bi-car-front me-2"></i>Vehículo Asignado
+                                            </h6>
+                                            <div class="row g-2 small mb-3">
+                                                <div class="col-sm-5">
+                                                    <span class="text-muted d-block">Modelo</span>
+                                                    <span class="fw-bold text-dark">{{ d.vehiculo }}</span>
+                                                </div>
+                                                <div class="col-sm-3">
+                                                    <span class="text-muted d-block">Placas</span>
+                                                    <span class="badge bg-dark font-monospace">{{ d.placas }}</span>
+                                                </div>
+                                                <div class="col-sm-4">
+                                                    <span class="text-muted d-block">Color</span>
+                                                    <span class="fw-bold text-dark">{{ d.color_vehiculo }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <img src="{{ d.foto_exterior }}" alt="Foto exterior del vehículo" class="foto-auto"
+                                                         onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22220%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23e8f5e9%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23005200%22 font-family=%22Arial%22 font-size=%2218%22>Exterior Vehiculo</text></svg>'">
+                                                    <div class="text-center text-muted mt-1" style="font-size: 0.72rem;">Vista exterior</div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <img src="{{ d.foto_interior }}" alt="Foto lateral del vehículo" class="foto-auto"
+                                                         onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22220%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23e8f5e9%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23005200%22 font-family=%22Arial%22 font-size=%2218%22>Unidad Verificada</text></svg>'">
+                                                    <div class="text-center text-muted mt-1" style="font-size: 0.72rem;">Unidad verificada</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+                    <i class="bi bi-car-front fs-1 text-muted mb-3"></i>
+                    <h5 class="fw-bold text-dark">Aún no tienes viajes solicitados</h5>
+                    <p class="text-muted small mb-4">Explora los viajes publicados por los conductores, revisa su mapa de ruta y solicita un asiento.</p>
+                    <div>
+                        <a href="/pasajero/" class="btn boton-verde rounded-3 px-4">Buscar Viajes</a>
+                    </div>
+                </div>
+            {% endif %}
+
+        <!-- ============================================================== -->
+        <!-- VISTA 3: SIMULADOR DE RUTAS IA (MODO CONSULTA PASAJERO)        -->
+        <!-- ============================================================== -->
+        {% elif vista == 'simulador' %}
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                <div>
+                    <h2 class="fw-bold texto-verde mb-1">
+                        <i class="bi bi-diagram-3-fill me-2"></i>Optimizador de Rutas (IA) — Pasajero
+                    </h2>
+                    <p class="text-secondary small mb-0">Consulta rutas óptimas (A*, UCS, Greedy, BFS, DFS), lógica proposicional y análisis tarifario K-Means/PCA.</p>
+                </div>
+                <a href="/pasajero/" class="btn boton-verde btn-sm rounded-3 fw-semibold px-3 py-2">
+                    <i class="bi bi-search me-1"></i>Ver Viajes Disponibles
+                </a>
+            </div>
+
+            <!-- Formulario de selección de origen, destino y algoritmo -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                <h6 class="fw-bold texto-verde mb-3"><i class="bi bi-sliders me-2"></i>Configuración de Búsqueda</h6>
+                <form method="post" action="/pasajero/simulador-ia" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-secondary">Origen</label>
+                        <select name="origen" class="form-select rounded-3">
+                            {% for nodo in nodos_disponibles %}
+                                <option value="{{ nodo }}" {% if nodo == sim_ia.origen %}selected{% endif %}>{{ nodo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-secondary">Destino</label>
+                        <select name="destino" class="form-select rounded-3">
+                            {% for nodo in nodos_disponibles %}
+                                <option value="{{ nodo }}" {% if nodo == sim_ia.destino %}selected{% endif %}>{{ nodo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-secondary">Algoritmo</label>
+                        <select name="algoritmo" class="form-select rounded-3">
+                            {% for alg in sim_ia.algoritmos_disponibles %}
+                                <option value="{{ alg }}" {% if alg == sim_ia.algoritmo %}selected{% endif %}>{{ alg }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button type="submit" class="btn boton-verde fw-bold rounded-3 py-2">
+                            <i class="bi bi-magic me-1"></i>Simular
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Dictamen IA y resultados de K-Means / PCA -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                <div class="dictamen-box {% if sim_ia.dictamen.nivel == 'moderado' %}moderado{% elif sim_ia.dictamen.nivel == 'no_conviene' %}no-conviene{% endif %} mb-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                        <h6 class="fw-bold mb-0">{{ sim_ia.dictamen.titulo }}</h6>
+                        <span class="badge bg-dark rounded-pill px-3 py-1">{{ sim_ia.ml.perfil_ruta }}</span>
+                    </div>
+                    <p class="small text-dark mb-2">{{ sim_ia.dictamen.resumen }}</p>
+                    <div class="small text-secondary">
+                        <i class="bi bi-lightbulb-fill text-warning me-1"></i><strong>Sugerencia IA:</strong> {{ sim_ia.dictamen.sugerencia }}
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="metrica-pill">
+                            <div class="small text-muted fw-bold">DISTANCIA ÓPTIMA</div>
+                            <div class="fs-5 fw-bold texto-verde">{{ sim_ia.distancia_km }} km</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="metrica-pill">
+                            <div class="small text-muted fw-bold">TIEMPO EST.</div>
+                            <div class="fs-5 fw-bold texto-verde">{{ sim_ia.tiempo_min }} min</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="metrica-pill">
+                            <div class="small text-muted fw-bold">TARIFA SUGERIDA</div>
+                            <div class="fs-5 fw-bold text-success">${{ sim_ia.ml.tarifa_recomendada }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="metrica-pill">
+                            <div class="small text-muted fw-bold">PCA (EJE X / Y)</div>
+                            <div class="small fw-bold text-dark mt-1">{{ sim_ia.ml.coordenadas_pca.pc1 }} / {{ sim_ia.ml.coordenadas_pca.pc2 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validación del motor de 10 premisas de lógica proposicional -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold texto-verde mb-0"><i class="bi bi-diagram-2 me-2"></i>Motor Lógico de Reglas (10 Premisas)</h6>
+                    {% if sim_ia.aprobado %}
+                        <span class="badge bg-success px-3 py-2 rounded-3">APROBADO</span>
+                    {% else %}
+                        <span class="badge bg-danger px-3 py-2 rounded-3">RECHAZADO</span>
+                    {% endif %}
+                </div>
+                <p class="small text-secondary mb-3">
+                    {% if sim_ia.aprobado %}
+                        Diagnóstico: Las 10 premisas de lógica proposicional se cumplen con éxito para tu consulta.
+                    {% else %}
+                        Diagnóstico: Selecciona un origen y un destino diferentes para validar la ruta.
+                    {% endif %}
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for nombre_p, valor_p in sim_ia.premisas %}
+                        <span class="badge {% if valor_p %}bg-success{% else %}bg-danger{% endif %} px-3 py-2 rounded-3">
+                            {{ nombre_p }}: {{ valor_p }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Mapa geoespacial y tabla comparativa de algoritmos -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <h6 class="fw-bold texto-verde mb-0"><i class="bi bi-map-fill me-2"></i>Mapa Geoespacial de Ruta</h6>
+                    <div class="small text-secondary">
+                        <strong>Trayecto:</strong> {{ sim_ia.ruta | join(' → ') if sim_ia.ruta else 'Sin ruta' }}
+                    </div>
+                </div>
+                <div id="mapaSimuladorPasajero" class="mapa-simulador mb-3"></div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr class="texto-verde">
+                                <th>Algoritmo</th>
+                                <th>Ruta Encontrada</th>
+                                <th>Distancia (km)</th>
+                                <th>Nodos Explorados</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fila in sim_ia.comparativa %}
+                            <tr>
+                                <td class="fw-bold">{{ fila.algoritmo }}</td>
+                                <td class="small">{{ fila.ruta | join(' → ') if fila.ruta else 'No encontrada' }}</td>
+                                <td class="fw-semibold">{{ fila.costo }} km</td>
+                                <td>{{ fila.explorados }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        <!-- ============================================================== -->
+        <!-- VISTA 4: HISTORIAL, REPUTACIÓN Y CALIFICACIONES RECIBIDAS      -->
+        <!-- ============================================================== -->
+        {% elif vista == 'historial' %}
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                <div>
+                    <h2 class="fw-bold texto-verde mb-1">
+                        <i class="bi bi-clock-history me-2"></i>Historial de Viajes
+                    </h2>
+                    <p class="text-secondary small mb-0">Consulta tus viajes, revisa las calificaciones que te dio el conductor y evalúa tus traslados.</p>
+                </div>
+                <a href="/pasajero/" class="btn btn-outline-success btn-sm rounded-3 fw-semibold">
+                    <i class="bi bi-arrow-left me-1"></i>Volver a Buscar Viajes
+                </a>
+            </div>
+
+            <!-- Alertas tras cancelar un viaje o enviar una calificación -->
+            {% if aviso_cancelado %}
+                <div class="alert alert-warning border-0 shadow-sm rounded-4 d-flex align-items-center mb-4">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-warning"></i>
+                    <div class="small">
+                        <strong>Viaje cancelado.</strong> El motivo quedó guardado en tu historial y actualizó tu calificación de pasajero a
+                        <strong>{{ pasajero.calificacion }} &#9733;</strong> (Confiabilidad IA: <strong>{{ pasajero.confiabilidad_ia.probabilidad }}%</strong>).
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if aviso_calificado %}
+                <div class="alert alert-success border-0 shadow-sm rounded-4 d-flex align-items-center mb-4">
+                    <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
+                    <div class="small">
+                        <strong>¡Calificación enviada!</strong> Tu evaluación ya se reflejó en el perfil del conductor
+                        (Promedio actual de Brandon Rivera: <strong>{{ calificacion_conductor_actual }} &#9733;</strong>).
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Tarjetas KPI de reputación del pasajero -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                        <div class="small text-muted fw-bold">MI CALIFICACIÓN</div>
+                        <div class="fs-4 fw-bold text-dark mt-1">
+                            {{ pasajero.calificacion }} <i class="bi bi-star-fill text-warning fs-5"></i>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.72rem;">Evaluación de conductores</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                        <div class="small text-muted fw-bold">CONFIABILIDAD IA</div>
+                        <div class="fs-4 fw-bold {% if pasajero.confiabilidad_ia.probabilidad >= 80 %}text-success{% else %}text-danger{% endif %} mt-1">
+                            {{ pasajero.confiabilidad_ia.probabilidad }}%
+                        </div>
+                        <div class="text-muted" style="font-size: 0.72rem;">{{ pasajero.confiabilidad_ia.estado }}</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                        <div class="small text-muted fw-bold">CANCELACIONES</div>
+                        <div class="fs-4 fw-bold {% if pasajero.cancelaciones == 0 %}texto-verde{% else %}text-danger{% endif %} mt-1">
+                            {{ pasajero.cancelaciones }}
+                        </div>
+                        <div class="text-muted" style="font-size: 0.72rem;">Asistencia: {{ pasajero.historial_asistencia }}%</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                        <div class="small text-muted fw-bold">RESEÑAS RECIBIDAS</div>
+                        <div class="fs-4 fw-bold texto-verde mt-1">{{ calificaciones_recibidas | length }}</div>
+                        <div class="text-muted" style="font-size: 0.72rem;">De conductores Velox</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bloque conectado con /ruta/calificar-pasajero: reseñas que el conductor le dejó al pasajero -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                <h5 class="fw-bold texto-verde mb-3">
+                    <i class="bi bi-award-fill me-2"></i>Calificaciones recibidas del Conductor
+                </h5>
+                {% if calificaciones_recibidas %}
+                    <div class="row g-3">
+                        {% for cr in calificaciones_recibidas %}
+                            <div class="col-md-6">
+                                <div class="caja-resena-conductor h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong class="text-dark">
+                                            <i class="bi bi-person-badge me-1 text-success"></i>{{ cr.nombre_conductor | default('Brandon Rivera') }}
+                                        </strong>
+                                        <span class="text-warning small">
+                                            {% for i in range(1, 6) %}
+                                                {% if i <= (cr.estrellas | default(5)) %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <strong class="text-dark ms-1">{{ cr.estrellas }}/5</strong>
+                                        </span>
+                                    </div>
+                                    <div class="small text-dark fst-italic mb-1">"{{ cr.comentario }}"</div>
+                                    <div class="text-muted" style="font-size: 0.74rem;">
+                                        <i class="bi bi-signpost-split me-1"></i>{{ cr.origen }} &rarr; {{ cr.destino }} &bull; {{ cr.fecha }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-muted small py-2">
+                        Aún no has recibido calificaciones de un conductor. Cuando el conductor finalice y evalúe tu viaje desde su historial, aparecerá aquí.
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Listado completo de viajes del pasajero -->
+            <h5 class="fw-bold texto-verde mb-3"><i class="bi bi-list-ul me-2"></i>Mis Viajes Registrados</h5>
+            <div class="d-flex flex-column gap-3">
+                {% for res in mis_reservas %}
+                    {% set est = (res.estado or 'pendiente') | lower %}
+                    {% set d = res.detalle_viaje %}
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                        <div class="row align-items-center g-3">
+                            <div class="col-md-7">
+                                <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                    <span class="badge bg-light text-dark border">#{{ res.id_reserva }}</span>
+                                    {% if est in ['aceptada', 'confirmada'] %}
+                                        <span class="badge bg-success rounded-pill px-3">Aceptada</span>
+                                    {% elif est == 'finalizada' %}
+                                        <span class="badge bg-primary rounded-pill px-3">Finalizada</span>
+                                    {% elif est == 'cancelada' %}
+                                        <span class="badge bg-danger rounded-pill px-3">
+                                            <i class="bi bi-x-octagon-fill me-1"></i>Viaje Cancelado
+                                        </span>
+                                    {% elif est == 'rechazada' %}
+                                        <span class="badge bg-secondary rounded-pill px-3">Rechazada</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark rounded-pill px-3">Pendiente</span>
+                                    {% endif %}
+                                    <span class="text-muted small"><i class="bi bi-calendar3 me-1"></i>{{ res.fecha_solicitud | default('Reciente') }}</span>
+                                </div>
+
+                                <h5 class="fw-bold texto-verde mb-1">{{ d.origen }} &rarr; {{ d.destino }}</h5>
+                                <div class="small text-secondary">
+                                    <i class="bi bi-person-badge me-1"></i>Conductor: <strong>{{ d.conductor }}</strong> ({{ d.calificacion_conductor }} &#9733;)
+                                    &bull; <i class="bi bi-car-front ms-1 me-1"></i>{{ d.vehiculo }} ({{ d.placas }})
+                                    &bull; <i class="bi bi-cash-coin ms-1 me-1"></i>${{ d.costo }} MXN
+                                </div>
+
+                                <!-- Calificación recibida del conductor sobre este viaje específico -->
+                                {% if res.calificado_por_conductor %}
+                                    <div class="caja-resena-conductor mt-2 small">
+                                        <span class="text-warning me-2">
+                                            {% for i in range(1, 6) %}
+                                                {% if i <= (res.calificacion_del_conductor | default(5)) %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        <strong class="text-dark">El conductor te calificó ({{ res.calificacion_del_conductor }}/5):</strong>
+                                        <span class="text-secondary">"{{ res.comentario_del_conductor }}"</span>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Calificación enviada por el pasajero al conductor o motivo de cancelación -->
+                                {% if res.calificado %}
+                                    <div class="mt-2 p-2 px-3 rounded-3 bg-light border small">
+                                        <span class="text-warning me-2">
+                                            {% for i in range(1, 6) %}
+                                                {% if i <= (res.calificacion_otorgada | default(5)) %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        <strong class="text-dark">Tu calificación al conductor ({{ res.calificacion_otorgada }}/5):</strong>
+                                        <span class="text-secondary">"{{ res.comentario_calificacion }}"</span>
+                                    </div>
+                                {% elif est == 'cancelada' %}
+                                    <div class="caja-cancelacion mt-3 small">
+                                        <div class="fw-bold text-danger mb-1">
+                                            <i class="bi bi-x-circle-fill me-1"></i>Cancelado el viaje
+                                            <span class="fw-normal text-muted">({{ res.fecha_cancelacion | default('recientemente') }})</span>
+                                        </div>
+                                        <div class="text-dark">
+                                            <strong>Motivo de cancelación:</strong> "{{ res.motivo_cancelacion | default('Sin motivo especificado') }}"
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Botones de acción por registro -->
+                            <div class="col-md-5 text-md-end">
+                                <div class="d-flex justify-content-md-end flex-wrap gap-2">
+                                    {% if est in ['aceptada', 'confirmada', 'finalizada'] and not res.calificado %}
+                                        <button type="button" class="btn boton-verde btn-sm rounded-3 fw-semibold px-3 py-2"
+                                                onclick="abrirModalCalificar('{{ res.id_reserva }}', '{{ d.conductor }}', '{{ d.origen }} → {{ d.destino }}')">
+                                            <i class="bi bi-star-fill me-1"></i>Calificar Conductor
+                                        </button>
+                                    {% elif res.calificado %}
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle px-3 py-2 rounded-pill">
+                                            <i class="bi bi-check2-all me-1"></i>Conductor Calificado
+                                        </span>
+                                    {% endif %}
+
+                                    {% if est in ['pendiente', 'aceptada', 'confirmada'] %}
+                                        <form id="formCancelarHist_{{ res.id_reserva }}" method="post" action="/pasajero/cancelar/{{ res.id_reserva }}">
+                                            <input type="hidden" name="id_usuario" value="{{ pasajero.id_usuario }}">
+                                            <input type="hidden" name="motivo_cancelacion" id="motivo_formCancelarHist_{{ res.id_reserva }}" value="">
+                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-3 fw-semibold px-3 py-2"
+                                                    onclick="confirmarCancelacion('formCancelarHist_{{ res.id_reserva }}', '{{ d.origen }} → {{ d.destino }}')">
+                                                <i class="bi bi-x-octagon me-1"></i>Cancelar
+                                            </button>
+                                        </form>
+                                    {% endif %}
+
+                                    <a href="/pasajero/mi-viaje#viaje-{{ res.id_reserva }}" class="btn btn-light border btn-sm rounded-3 px-3 py-2">
+                                        <i class="bi bi-eye me-1"></i>Detalle
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+                        <i class="bi bi-clock-history fs-1 text-muted mb-3"></i>
+                        <h5 class="fw-bold text-dark">Tu historial está vacío</h5>
+                        <p class="text-muted small mb-4">Cuando solicites o completes un viaje aparecerá aquí para que puedas consultarlo y calificar al conductor.</p>
+                        <div>
+                            <a href="/pasajero/" class="btn boton-verde rounded-3 px-4">Buscar Viajes</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </main>
+
+    <!-- ================================================================== -->
+    <!-- MODAL 1: MAPA DE RUTA DEL CONDUCTOR Y CONVENIENCIA ANTES DE RESERVAR -->
+    <!-- ================================================================== -->
+    <div class="modal fade" id="modalRutaConductor" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-2">
+                    <div>
+                        <span id="prevBadgePerfil" class="badge bg-dark rounded-pill mb-1">Ruta</span>
+                        <h5 id="prevTituloRuta" class="modal-title fw-bold texto-verde">Ruta del Conductor</h5>
+                        <div id="prevInfoConductor" class="small text-secondary"></div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body pt-2">
+                    <!-- Contenedor del mapa Leaflet -->
+                    <div id="mapaPreviewConductor" class="mapa-modal mb-2"></div>
+                    <div class="small text-secondary mb-3">
+                        <i class="bi bi-signpost-split text-success me-1"></i>
+                        <strong>Recorrido estimado:</strong> <span id="prevNodosTexto"></span>
+                    </div>
+
+                    <!-- Dictamen IA de ahorro y conveniencia -->
+                    <div id="prevCajaDictamen" class="dictamen-box mb-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                            <h6 id="prevDictamenTitulo" class="fw-bold mb-0"></h6>
+                            <span id="prevDictamenBadge" class="badge rounded-pill px-3 py-1"></span>
+                        </div>
+                        <p id="prevDictamenResumen" class="small text-dark mb-2"></p>
+                        <div class="row g-2 small mb-2">
+                            <div class="col-4">
+                                <span class="text-muted d-block">Taxi aprox.</span>
+                                <strong id="prevCompTaxi" class="text-dark">--</strong>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-muted d-block">Ahorro Velox</span>
+                                <strong id="prevCompAhorro" class="text-success">--</strong>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-muted d-block">Camión aprox.</span>
+                                <strong id="prevCompCamion" class="text-dark">--</strong>
+                            </div>
+                        </div>
+                        <div class="small pt-2 border-top text-secondary">
+                            <i class="bi bi-lightbulb-fill text-warning me-1"></i>
+                            <span id="prevDictamenSugerencia"></span>
+                        </div>
+                    </div>
+
+                    <!-- Indicadores rápidos del viaje -->
+                    <div class="row g-2">
+                        <div class="col-3">
+                            <div class="metrica-pill py-2">
+                                <div class="text-muted fw-bold" style="font-size: 0.7rem;">DISTANCIA</div>
+                                <div id="prevKm" class="fw-bold texto-verde">--</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="metrica-pill py-2">
+                                <div class="text-muted fw-bold" style="font-size: 0.7rem;">TIEMPO</div>
+                                <div id="prevTiempo" class="fw-bold texto-verde">--</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="metrica-pill py-2">
+                                <div class="text-muted fw-bold" style="font-size: 0.7rem;">APORTACIÓN</div>
+                                <div id="prevCosto" class="fw-bold text-success">--</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="metrica-pill py-2">
+                                <div class="text-muted fw-bold" style="font-size: 0.7rem;">LUGARES</div>
+                                <div id="prevLugares" class="fw-bold text-dark">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pie del modal con botón para reservar directamente si le convino -->
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light border rounded-3" data-bs-dismiss="modal">Cerrar</button>
+                    <form method="post" action="/pasajero/solicitar" id="formReservarDesdeModal">
+                        <input type="hidden" name="id_viaje" id="modalResIdViaje">
+                        <input type="hidden" name="origen" id="modalResOrigen">
+                        <input type="hidden" name="destino" id="modalResDestino">
+                        <input type="hidden" name="id_usuario" value="{{ pasajero.id_usuario }}">
+                        <input type="hidden" name="nombre_pasajero" value="{{ pasajero.nombre }}">
+                        <button type="submit" id="btnReservarDesdeModal" class="btn boton-verde fw-semibold rounded-3 px-4">
+                            <i class="bi bi-send-check me-1"></i>Sí me conviene, Solicitar Asiento
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- MODAL 2: CALIFICAR AL CONDUCTOR (1 A 5 ESTRELLAS)                  -->
+    <!-- ================================================================== -->
+    <div class="modal fade" id="modalCalificarConductor" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h5 class="modal-title fw-bold texto-verde">
+                            <i class="bi bi-star-fill text-warning me-2"></i>Calificar al Conductor
+                        </h5>
+                        <p id="subtituloModalCalificar" class="text-muted small mb-0"></p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <form method="post" action="/pasajero/calificar">
+                    <div class="modal-body pt-3">
+                        <input type="hidden" name="id_reserva" id="calificarIdReserva">
+                        <input type="hidden" name="id_usuario" value="{{ pasajero.id_usuario }}">
+                        <input type="hidden" name="estrellas" id="calificarEstrellasInput" value="5">
+
+                        <div class="text-center py-3 bg-light rounded-4 mb-3">
+                            <div class="small text-muted fw-bold mb-1">¿Cómo fue tu experiencia con <span id="calificarNombreConductor" class="text-dark"></span>?</div>
+                            <div id="grupoEstrellas" class="d-flex justify-content-center my-2">
+                                <button type="button" class="estrella-btn activa" data-valor="1" onclick="seleccionarEstrellas(1)"><i class="bi bi-star-fill"></i></button>
+                                <button type="button" class="estrella-btn activa" data-valor="2" onclick="seleccionarEstrellas(2)"><i class="bi bi-star-fill"></i></button>
+                                <button type="button" class="estrella-btn activa" data-valor="3" onclick="seleccionarEstrellas(3)"><i class="bi bi-star-fill"></i></button>
+                                <button type="button" class="estrella-btn activa" data-valor="4" onclick="seleccionarEstrellas(4)"><i class="bi bi-star-fill"></i></button>
+                                <button type="button" class="estrella-btn activa" data-valor="5" onclick="seleccionarEstrellas(5)"><i class="bi bi-star-fill"></i></button>
+                            </div>
+                            <div id="textoNivelEstrellas" class="fw-bold texto-verde small">5 estrellas — Excelente servicio</div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-secondary">Comentario (opcional)</label>
+                            <textarea name="comentario" class="form-control rounded-3" rows="3" placeholder="Ej. Muy puntual, manejo seguro y vehículo limpio..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light border rounded-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn boton-verde fw-semibold rounded-3 px-4">
+                            <i class="bi bi-send-check me-1"></i>Enviar Calificación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts de Bootstrap, Leaflet y lógica interactiva del Pasajero -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Arreglo JSON con los viajes disponibles enviado desde FastAPI para el modal de vista previa
+        const VIAJES_DISPONIBLES = {{ viajes | tojson }};
+        let mapaPreviewInstancia = null;
+        let capaPreviewInstancia = null;
+        let modalRutaInstancia = null;
+        let viajeSeleccionadoActual = null;
+        let modalCalificarInstancia = null;
+
+        // Limpia los datos de sesión demo en localStorage al cerrar sesión
+        function limpiarSesion() {
+            localStorage.removeItem('velox_usuario_nombre');
+            localStorage.removeItem('velox_usuario_rol');
+            localStorage.removeItem('velox_usuario_inicial');
+            localStorage.removeItem('velox_usuario_id');
+        }
+
+        // Diálogo SweetAlert2 que advierte el impacto en calificación y exige escribir el motivo de cancelación
+        function confirmarCancelacion(formId, rutaTexto) {
+            Swal.fire({
+                title: '¿Quieres cancelar este viaje?',
+                html: `
+                    <p class="mb-2 fw-semibold text-dark">${rutaTexto}</p>
+                    <div class="alert alert-warning text-start small mb-3 rounded-3">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        <strong>Aviso importante:</strong> Esto puede afectar tu calificación de pasajero y reducir tu porcentaje de confiabilidad en el sistema de Inteligencia Artificial.
+                    </div>
+                    <div class="text-start">
+                        <label for="swalMotivoCancelacion" class="form-label small fw-bold text-secondary mb-1">
+                            ¿Cuál es el motivo de la cancelación?
+                        </label>
+                        <textarea id="swalMotivoCancelacion" class="form-control rounded-3" rows="3"
+                                  placeholder="Ej. Surgió un imprevisto personal, cambió mi horario de clases..."></textarea>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, cancelar viaje',
+                cancelButtonText: 'No, conservar viaje',
+                reverseButtons: true,
+                preConfirm: () => {
+                    const motivo = document.getElementById('swalMotivoCancelacion').value.trim();
+                    if (!motivo) {
+                        Swal.showValidationMessage('Por favor escribe el motivo de la cancelación.');
+                        return false;
+                    }
+                    return motivo;
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    const inputMotivo = document.getElementById(`motivo_${formId}`);
+                    if (inputMotivo) inputMotivo.value = result.value;
+                    const form = document.getElementById(formId);
+                    if (form) form.submit();
+                }
+            });
+        }
+
+        // Llena y abre el modal de ruta del conductor y análisis de conveniencia previo a reservar
+        function abrirModalRutaConductor(idViaje) {
+            const viaje = VIAJES_DISPONIBLES.find(v => v.id_viaje === idViaje);
+            if (!viaje) return;
+            viajeSeleccionadoActual = viaje;
+
+            document.getElementById('prevBadgePerfil').textContent = viaje.perfil_ia;
+            document.getElementById('prevTituloRuta').textContent = `${viaje.origen} → ${viaje.destino}`;
+            document.getElementById('prevInfoConductor').innerHTML =
+                `<i class="bi bi-person-badge me-1"></i>${viaje.conductor} (${viaje.calificacion_conductor} &#9733;) &bull; ${viaje.vehiculo} (${viaje.placas}) &bull; ${viaje.horario}`;
+            document.getElementById('prevNodosTexto').textContent = viaje.ruta_nodos.join(' → ');
+
+            // Aplicamos colores y textos del dictamen IA
+            const d = viaje.dictamen;
+            const caja = document.getElementById('prevCajaDictamen');
+            caja.classList.remove('moderado', 'no-conviene');
+            const badge = document.getElementById('prevDictamenBadge');
+
+            if (d.nivel === 'moderado') {
+                caja.classList.add('moderado');
+                badge.className = 'badge rounded-pill px-3 py-1 bg-warning text-dark';
+            } else if (d.nivel === 'no_conviene') {
+                caja.classList.add('no-conviene');
+                badge.className = 'badge rounded-pill px-3 py-1 bg-danger';
+            } else {
+                badge.className = 'badge rounded-pill px-3 py-1 bg-success';
+            }
+
+            badge.textContent = d.etiqueta;
+            document.getElementById('prevDictamenTitulo').textContent = d.titulo;
+            document.getElementById('prevDictamenResumen').textContent = d.resumen;
+            document.getElementById('prevCompTaxi').textContent = `$${d.costo_taxi} MXN`;
+            document.getElementById('prevCompAhorro').textContent = `$${d.ahorro_taxi} (${d.porcentaje_ahorro}%)`;
+            document.getElementById('prevCompCamion').textContent = `~${d.tiempo_camion} min`;
+            document.getElementById('prevDictamenSugerencia').textContent = d.sugerencia;
+
+            document.getElementById('prevKm').textContent = `${viaje.distancia_km} km`;
+            document.getElementById('prevTiempo').textContent = `~${viaje.tiempo_min} min`;
+            document.getElementById('prevCosto').textContent = `$${viaje.costo}`;
+            document.getElementById('prevLugares').textContent = `${viaje.asientos_disponibles} disp.`;
+
+            document.getElementById('modalResIdViaje').value = viaje.id_viaje;
+            document.getElementById('modalResOrigen').value = viaje.origen;
+            document.getElementById('modalResDestino').value = viaje.destino;
+            document.getElementById('btnReservarDesdeModal').disabled = viaje.asientos_disponibles <= 0;
+
+            const modalEl = document.getElementById('modalRutaConductor');
+            if (!modalRutaInstancia) {
+                modalRutaInstancia = new bootstrap.Modal(modalEl);
+                // Renderizamos el mapa cuando el modal termina de mostrarse para evitar cuadros grises
+                modalEl.addEventListener('shown.bs.modal', renderizarMapaPreviewConductor);
+            }
+            modalRutaInstancia.show();
+        }
+
+        // Dibuja los nodos y la polilínea de la ruta del conductor dentro del modal Leaflet
+        function renderizarMapaPreviewConductor() {
+            if (!viajeSeleccionadoActual) return;
+            const coords = viajeSeleccionadoActual.coords_ruta || [];
+            const nodos = viajeSeleccionadoActual.ruta_nodos || [];
+
+            if (!mapaPreviewInstancia) {
+                mapaPreviewInstancia = L.map('mapaPreviewConductor').setView([19.305, -99.58], 11);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(mapaPreviewInstancia);
+                capaPreviewInstancia = L.layerGroup().addTo(mapaPreviewInstancia);
+            }
+
+            mapaPreviewInstancia.invalidateSize();
+            capaPreviewInstancia.clearLayers();
+
+            if (coords.length >= 2) {
+                coords.forEach((coord, idx) => {
+                    let color = '#6c757d';
+                    if (idx === 0) color = '#018701';
+                    else if (idx === coords.length - 1) color = '#dc3545';
+                    L.circleMarker(coord, { radius: 8, color: color, fillColor: color, fillOpacity: 0.95 })
+                        .addTo(capaPreviewInstancia)
+                        .bindPopup(`<strong>${nodos[idx] || 'Parada'}</strong>`);
+                });
+
+                const linea = L.polyline(coords, {
+                    color: '#018701',
+                    weight: 5,
+                    opacity: 0.85
+                }).addTo(capaPreviewInstancia);
+
+                mapaPreviewInstancia.fitBounds(linea.getBounds(), { padding: [40, 40] });
+            }
+        }
+
+        // Abre el modal para que el pasajero califique al conductor
+        function abrirModalCalificar(idReserva, nombreConductor, rutaTexto) {
+            document.getElementById('calificarIdReserva').value = idReserva;
+            document.getElementById('calificarNombreConductor').textContent = nombreConductor;
+            document.getElementById('subtituloModalCalificar').textContent = `Viaje #${idReserva} — ${rutaTexto}`;
+            seleccionarEstrellas(5);
+
+            if (!modalCalificarInstancia) {
+                modalCalificarInstancia = new bootstrap.Modal(document.getElementById('modalCalificarConductor'));
+            }
+            modalCalificarInstancia.show();
+        }
+
+        // Actualiza las estrellas activas del modal de calificación al conductor
+        function seleccionarEstrellas(valor) {
+            document.getElementById('calificarEstrellasInput').value = valor;
+            const etiquetas = {
+                1: '1 estrella — Muy mala experiencia',
+                2: '2 estrellas — Servicio regular',
+                3: '3 estrellas — Buen viaje',
+                4: '4 estrellas — Muy buen servicio',
+                5: '5 estrellas — Excelente servicio'
+            };
+            document.getElementById('textoNivelEstrellas').textContent = etiquetas[valor] || '';
+
+            document.querySelectorAll('#grupoEstrellas .estrella-btn').forEach(btn => {
+                const v = parseInt(btn.getAttribute('data-valor'), 10);
+                btn.classList.toggle('activa', v <= valor);
+            });
+        }
+
+        // Inicialización de menú móvil y mapas Leaflet al cargar el documento
+        document.addEventListener('DOMContentLoaded', function () {
+            const menu = document.getElementById('menuPasajero');
+            const btnAbrir = document.getElementById('btnAbrirMenu');
+            const btnCerrar = document.getElementById('btnCerrarMenu');
+
+            if (btnAbrir && menu) btnAbrir.addEventListener('click', () => menu.classList.add('abierto'));
+            if (btnCerrar && menu) btnCerrar.addEventListener('click', () => menu.classList.remove('abierto'));
+
+            // Mapas individuales dentro de la vista "Detalle de mi Viaje"
+            {% if vista == 'detalle' and mis_reservas %}
+                {% for res in mis_reservas %}
+                    (function () {
+                        const mapId = "mapaDetalle_{{ res.id_reserva }}";
+                        const el = document.getElementById(mapId);
+                        if (!el) return;
+
+                        const coordsRuta = {{ res.detalle_viaje.coords_ruta | tojson }};
+                        const nodosRuta = {{ res.detalle_viaje.ruta_nodos | tojson }};
+
+                        const centro = coordsRuta.length ? coordsRuta[0] : [19.305, -99.58];
+                        const mapa = L.map(mapId).setView(centro, 12);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap'
+                        }).addTo(mapa);
+
+                        if (coordsRuta.length >= 2) {
+                            coordsRuta.forEach((coord, idx) => {
+                                let color = '#6c757d';
+                                if (idx === 0) color = '#018701';
+                                else if (idx === coordsRuta.length - 1) color = '#dc3545';
+                                L.circleMarker(coord, { radius: 8, color: color, fillColor: color, fillOpacity: 0.9 })
+                                    .addTo(mapa)
+                                    .bindPopup(`<strong>${nodosRuta[idx] || 'Parada'}</strong>`);
+                            });
+
+                            const linea = L.polyline(coordsRuta, {
+                                color: '#018701',
+                                weight: 4,
+                                dashArray: '8, 6'
+                            }).addTo(mapa);
+
+                            mapa.fitBounds(linea.getBounds(), { padding: [35, 35] });
+                        }
+                    })();
+                {% endfor %}
+            {% endif %}
+
+            // Mapa principal dentro de la vista "Simulador de Rutas IA" del Pasajero
+            {% if vista == 'simulador' %}
+                (function () {
+                    const el = document.getElementById('mapaSimuladorPasajero');
+                    if (!el) return;
+                    const coordsRuta = {{ sim_ia.coords_ruta | tojson }};
+                    const nombresRuta = {{ sim_ia.ruta | tojson }};
+
+                    const centro = coordsRuta.length ? coordsRuta[0] : [19.305, -99.58];
+                    const mapa = L.map('mapaSimuladorPasajero').setView(centro, 11);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap'
+                    }).addTo(mapa);
+
+                    if (coordsRuta.length >= 2) {
+                        coordsRuta.forEach((coord, idx) => {
+                            let color = '#6c757d';
+                            if (idx === 0) color = '#018701';
+                            else if (idx === coordsRuta.length - 1) color = '#dc3545';
+                            L.circleMarker(coord, { radius: 8, color: color, fillColor: color, fillOpacity: 0.95 })
+                                .addTo(mapa)
+                                .bindPopup(`<strong>${nombresRuta[idx]}</strong>`);
+                        });
+                        const poly = L.polyline(coordsRuta, { color: '#018701', weight: 5, opacity: 0.85 }).addTo(mapa);
+                        mapa.fitBounds(poly.getBounds(), { padding: [40, 40] });
+                    }
+                })();
+            {% endif %}
+        });
+    </script>
+</body>
+</html>

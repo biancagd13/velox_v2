@@ -20,16 +20,24 @@ motor_plantillas = Jinja2Templates(directory="templates")
 
 @router.get("/")
 def listar_roles(solicitud: Request):
-    """Ruta HTTP GET para mostrar la vista principal con el listado de todos los roles."""
-    # Obtenemos todos los registros de roles utilizando la clase RolController
+    """Ruta HTTP GET para mostrar la vista principal (ahora Dashboard del conductor)."""
+    # Obtenemos todos los registros de roles (se mantiene por si acaso)
     lista_roles = RolController.obtener_todos_los_roles()
 
-    # Renderizamos y retornamos la plantilla HTML 'rol_inicio.html' enviando los roles obtenidos
+    # SOLUCIÓN ERROR 500: Simulamos los datos del conductor que el Dashboard de HTML está esperando
+    usuario_sesion = {
+        "nombre": "Brandon Rivera   ",
+        "ganancias_estimadas": 350,
+        "rol": "Conductor"
+    }
+
+    # Renderizamos y retornamos la plantilla HTML 'rol_inicio.html' enviando AMBAS variables
     return motor_plantillas.TemplateResponse(
         solicitud,
         "rol/rol_inicio.html",
         {
             "roles": lista_roles,
+            "usuario": usuario_sesion  # <- Esto evita que la plantilla de Jinja2 falle
         },
     )
 

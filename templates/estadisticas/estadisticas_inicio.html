@@ -1,119 +1,152 @@
 <!DOCTYPE html>
-<!-- Declaración del tipo de documento indicando que es un archivo HTML5 estándar -->
 <html lang="es">
-<!-- Elemento raíz de la página HTML con el idioma configurado en español -->
 <head>
-    <!-- Definimos la codificación de caracteres en UTF-8 para garantizar acentos y caracteres especiales -->
+    <!-- Configuración básica y metaetiquetas responsivas -->
     <meta charset="UTF-8">
-    <!-- Configuramos la vista responsiva para adaptar el diseño a dispositivos móviles y escritorios -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Título institucional que aparece en la pestaña del navegador -->
-    <title>Estadísticas y Gráficas - Velox UTVT</title>
-    <!-- Importamos la hoja de estilos de Bootstrap 5 desde una red de distribución de contenido (CDN) -->
+    <title>Estadísticas y Análisis de Rutas - Velox UTVT</title>
+    
+    <!-- Librerías externas: Bootstrap 5 y Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Importamos la librería de iconos de Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Estilos CSS personalizados para la interfaz institucional -->
+    
     <style>
-        /* Definimos el fondo blanco general de la página */
-        body {
-            background-color: #FFFFFF !important;
-        }
-        /* Ajustamos el margen izquierdo del contenido principal para dar espacio a la barra lateral */
-        #mainContent {
+        /* Fondo blanco puro para mantener diseño limpio */
+        body { background-color: #FFFFFF !important; }
+        
+        /* Ajuste del contenedor principal para dar espacio al menú lateral en escritorio */
+        #contenidoPrincipal {
             margin-left: 280px;
             transition: margin-left 0.3s ease-in-out;
         }
-        /* Clase personalizada para los botones con el color verde institucional de Velox */
-        .btn-verde-custom {
+        
+        /* Botón institucional primario (Verde Velox) */
+        .boton-verde {
             background-color: #018701 !important;
             color: #ffffff !important;
             border: none;
+            transition: background-color 0.2s ease-in-out;
         }
-        /* Efecto de cambio de color al pasar el cursor sobre el botón verde */
-        .btn-verde-custom:hover {
-            background-color: #005200 !important;
+        .boton-verde:hover { background-color: #005200 !important; }
+        
+        /* Botón secundario contorneado en verde */
+        .boton-contorno-verde {
+            color: #018701 !important;
+            border-color: #018701 !important;
+            transition: all 0.2s ease-in-out;
+        }
+        .boton-contorno-verde:hover {
+            background-color: #018701 !important;
             color: #ffffff !important;
         }
-        /* Regla responsiva para dispositivos móviles: elimina el margen izquierdo del contenido */
+
+        /* --- MODO RESPONSIVO PARA DISPOSITIVOS MÓVILES --- */
         @media (max-width: 768px) {
-            #mainContent {
+            /* Eliminamos el margen del menú en pantallas pequeñas */
+            #contenidoPrincipal {
                 margin-left: 0 !important;
+                padding: 15px !important;
+            }
+            /* Apilamos el encabezado para que no se sobrepongan textos y botones */
+            .encabezado-rutas {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 15px;
+            }
+            /* Botones a ancho completo para facilitar la interacción táctil */
+            .grupo-botones-rutas {
+                flex-direction: column;
+                width: 100%;
+            }
+            .grupo-botones-rutas .btn {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- Incluimos la barra lateral de navegación común del sistema Velox UTVT -->
+    <!-- Inserción dinámica del menú lateral institucional -->
     {% include 'components/sidebar.html' %}
 
-    <!-- Contenedor principal de la vista de estadísticas -->
-    <div id="mainContent" class="p-4 bg-white">
-        <div class="container-fluid">
-            <!-- Encabezado superior con el título del módulo y los botones de acción -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- Contenedor principal de la interfaz de estadísticas -->
+    <div id="contenidoPrincipal" class="p-4 bg-white">
+        
+        <!-- Botón superior para desplegar el menú exclusivamente en móviles -->
+        <div class="d-flex align-items-center mb-3">
+            <button class="btn boton-verde p-1 px-2 me-3 shadow-sm rounded-3 d-block d-md-none" id="btnAbrirMenu" title="Mostrar Menú">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+        </div>
+
+        <div class="container-fluid px-0">
+            
+            <!-- Encabezado responsivo: agrupado en PC, apilado en celular -->
+            <div class="encabezado-rutas d-flex justify-content-between align-items-center mb-4">
+                
+                <!-- Títulos informativos del módulo -->
                 <div>
                     <h2 class="fw-bold mb-1" style="color: #005200;">
-                        <i class="bi bi-bar-chart-fill me-2" style="color: #005200;"></i>Estadísticas y Análisis de Rutas
+                        <i class="bi bi-bar-chart-fill me-2"></i>Análisis de Rutas
                     </h2>
-                    <p class="text-muted small mb-0">Análisis de rutas del sistema Velox UTVT.</p>
+                    <p class="text-muted small mb-0">Rutas más demandadas en el sistema Velox UTVT.</p>
                 </div>
                 
-                <!-- Contenedor para los botones de control de la gráfica -->
-                <div class="d-flex gap-2">
-                    <!-- Botón para recargar y actualizar la gráfica con datos frescos de MongoDB -->
-                    <a href="/estadisticas" class="btn btn-verde-custom shadow-sm rounded-3 fw-semibold">
+                <!-- Grupo de botones interactivos para la gráfica -->
+                <div class="grupo-botones-rutas d-flex gap-2">
+                    <!-- Recargar vista y generar gráfica actualizada -->
+                    <a href="/estadisticas" class="btn boton-verde shadow-sm rounded-3 fw-semibold">
                         <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
                     </a>
-                    
-                    <!-- Botón de descarga directa (Equivalente web al botón de guardar imagen de Matplotlib) -->
-                    <a href="{{ imagen_grafica }}" download="Grafica_Rutas_Velox_UTVT.png" class="btn btn-outline-success shadow-sm rounded-3 fw-semibold" title="Guardar imagen de la gráfica">
+                    <!-- Opción nativa para descargar la gráfica generada por Matplotlib -->
+                    <a href="{{ imagen_grafica }}" download="Grafica_Rutas_Velox_UTVT.png" class="btn btn-outline-success boton-contorno-verde shadow-sm rounded-3 fw-semibold" title="Guardar imagen localmente">
                         <i class="bi bi-download me-1"></i> Guardar Gráfica
                     </a>
                 </div>
             </div>
 
-            <!-- Tarjeta contenedora visual para la gráfica estadística -->
+            <!-- Contenedor blanco para la presentación visual de la gráfica -->
             <div class="card shadow-sm border rounded-4 bg-white text-center p-4">
                 <div class="card-body">
                     
-                    <!-- Contenedor estilizado para mostrar la imagen generada dinámicamente por Matplotlib -->
-                    <div class="p-2 border rounded-4 bg-light shadow-sm d-inline-block">
-                        <!-- Imagen de la gráfica con un parámetro de tiempo único para evitar conflictos de caché -->
-                        <img src="{{ imagen_grafica }}?t=1" alt="Gráfica de Rutas Más Usadas" class="img-fluid rounded-3" style="max-height: 500px; cursor: zoom-in;" id="imagenGraficaEstadistica">
+                    <!-- Marco decorativo que envuelve la gráfica -->
+                    <div class="p-2 border rounded-4 bg-light shadow-sm d-inline-block" style="width: 100%; max-width: 800px;">
+                        
+                        <!-- Elemento imagen que carga la gráfica generada en el backend -->
+                        <!-- Usamos object-fit: contain para evitar deformaciones en pantallas estrechas -->
+                        <img src="{{ imagen_grafica }}?t=1" alt="Gráfica de Rutas Más Usadas" class="img-fluid rounded-3" 
+                             style="max-height: 400px; width: 100%; object-fit: contain; cursor: zoom-in; transition: transform 0.3s ease;" 
+                             id="imagenGraficaRutas">
                     </div>
                 </div>
             </div>
+            
         </div>
     </div>
 
-    <!-- Script de Bootstrap 5 para el funcionamiento de componentes interactivos -->
+    <!-- Script principal de Bootstrap para manejo de componentes -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Script interactivo para permitir hacer zoom en la gráfica al hacer clic sobre ella -->
     <script>
-        /* Escuchamos el evento de carga completa del DOM antes de ejecutar cualquier lógica */
+        // Funcionalidad de interacción (Zoom in/out) sobre la imagen de la gráfica
         document.addEventListener("DOMContentLoaded", function() {
-            /* Obtenemos la referencia al elemento de imagen mediante su ID único */
-            const imagenElemento = document.getElementById("imagenGraficaEstadistica");
-            /* Validamos que el elemento exista efectivamente en el documento */
-            if (imagenElemento) {
-                /* Agregamos un escuchador de eventos para detectar clics sobre la imagen */
-                imagenElemento.addEventListener("click", function() {
-                    /* Verificamos si la imagen está en su tamaño estándar para aplicar el zoom */
-                    if (imagenElemento.style.maxHeight === "500px") {
-                        /* Quitamos la restricción de altura máxima para mostrarla ampliada */
-                        imagenElemento.style.maxHeight = "none";
-                        /* Aplicamos una escala visual de zoom del 3% */
-                        imagenElemento.style.transform = "scale(1.03)";
-                        /* Configuramos una transición suave para el cambio de escala */
-                        imagenElemento.style.transition = "transform 0.3s ease";
+            const graficaRutas = document.getElementById("imagenGraficaRutas");
+            
+            // Validamos que la imagen haya cargado en la vista antes de aplicar el evento
+            if (graficaRutas) {
+                graficaRutas.addEventListener("click", function() {
+                    const estaAmpliada = graficaRutas.style.maxHeight === "none";
+                    
+                    if (estaAmpliada) {
+                        // Revertimos la imagen a su estado base
+                        graficaRutas.style.maxHeight = "400px";
+                        graficaRutas.style.transform = "scale(1)";
+                        graficaRutas.style.cursor = "zoom-in";
                     } else {
-                        /* Restauramos la altura máxima original de la imagen */
-                        imagenElemento.style.maxHeight = "500px";
-                        /* Restablecemos la escala visual a su tamaño normal */
-                        imagenElemento.style.transform = "scale(1)";
+                        // Expandimos la imagen e indicamos visualmente (zoom-out) la posibilidad de contraer
+                        graficaRutas.style.maxHeight = "none";
+                        graficaRutas.style.transform = "scale(1.05)";
+                        graficaRutas.style.cursor = "zoom-out";
                     }
                 });
             }

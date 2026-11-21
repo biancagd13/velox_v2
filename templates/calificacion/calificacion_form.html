@@ -1,51 +1,38 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- Declaración del juego de caracteres UTF-8 para garantizar el soporte de acentos y eñes -->
+    <!-- Configuración del documento y diseño responsivo -->
     <meta charset="UTF-8">
-
-    <!-- Configuración del diseño responsivo para asegurar adaptabilidad en dispositivos móviles y escritorios -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Título dinámico de la pestaña del navegador: cambia entre 'Editar' o 'Registrar' según el contexto -->
     <title>{{ "Editar Calificación" if calificacion else "Nueva Calificación" }} - Velox UTVT</title>
 
-    <!-- Importación de la hoja de estilos oficial de Bootstrap 5 para el diseño de componentes -->
+    <!-- Librerías base (Bootstrap 5, Iconos y SweetAlert2) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Importación de Bootstrap Icons para los iconos institucionales del sistema -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- Importación de la librería SweetAlert2 para la gestión de alertas y modales interactivos -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* Definición estricta del color de fondo general de la página en blanco puro */
-        body {
-            background-color: #FFFFFF !important;
-        }
+        /* Fondo principal de la vista */
+        body { background-color: #FFFFFF !important; }
 
-        /* Margen izquierdo para evitar que el formulario se encime con el menú lateral fijo */
-        #mainContent {
+        /* Ajuste del contenedor para no chocar con el menú lateral en PC */
+        #contenidoPrincipal {
             margin-left: 280px;
             transition: margin-left 0.3s ease-in-out;
         }
 
-        /* Clase personalizada para botones verdes primarios institucionales (#018701) */
-        .btn-verde-custom {
+        /* Estilo institucional para los botones primarios (Verde Velox) */
+        .boton-verde {
             background-color: #018701 !important;
             color: #ffffff !important;
             border: none;
-            transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .boton-verde:hover { 
+            background-color: #005200 !important; 
         }
 
-        /* Efecto hover hacia el verde institucional fuerte (#005200) */
-        .btn-verde-custom:hover {
-            background-color: #005200 !important;
-            color: #ffffff !important;
-        }
-
-        /* Estilo personalizado y unificado para los botones de confirmación positivos en las modales */
+        /* Estilo para los botones de confirmación en las modales de SweetAlert */
         .swal2-confirm.btn-verde-modal {
             background-color: #018701 !important;
             color: #ffffff !important;
@@ -54,15 +41,13 @@
             font-weight: bold !important;
             box-shadow: none !important;
         }
-
-        /* Efecto hover del botón de la modal hacia el verde institucional fuerte (#005200) */
         .swal2-confirm.btn-verde-modal:hover {
             background-color: #005200 !important;
         }
 
-        /* Regla responsiva para dispositivos móviles: elimina el margen izquierdo cuando el menú se oculta */
+        /* Adaptación a dispositivos móviles (quitar margen del menú) */
         @media (max-width: 768px) {
-            #mainContent {
+            #contenidoPrincipal {
                 margin-left: 0 !important;
             }
         }
@@ -70,30 +55,30 @@
 </head>
 <body>
 
-    <!-- Inclusión modular del componente de navegación lateral flotante institucional -->
+    <!-- Menú lateral institucional de la aplicación -->
     {% include 'components/sidebar.html' %}
 
-    <!-- Contenedor principal del formulario con alineación centrada y diseño fluido -->
-    <div id="mainContent" class="p-4 d-flex flex-column align-items-center justify-content-center bg-white" style="min-height: 100vh;">
+    <!-- Contenedor centrado para el formulario -->
+    <div id="contenidoPrincipal" class="p-4 d-flex flex-column align-items-center justify-content-center bg-white" style="min-height: 100vh;">
         <div class="container px-3" style="max-width: 600px;">
             
-            <!-- Tarjeta contenedora con bordes redondeados (rounded-4) y sombra suave -->
+            <!-- Tarjeta principal del formulario -->
             <div class="card shadow-sm border rounded-4 p-5 bg-white">
                 
-                <!-- Encabezado superior de la tarjeta con icono institucional y títulos dinámicos -->
+                <!-- Cabecera del formulario -->
                 <div class="d-flex align-items-center mb-4">
                     <div>
                         <h3 class="fw-bold mb-1" style="color: #005200;">
-                            <i class="bi bi-star-fill me-2" style="color: #005200;"></i>{{ "Editar Calificación #" ~ calificacion.id_calificacion if calificacion else "Registrar Nueva Calificación" }}
+                            <i class="bi bi-star-fill me-2"></i>{{ "Editar Calificación #" ~ calificacion.id_calificacion if calificacion else "Registrar Nueva Calificación" }}
                         </h3>
                         <p class="text-muted small mb-0">Completa la información solicitada en el formulario institucional.</p>
                     </div>
                 </div>
 
-                <!-- Formulario HTML principal: apunta de manera dinámica a la ruta de actualizar o guardar según el estado -->
+                <!-- Formulario dinámico (Guardar o Actualizar según contexto) -->
                 <form id="formularioCalificacion" action="{{ '/calificacion/actualizar' if calificacion else '/calificacion/guardar' }}" method="POST">
                     
-                    <!-- Campo oculto para enviar el ID del registro en caso de que se trate de una actualización -->
+                    <!-- Campo oculto y visible solo si se está editando un registro existente -->
                     {% if calificacion %}
                     <input type="hidden" name="id_calificacion" value="{{ calificacion.id_calificacion }}">
                     <div class="mb-3">
@@ -102,19 +87,19 @@
                     </div>
                     {% endif %}
 
-                    <!-- Campo numérico para la Puntuación -->
+                    <!-- Campo de Puntuación (1-5) -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Puntuación (1 al 5)</label>
                         <input type="number" id="puntuacion" name="puntuacion" min="1" max="5" class="form-control py-2" value="{{ calificacion.puntuacion if calificacion else '' }}" placeholder="Ej. 5" required>
                     </div>
 
-                    <!-- Campo de texto para el Comentario o Reseña -->
+                    <!-- Campo de Comentario -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Comentario / Reseña</label>
                         <textarea id="comentario" name="comentario" class="form-control py-2" rows="3" placeholder="Ej. Excelente servicio y puntualidad..." required>{{ calificacion.comentario if calificacion else '' }}</textarea>
                     </div>
 
-                    <!-- Selector dinámico para elegir al Usuario registrado en la base de datos -->
+                    <!-- Lista desplegable para seleccionar el Usuario -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-secondary small">Usuario Emisor</label>
                         <select id="id_usuario" name="id_usuario" class="form-select py-2" required>
@@ -127,7 +112,7 @@
                         </select>
                     </div>
 
-                    <!-- Selector dinámico para elegir el Viaje registrado en la base de datos -->
+                    <!-- Lista desplegable para seleccionar el Viaje -->
                     <div class="mb-4">
                         <label class="form-label fw-semibold text-secondary small">Viaje Calificado</label>
                         <select id="id_viaje" name="id_viaje" class="form-select py-2" required>
@@ -140,13 +125,10 @@
                         </select>
                     </div>
 
-                    <!-- Botones de navegación y envío del formulario alineados a la derecha -->
+                    <!-- Botones de acción del formulario -->
                     <div class="d-flex justify-content-end gap-2">
-                        <!-- Botón de cancelación para regresar a la vista principal -->
                         <a href="/calificacion" class="btn btn-outline-secondary px-4 fw-semibold rounded-pill">Cancelar</a>
-                        
-                        <!-- Botón de envío que dispara la validación interactiva por JavaScript -->
-                        <button type="button" onclick="confirmarGuardado()" class="btn px-5 fw-bold shadow-sm rounded-pill btn-verde-custom">
+                        <button type="button" onclick="confirmarGuardado()" class="btn boton-verde px-5 fw-bold shadow-sm rounded-pill">
                             {{ "Guardar Cambios" if calificacion else "Registrar Calificación" }}
                         </button>
                     </div>
@@ -155,28 +137,25 @@
         </div>
     </div>
 
-    <!-- Importación del bundle de scripts de Bootstrap 5 -->
+    <!-- Script de componentes interactivos de Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        /**
-         * Función JavaScript encargada de validar los campos obligatorios del formulario 
-         * y desplegar un flujo interactivo de ventanas modales mediante SweetAlert2.
-         */
+        // Función principal que valida el formulario y muestra modales de confirmación
         function confirmarGuardado() {
-            /* Captura de los valores actuales de los campos obligatorios */
-            const puntuacion = document.getElementById('puntuacion').value;
-            const comentario = document.getElementById('comentario').value;
+            // Captura los valores de los inputs obligatorios
+            const puntuacion = document.getElementById('puntuacion').value.trim();
+            const comentario = document.getElementById('comentario').value.trim();
             const idUsuario = document.getElementById('id_usuario').value;
             const idViaje = document.getElementById('id_viaje').value;
             
-            /* Validación nativa del navegador en caso de omitir campos requeridos */
-            if(!puntuacion.trim() || !comentario.trim() || !idUsuario || !idViaje) {
+            // Si falta algún dato, activa la validación nativa del navegador
+            if(!puntuacion || !comentario || !idUsuario || !idViaje) {
                 document.getElementById('formularioCalificacion').reportValidity();
                 return;
             }
 
-            /* Despliegue de la primera ventana modal de confirmación previa al envío */
+            // Muestra la ventana modal de confirmación
             Swal.fire({
                 title: '¿Guardar cambios?',
                 text: 'Se registrarán tus datos en el sistema de manera segura.',
@@ -190,9 +169,9 @@
                     confirmButton: 'btn-verde-modal',
                     cancelButton: 'rounded-3 px-4 fw-bold'
                 }
-            }).then((resultado_confirmacion) => {
-                if (resultado_confirmacion.isConfirmed) {
-                    /* Segunda ventana modal para notificar el éxito de la operación */
+            }).then((resultado) => {
+                // Si el usuario acepta, muestra la modal de éxito y envía el formulario
+                if (resultado.isConfirmed) {
                     Swal.fire({
                         title: '¡Operación Exitosa!',
                         text: 'El registro se ha completado correctamente.',
@@ -204,7 +183,6 @@
                             confirmButton: 'btn-verde-modal'
                         }
                     }).then(() => {
-                        /* Envío formal del formulario hacia el backend por método POST */
                         document.getElementById('formularioCalificacion').submit();
                     });
                 }

@@ -1,76 +1,111 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Configuración principal del documento y metaetiquetas para responsividad -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asistente de Rutas Inteligentes - Velox UTVT</title>
     
-    <!-- Bootstrap 5 y Bootstrap Icons -->
+    <!-- Importación de librerías externas: Bootstrap 5 y Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <!-- Leaflet CSS -->
+    <!-- Librería Leaflet para la renderización del mapa interactivo geográfico -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
     <style>
-        body {
-            background-color: #FFFFFF !important;
-        }
-        #mainContent {
+        /* Forzamos el fondo blanco puro para un diseño corporativo y limpio */
+        body { background-color: #FFFFFF !important; }
+        
+        /* Contenedor principal desplazado a la derecha para no tapar el menú lateral en PC */
+        #contenidoPrincipal {
             margin-left: 280px;
             transition: margin-left 0.3s ease-in-out;
         }
-        .btn-verde-custom {
+        
+        /* Clase reutilizable para el botón principal institucional (Verde Velox) */
+        .boton-verde {
             background-color: #018701 !important;
             color: #FFFFFF !important;
             border: none !important;
             transition: background-color 0.2s ease-in-out !important;
         }
-        .btn-verde-custom:hover {
-            background-color: #005200 !important;
-            color: #FFFFFF !important;
-        }
+        .boton-verde:hover { background-color: #005200 !important; }
+        
+        /* Estilo visual para listar los nodos evaluados en la bitácora del algoritmo */
         .paso-nodo {
             background-color: #E8F5E9;
             border-left: 4px solid #018701;
         }
-        .badge-exito {
+        
+        /* Indicadores visuales para el motor de lógica proposicional (Éxito/Fallo) */
+        .indicador-exito {
             background-color: #018701 !important;
             color: #FFFFFF !important;
         }
-        .badge-alerta {
+        .indicador-alerta {
             background-color: #D9534F !important;
             color: #FFFFFF !important;
         }
+
+        /* --- REGLAS RESPONSIVAS PARA DISPOSITIVOS MÓVILES --- */
         @media (max-width: 768px) {
-            #mainContent {
+            /* En celulares, eliminamos el margen porque el menú se oculta o se superpone */
+            #contenidoPrincipal {
                 margin-left: 0 !important;
+                padding: 15px !important;
+            }
+            /* Apilamos el encabezado para que el texto no se amontone */
+            .encabezado-rutas {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 10px;
+            }
+            /* Aseguramos que cada campo del formulario ocupe el 100% de la pantalla táctil */
+            .formulario-configuracion > div {
+                width: 100% !important;
+                margin-bottom: 15px;
+            }
+            /* Centramos los badges de la lógica proposicional en pantallas pequeñas */
+            .contenedor-badges {
+                justify-content: center;
             }
         }
     </style>
 </head>
 <body class="bg-white">
 
+    <!-- Inserción modular del menú lateral institucional usando Jinja2 -->
     {% include 'components/sidebar.html' %}
 
-    <div id="mainContent" class="p-4 bg-white" style="min-height: 100vh;">
-        <div class="container-fluid">
+    <!-- Contenedor general que almacena toda la interfaz gráfica del simulador -->
+    <div id="contenidoPrincipal" class="p-4 bg-white" style="min-height: 100vh;">
+        
+        <!-- Botón superior diseñado exclusivamente para desplegar el menú en modo móvil -->
+        <div class="d-flex align-items-center mb-3">
+            <button class="btn boton-verde p-1 px-2 me-3 shadow-sm rounded-3 d-block d-md-none" id="btnAbrirMenu" title="Mostrar Menú">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+        </div>
+
+        <div class="container-fluid px-0">
             
-            <!-- Encabezado -->
-            <div class="mb-4">
+            <!-- Encabezado del módulo con título y descripción breve -->
+            <div class="encabezado-rutas mb-4">
                 <h2 class="fw-bold mb-1" style="color: #005200;">
-                    <i class="bi bi-diagram-3-fill me-2" style="color: #005200;"></i>Optimizador y Simulador de Rutas (IA)
+                    <i class="bi bi-diagram-3-fill me-2"></i>Optimizador de Rutas (IA)
                 </h2>
-                <p class="text-secondary small mb-0">Compara algoritmos de búsqueda ciega e informada (BFS, DFS, UCS, Greedy y A*) para viajes compartidos en la UTVT.</p>
+                <p class="text-secondary small mb-0">Simulador de algoritmos de búsqueda, evaluación lógica y análisis tarifario (K-Means/PCA).</p>
             </div>
 
-            <!-- Panel de Control -->
+            <!-- Panel interactivo para configurar los parámetros de la simulación -->
             <div class="card shadow-sm border rounded-4 bg-white mb-4 p-4">
-                <h5 class="fw-bold mb-3" style="color: #005200;"><i class="bi bi-sliders me-2" style="color: #005200;"></i>Configuración de la Búsqueda</h5>
+                <h5 class="fw-bold mb-3" style="color: #005200;"><i class="bi bi-sliders me-2"></i>Configuración de Búsqueda</h5>
                 
-                <form method="get" action="/simulador-ia" class="row g-3 align-items-end">
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold text-secondary small">Punto de Partida (Origen):</label>
+                <form method="post" action="/simulador-ia/analizar" class="row g-3 align-items-end formulario-configuracion">
+                    
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold text-secondary small">Origen:</label>
                         <select name="origen" class="form-select border shadow-sm py-2">
                             {% for estado in estados_disponibles %}
                                 <option value="{{ estado }}" {% if estado == origen %}selected{% endif %}>{{ estado }}</option>
@@ -78,8 +113,8 @@
                         </select>
                     </div>
                     
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold text-secondary small">Punto de Llegada (Destino):</label>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold text-secondary small">Destino:</label>
                         <select name="destino" class="form-select border shadow-sm py-2">
                             {% for estado in estados_disponibles %}
                                 <option value="{{ estado }}" {% if estado == destino %}selected{% endif %}>{{ estado }}</option>
@@ -87,117 +122,136 @@
                         </select>
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold text-secondary small">Algoritmo de IA:</label>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold text-secondary small">Algoritmo:</label>
                         <select name="algoritmo" class="form-select border shadow-sm py-2">
                             {% for algo in algoritmos_disponibles %}
                                 <option value="{{ algo }}" {% if algo == algoritmo %}selected{% endif %}>{{ algo }}</option>
                             {% endfor %}
                         </select>
                     </div>
+
+                    <!-- NUEVOS CAMPOS PARA ML: DISTANCIA Y TIEMPO -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold text-secondary small">Dist. (Km):</label>
+                        <input type="number" step="0.1" name="distancia" class="form-control shadow-sm py-2" placeholder="Ej. 12" value="{{ distancia | default('10') }}" required>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold text-secondary small">Tiempo (Min):</label>
+                        <input type="number" step="1" name="tiempo" class="form-control shadow-sm py-2" placeholder="Ej. 30" value="{{ tiempo | default('25') }}" required>
+                    </div>
                     
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-verde-custom w-100 fw-semibold shadow-sm py-2">
-                            <i class="bi bi-search me-1"></i> Ejecutar Algoritmo
+                    <div class="col-md-2">
+                        <button type="submit" class="btn boton-verde w-100 fw-semibold shadow-sm py-2">
+                            <i class="bi bi-magic me-1"></i> Simular
                         </button>
                     </div>
                 </form>
             </div>
 
-            <!-- Motor de Reglas (Lógica Proposicional - 10 Premisas) -->
-            <div class="card shadow-sm border rounded-4 bg-white mb-4 p-4 border-start border-4" style="border-left-color: #018701 !important;">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-cpu-fill fs-5 me-2" style="color: #005200;"></i>
-                        <h6 class="fw-bold mb-0" style="color: #005200;">Evaluación Formal del Motor de Reglas (Lógica Proposicional - 10 Premisas)</h6>
+            <!-- RESULTADOS DEL MOTOR DE ML (K-MEANS Y PCA) -->
+            {% if resultado %}
+            <div class="card shadow-sm border rounded-4 bg-white mb-4 p-4 border-start border-4" style="border-left-color: #0d6efd !important;">
+                <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-cpu-fill me-2"></i>Predicción Tarifaria Inteligente (ML)</h5>
+                
+                <div class="row text-center g-3 mb-3">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-4">
+                            <span class="d-block text-muted small fw-bold mb-1">TARIFA SUGERIDA</span>
+                            <h3 class="fw-bold text-success mb-0">${{ resultado.tarifa_recomendada }}</h3>
+                        </div>
                     </div>
-                    <span class="badge {% if evaluacion_logica.viaje_permitido %}bg-success{% else %}bg-danger{% endif %} px-3 py-2">
-                        {% if evaluacion_logica.viaje_permitido %}ESTADO: APROBADO{% else %}ESTADO: RECHAZADO{% endif %}
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-4">
+                            <span class="d-block text-muted small fw-bold mb-1">RENTABILIDAD</span>
+                            <h3 class="fw-bold text-primary mb-0">{{ resultado.rentabilidad }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-start">
+                        <ul class="list-unstyled mb-0 ms-3">
+                            <li class="mb-2"><span class="text-secondary small fw-bold d-block">Segmento (K-Means):</span> <span class="badge bg-dark rounded-pill">{{ resultado.perfil_ruta }}</span></li>
+                            <li class="mb-1"><span class="text-secondary small fw-bold">PCA (Eje X):</span> {{ resultado.coordenadas_pca.pc1 }}</li>
+                            <li><span class="text-secondary small fw-bold">PCA (Eje Y):</span> {{ resultado.coordenadas_pca.pc2 }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Sección del Motor de Evaluación Lógica (Valida 10 premisas booleanas) -->
+            <div class="card shadow-sm border rounded-4 bg-white mb-4 p-4 border-start border-4" style="border-left-color: #018701 !important;">
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-diagram-2-fill fs-5 me-2" style="color: #005200;"></i>
+                        <h6 class="fw-bold mb-0" style="color: #005200;">Motor Lógico de Reglas</h6>
+                    </div>
+                    <span class="badge {% if evaluacion_logica and evaluacion_logica.viaje_permitido %}bg-success{% else %}bg-danger{% endif %} px-3 py-2">
+                        {% if evaluacion_logica and evaluacion_logica.viaje_permitido %}APROBADO{% else %}RECHAZADO{% endif %}
                     </span>
                 </div>
                 
-                <p class="text-secondary small mb-3">
-                    <strong>Diagnóstico del Sistema:</strong> {{ evaluacion_logica.explicacion }}
-                </p>
+                <p class="text-secondary small mb-3"><strong>Diagnóstico:</strong> {{ evaluacion_logica.explicacion if evaluacion_logica else "Esperando ejecución." }}</p>
 
-                <div class="d-flex flex-wrap gap-2">
-                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.O %}badge-exito{% else %}badge-alerta{% endif %}">
-                        O (Origen Válido): {{ evaluacion_logica.premisas.O }}
-                    </span>
-                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.D %}badge-exito{% else %}badge-alerta{% endif %}">
-                        D (Destino Válido): {{ evaluacion_logica.premisas.D }}
-                    </span>
-                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.V %}badge-exito{% else %}badge-alerta{% endif %}">
-                        V (Vía Conectada IA): {{ evaluacion_logica.premisas.V }}
-                    </span>
-                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.C %}badge-exito{% else %}badge-alerta{% endif %}">
-                        C (Capacidad Óptima): {{ evaluacion_logica.premisas.C }}
-                    </span>
-                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.U %}badge-exito{% else %}badge-alerta{% endif %}">
-                        U (Usuario Verificado): {{ evaluacion_logica.premisas.U }}
-                    </span>
-                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.H %}badge-exito{% else %}badge-alerta{% endif %}">
-                        H (Horario Compatible): {{ evaluacion_logica.premisas.H }}
-                    </span>
-                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.E %}badge-exito{% else %}badge-alerta{% endif %}">
-                        E (Estatus Conductor): {{ evaluacion_logica.premisas.E }}
-                    </span>
-                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.S %}badge-exito{% else %}badge-alerta{% endif %}">
-                        S (Viaje Activo): {{ evaluacion_logica.premisas.S }}
-                    </span>
-                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.M %}badge-exito{% else %}badge-alerta{% endif %}">
-                        M (Cuota Aprobada): {{ evaluacion_logica.premisas.M }}
-                    </span>
-                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.R %}badge-exito{% else %}badge-alerta{% endif %}">
-                        R (Ruta / Zona Segura): {{ evaluacion_logica.premisas.R }}
-                    </span>
+                {% if evaluacion_logica %}
+                <div class="d-flex flex-wrap gap-2 contenedor-badges">
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.O %}indicador-exito{% else %}indicador-alerta{% endif %}">Origen: {{ evaluacion_logica.premisas.O }}</span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.D %}indicador-exito{% else %}indicador-alerta{% endif %}">Destino: {{ evaluacion_logica.premisas.D }}</span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.V %}indicador-exito{% else %}indicador-alerta{% endif %}">Vía IA: {{ evaluacion_logica.premisas.V }}</span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.C %}indicador-exito{% else %}indicador-alerta{% endif %}">Cupo: {{ evaluacion_logica.premisas.C }}</span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.U %}indicador-exito{% else %}indicador-alerta{% endif %}">Usuario: {{ evaluacion_logica.premisas.U }}</span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.H %}indicador-exito{% else %}indicador-alerta{% endif %}">Hora: {{ evaluacion_logica.premisas.H }}</span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.E %}indicador-exito{% else %}indicador-alerta{% endif %}">Chofer: {{ evaluacion_logica.premisas.E }}</span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.S %}indicador-exito{% else %}indicador-alerta{% endif %}">Estatus: {{ evaluacion_logica.premisas.S }}</span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.M %}indicador-exito{% else %}indicador-alerta{% endif %}">Pago: {{ evaluacion_logica.premisas.M }}</span>
+                    <span class="badge py-2 px-3 {% if evaluacion_logica.premisas.R %}indicador-exito{% else %}indicador-alerta{% endif %}">Seguridad: {{ evaluacion_logica.premisas.R }}</span>
                 </div>
+                {% endif %}
             </div>
 
-            <!-- Mapa Interactivo Leaflet -->
+            <!-- Contenedor del Mapa Geoespacial renderizado con Leaflet.js -->
             <div class="card shadow-sm border rounded-4 bg-white p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-map-fill me-2" style="color: #005200;"></i>Mapa Interactivo de Rutas (Velox UTVT)</h5>
-                    
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-map-fill me-2"></i>Mapa Geoespacial</h5>
+                    <!-- Leyenda visual de los nodos en el mapa -->
                     <div class="d-flex gap-2 flex-wrap">
                         <span class="badge px-3 py-2" style="background-color: #018701; color: white;">Origen</span>
                         <span class="badge px-3 py-2" style="background-color: #D9534F; color: white;">Destino</span>
-                        <span class="badge px-3 py-2" style="background-color: #6c757d; color: white;">Nodos Viales</span>
+                        <span class="badge px-3 py-2 bg-secondary text-white">Nodos Intermedios</span>
                     </div>
                 </div>
                 <hr class="text-muted opacity-25">
 
-                <div id="mapa-utvt" style="height: 450px; width: 100%; border-radius: 0.75rem;" class="border shadow-sm"></div>
+                <!-- Div vacío donde Leaflet inyectará los mapas de OpenStreetMap -->
+                <div id="mapaSimulador" style="height: 450px; width: 100%; border-radius: 0.75rem;" class="border shadow-sm"></div>
             </div>
 
-            <!-- Tabla Comparativa (Se muestra cuando el usuario elige "Todos") -->
+            <!-- Tabla condicional: Se muestra únicamente si se eligió ejecutar "Todos" los algoritmos -->
             {% if tabla_comparativa %}
             <div class="card shadow-sm border rounded-4 bg-white p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                     <h5 class="fw-bold mb-0" style="color: #005200;">
-                        <i class="bi bi-table me-2" style="color: #005200;"></i>Métrica Comparativa de los 5 Algoritmos
+                        <i class="bi bi-table me-2"></i>Comparativa de Algoritmos
                     </h5>
-                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 fw-bold">
-                        Modo Comparativo Masivo
-                    </span>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 fw-bold">Modo Masivo Activo</span>
                 </div>
                 <hr class="text-muted opacity-25">
                 
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0 text-nowrap">
                         <thead class="table-light">
                             <tr style="color: #005200;">
                                 <th>Algoritmo</th>
-                                <th>Ruta Encontrada</th>
-                                <th class="text-center">Nodos Explorados</th>
-                                <th class="text-center">Costo Total</th>
+                                <th>Ruta Trazada</th>
+                                <th class="text-center">Nodos Visitados</th>
+                                <th class="text-center">Costo Calculado</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for fila in tabla_comparativa %}
                             <tr>
                                 <td class="fw-bold" style="color: #018701;">{{ fila.algoritmo }}</td>
-                                <td class="text-secondary small">{{ fila.ruta }}</td>
+                                <td class="text-secondary small text-truncate" style="max-width: 300px;">{{ fila.ruta }}</td>
                                 <td class="text-center fw-semibold">{{ fila.nodos_explorados }}</td>
                                 <td class="text-center fw-bold" style="color: #005200;">{{ fila.costo }}</td>
                             </tr>
@@ -208,141 +262,162 @@
             </div>
             {% endif %}
 
-            <!-- Resultados y Bitácora -->
+            <!-- Sección dividida en dos columnas: Resumen numérico y Bitácora de nodos explorados -->
             <div class="row g-4">
-                <div class="col-md-7">
+                <div class="col-lg-7">
                     <div class="card shadow-sm border rounded-4 h-100 p-4 bg-white">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-check2-circle me-2" style="color: #005200;"></i>Resultado del Trayecto</h5>
-                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 fw-bold">
-                                Algoritmo: {{ algoritmo }}
-                            </span>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                            <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-check2-circle me-2"></i>Resultado Específico</h5>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 fw-bold">{{ algoritmo if algoritmo else 'A*' }}</span>
                         </div>
                         
+                        <!-- Si se encontró una ruta exitosa, mostramos los datos del trayecto -->
                         {% if ruta_solucion %}
-                            <div class="alert border-0 bg-light text-success fw-bold p-3 rounded-3 mb-3" style="border-left: 4px solid #018701 !important; color: #018701 !important;">
-                                ¡Solución encontrada satisfactoriamente con {{ algoritmo }}!
+                            <div class="alert border-0 bg-light fw-bold p-3 rounded-3 mb-3" style="border-left: 4px solid #018701 !important; color: #018701 !important;">
+                                Solución encontrada exitosamente.
                             </div>
 
-                            <p class="mb-1 text-secondary small"><strong>Trayecto recomendado paso a paso:</strong></p>
-                            <div class="p-3 bg-light border rounded-3 text-center mb-3">
-                                <h4 class="fw-bold mb-0" style="color: #005200;">
+                            <p class="mb-1 text-secondary small"><strong>Cadena de nodos recomendados:</strong></p>
+                            <div class="p-3 bg-light border rounded-3 text-center mb-3" style="overflow-wrap: break-word;">
+                                <h5 class="fw-bold mb-0" style="color: #005200;">
                                     {{ " ➔ ".join(ruta_solucion) }}
-                                </h4>
+                                </h5>
                             </div>
 
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <div class="p-3 bg-light border rounded-3 text-center">
-                                        <span class="text-secondary small d-block">Costo Total (Distancia):</span>
-                                        <strong class="fs-5" style="color: #018701;">{{ costo_total }}</strong>
+                                        <span class="text-secondary small d-block">Distancia/Costo Búsqueda:</span>
+                                        <strong class="fs-4" style="color: #018701;">{{ costo_total }}</strong>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="p-3 bg-light border rounded-3 text-center">
-                                        <span class="text-secondary small d-block">Transbordos / Aristas:</span>
-                                        <strong class="fs-5 text-dark">{{ total_movimientos }}</strong>
+                                        <span class="text-secondary small d-block">Movimientos (Aristas):</span>
+                                        <strong class="fs-4 text-dark">{{ total_movimientos }}</strong>
                                     </div>
                                 </div>
                             </div>
                         {% else %}
+                            <!-- Si la ruta es imposible, alertamos al usuario -->
                             <div class="alert border-0 bg-light text-danger fw-bold p-3 rounded-3" style="border-left: 4px solid #D9534F !important;">
-                                No se encontró una ruta válida utilizando {{ algoritmo }} entre estos puntos.
+                                El algoritmo {{ algoritmo }} no encontró una ruta que conecte los puntos seleccionados. (Presiona Simular)
                             </div>
                         {% endif %}
                     </div>
                 </div>
 
-                <div class="col-md-5">
+                <div class="col-lg-5">
                     <div class="card shadow-sm border rounded-4 h-100 p-4 bg-white">
-                        <h5 class="fw-bold mb-3" style="color: #005200;"><i class="bi bi-cpu-fill me-2" style="color: #005200;"></i>Bitácora de Exploración</h5>
-                        <p class="text-secondary small">Orden en que la IA expandió y evaluó los nodos:</p>
+                        <h5 class="fw-bold mb-3" style="color: #005200;"><i class="bi bi-clock-history me-2"></i>Orden de Exploración</h5>
+                        <p class="text-secondary small">Secuencia de nodos evaluados matemáticamente por la IA:</p>
                         
                         <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                             <ul class="list-group list-group-flush">
-                                {% for paso in bitacora %}
-                                    <li class="list-group-item paso-nodo rounded-3 mb-2 py-2 px-3 border shadow-sm d-flex justify-content-between align-items-center bg-white">
-                                        <span class="small text-secondary">Nodo expandido:</span>
-                                        <span class="fw-bold" style="color: #018701;">{{ paso }}</span>
-                                    </li>
-                                {% endfor %}
+                                <!-- Recorremos la bitácora devuelta por el servidor -->
+                                {% if bitacora %}
+                                    {% for paso in bitacora %}
+                                        <li class="list-group-item paso-nodo rounded-3 mb-2 py-2 px-3 border shadow-sm d-flex justify-content-between align-items-center bg-white">
+                                            <span class="small text-secondary">Evaluando:</span>
+                                            <span class="fw-bold" style="color: #018701;">{{ paso }}</span>
+                                        </li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="list-group-item border-0 text-muted small text-center mt-3">No hay pasos registrados. Ejecuta una simulación.</li>
+                                {% endif %}
                             </ul>
                         </div>
                     </div>
                 </div>
             </div>
+            
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts de interactividad (Bootstrap 5 y motor Leaflet JS) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
+    <!-- Lógica de renderizado del mapa topológico -->
     <script>
-        // Inicializar mapa
-        var map = L.map('mapa-utvt').setView([19.2848, -99.6552], 12);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicialización de la vista central del mapa (Coordenadas geográficas de Toluca)
+            const mapa = L.map('mapaSimulador').setView([19.2848, -99.6552], 12);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors | Velox UTVT'
-        }).addTo(map);
+            // Integración de los mosaicos topológicos base de OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap | Sistema Velox'
+            }).addTo(mapa);
 
-        var coordenadasNodos = {{ coordenadas_nodos | tojson }};
-        var origenActual = "{{ origen }}";
-        var destinoActual = "{{ destino }}";
-        var rutaSolucion = {{ ruta_solucion | tojson }};
+            // CORRECCIÓN CLAVE: Uso de prettier-ignore para proteger la inyección de Jinja2 en VS Code
+            // prettier-ignore
+            const datosNodos = {{ coordenadas_nodos | default('{}') | tojson | safe }};
+            const origenElegido = "{{ origen | default('') }}";
+            const destinoElegido = "{{ destino | default('') }}";
+            // prettier-ignore
+            const solucionActual = {{ ruta_solucion | default('[]') | tojson | safe }};
 
-        // Renderizar nodos con colores personalizados (círculos)
-        for (var nodo in coordenadasNodos) {
-            if (coordenadasNodos.hasOwnProperty(nodo)) {
-                var coords = coordenadasNodos[nodo];
-                
-                var colorPunto = '#6c757d'; // Gris para nodos normales
-                var radioPunto = 7;
-                var mensajePopup = "<b>Nodo: " + nodo + "</b>";
+            // Ciclo iterativo para mapear y dibujar los círculos (nodos) en la interfaz geográfica
+            for (const nombreNodo in datosNodos) {
+                if (datosNodos.hasOwnProperty(nombreNodo)) {
+                    const coordenadas = datosNodos[nombreNodo];
+                    
+                    let colorNodo = '#6c757d'; // Color base gris para nodos intermedios
+                    let tamañoNodo = 7;
+                    let textoGlobo = `<b>Nodo: ${nombreNodo}</b>`;
 
-                if (nodo === origenActual) {
-                    colorPunto = '#018701'; // Verde institucional para Origen
-                    radioPunto = 10;
-                    mensajePopup = "<b style='color:#018701;'>Origen: " + nodo + "</b>";
-                } else if (nodo === destinoActual) {
-                    colorPunto = '#D9534F'; // Rojo para Destino
-                    radioPunto = 10;
-                    mensajePopup = "<b style='color:#D9534F;'>Destino: " + nodo + "</b>";
+                    // Lógica para resaltar visualmente el Origen elegido por el usuario
+                    if (nombreNodo === origenElegido) {
+                        colorNodo = '#018701'; // Verde Velox
+                        tamañoNodo = 10;
+                        textoGlobo = `<b style='color:#018701;'>Origen Válido: ${nombreNodo}</b>`;
+                    } 
+                    // Lógica para resaltar visualmente el Destino elegido
+                    else if (nombreNodo === destinoElegido) {
+                        colorNodo = '#D9534F'; // Rojo Peligro/Llegada
+                        tamañoNodo = 10;
+                        textoGlobo = `<b style='color:#D9534F;'>Destino Final: ${nombreNodo}</b>`;
+                    }
+
+                    // Instanciación del círculo de Leaflet asociado a este nodo
+                    const marcador = L.circleMarker(coordenadas, {
+                        radius: tamañoNodo,
+                        fillColor: colorNodo,
+                        color: '#ffffff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.9
+                    }).addTo(mapa);
+
+                    // Agregamos el texto emergente que aparece al dar clic en el círculo
+                    marcador.bindPopup(textoGlobo);
                 }
-
-                var circleMarker = L.circleMarker(coords, {
-                    radius: radioPunto,
-                    fillColor: colorPunto,
-                    color: '#ffffff',
-                    weight: 2,
-                    opacity: 1,
-                    fillOpacity: 0.9
-                }).addTo(map);
-
-                circleMarker.bindPopup(mensajePopup);
             }
-        }
 
-        // Trazar la ruta de solución si existe
-        if (rutaSolucion && rutaSolucion.length > 0) {
-            var puntosRuta = [];
-            rutaSolucion.forEach(function(nodoRuta) {
-                if (coordenadasNodos[nodoRuta]) {
-                    puntosRuta.push(coordenadasNodos[nodoRuta]);
+            // Trazado de la ruta (Línea Poligonal verde) de acuerdo al resultado del algoritmo de búsqueda
+            if (solucionActual && solucionActual.length > 0) {
+                const vectorRuta = [];
+                // Unimos las coordenadas matemáticas correspondientes a cada nodo de la respuesta
+                solucionActual.forEach(nodoEnRuta => {
+                    if (datosNodos[nodoEnRuta]) {
+                        vectorRuta.push(datosNodos[nodoEnRuta]);
+                    }
+                });
+
+                // Si hay más de un nodo en la ruta, se traza la línea conectora
+                if (vectorRuta.length > 1) {
+                    const lineaTrazada = L.polyline(vectorRuta, { color: '#018701', weight: 6, opacity: 0.85 }).addTo(mapa);
+                    // Instrucción para forzar a Leaflet a centrar la cámara cubriendo toda la línea
+                    mapa.fitBounds(lineaTrazada.getBounds(), { padding: [50, 50] });
                 }
-            });
-
-            if (puntosRuta.length > 1) {
-                var polyline = L.polyline(puntosRuta, {color: '#018701', weight: 6, opacity: 0.85}).addTo(map);
-                map.fitBounds(polyline.getBounds(), {padding: [50, 50]});
             }
-        }
 
-        // Forzar a Leaflet a corregir cualquier problema de renderizado gris en los mosaicos
-        setTimeout(function() {
-            map.invalidateSize();
-        }, 200);
+            // Fix preventivo de renderizado: Retraso mínimo para asegurar que los tiles grises se descarguen
+            setTimeout(() => {
+                mapa.invalidateSize();
+            }, 250);
+        });
     </script>
 </body>
 </html>
