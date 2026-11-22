@@ -57,6 +57,24 @@ def _obtener_id_usuario_sesion(solicitud: Request) -> int | None:
     return None
 
 
+def _obtener_id_usuario_efectivo(solicitud: Request) -> int | None:
+    """Obtiene el ID del usuario logueado o un usuario no-admin por defecto si no viene en la petición."""
+    id_sesion = _obtener_id_usuario_sesion(solicitud)
+    if id_sesion is not None and id_sesion > 0:
+        return id_sesion
+
+    usuario_no_admin = db["usuario"].find_one(
+        {"rol": {"$not": {"$regex": "admin", "$options": "i"}}},
+        {"_id": 0, "id_usuario": 1},
+    )
+    if usuario_no_admin and usuario_no_admin.get("id_usuario") is not None:
+        raw_id = str(usuario_no_admin.get("id_usuario")).strip()
+        if raw_id.isdigit():
+            return int(raw_id)
+
+    return None
+
+
 def _obtener_usuario_por_id_o_nombre(id_usuario: int, nombre_usuario: str = "") -> dict | None:
     """Busca un usuario real en db['usuario'] por id_usuario o nombre."""
     if id_usuario > 0:
@@ -71,10 +89,14 @@ def _obtener_usuario_por_id_o_nombre(id_usuario: int, nombre_usuario: str = "") 
     return None
 
 
-def _pertenece_a_usuario(doc: dict, id_usuario_activo: int | None) -> bool:
-    """Verifica si una ruta publicada pertenece al usuario activo cuando no es admin."""
+def _pertenece_a_usuario(
+    doc: dict,
+    id_usuario_activo: int | None,
+    usuario_sesion: dict | None = None,
+) -> bool:
+    """Verifica estrictamente si una ruta pertenece al usuario activo cuando no es admin."""
     if id_usuario_activo is None:
-        return True
+        return False
 
     campos_id = [
         doc.get("id_usuario"),
@@ -83,7 +105,20 @@ def _pertenece_a_usuario(doc: dict, id_usuario_activo: int | None) -> bool:
         doc.get("conductor_id"),
     ]
     ids_presentes = [int(v) for v in campos_id if v is not None and str(v).strip().isdigit()]
-    return id_usuario_activo in ids_presentes
+    if id_usuario_activo in ids_presentes:
+        return True
+
+    if not ids_presentes and usuario_sesion:
+        nombre_sesion = (
+            f"{usuario_sesion.get('nombre', '')} {usuario_sesion.get('apellido_paterno', '')}".strip().lower()
+        )
+        nombre_doc = str(
+            doc.get("nombre_usuario") or doc.get("nombre_pasajero") or doc.get("pasajero") or ""
+        ).strip().lower()
+        if nombre_sesion and nombre_doc and nombre_sesion == nombre_doc:
+            return True
+
+    return False
 
 
 def _estimar_metricas(origen: str, destino: str) -> tuple[float, int, float]:
@@ -165,7 +200,7 @@ def _recalcular_calificacion_pasajero(id_usuario: int, nombre_pasajero: str):
 def listar_rutas(solicitud: Request):
     """Ruta HTTP GET que muestra únicamente las rutas publicadas en 'ruta' según el rol y usuario."""
     es_admin = _es_admin(solicitud)
-    id_usuario_activo = None if es_admin else _obtener_id_usuario_sesion(solicitud)
+    id_usuario_activo = None if es_admin else _obtener_id_usuario_efectivo(solicitud)
     plantilla = "admin/ruta_inicio_admin.html" if es_admin else "ruta/ruta_inicio.html"
 
     usuario_sesion = (
@@ -178,7 +213,7 @@ def listar_rutas(solicitud: Request):
     rutas_raw = list(db["ruta"].find({}, {"_id": 0}))
 
     for idx, r in enumerate(rutas_raw):
-        if not _pertenece_a_usuario(r, id_usuario_activo):
+        if not es_admin and not _pertenece_a_usuario(r, id_usuario_activo, usuario_sesion):
             continue
 
         id_ruta = int(r.get("id_ruta", idx + 1))
@@ -294,7 +329,7 @@ def guardar_ruta(
     ultima = db["ruta"].find_one(sort=[("id_ruta", -1)])
     nuevo_id = (ultima["id_ruta"] + 1) if ultima and "id_ruta" in ultima else 1
 
-    id_usuario_final = id_usuario if id_usuario > 0 else (_obtener_id_usuario_sesion(solicitud) or 0)
+    id_usuario_final = id_usuario if id_usuario > 0 else (_obtener_id_usuario_efectivo(solicitud) or 0)
     usuario_doc = _obtener_usuario_por_id_o_nombre(id_usuario_final) if id_usuario_final > 0 else None
     nombre_creador = (
         f"{usuario_doc.get('nombre', '')} {usuario_doc.get('apellido_paterno', '')}".strip()

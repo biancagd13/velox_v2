@@ -32,6 +32,58 @@
             background-color: #005200 !important; 
         }
 
+        /* Selector interactivo de estrellitas (sin menú desplegable) */
+        .selector-estrellas-box {
+            border: 1.5px solid #dee2e6;
+            border-radius: 0.9rem;
+            padding: 0.85rem 1.1rem;
+            background-color: #fafafa;
+        }
+        .selector-estrellas-box.seleccionado {
+            border-color: #018701;
+            background-color: #f6fcf6;
+        }
+        .estrellas-interactivas {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+        .estrella-btn {
+            background: transparent;
+            border: none;
+            padding: 0.15rem;
+            font-size: 2rem;
+            line-height: 1;
+            color: #ced4da;
+            cursor: pointer;
+            transition: transform 0.15s ease, color 0.15s ease;
+        }
+        .estrella-btn:hover,
+        .estrella-btn:focus {
+            transform: scale(1.15);
+            outline: none;
+        }
+        .estrella-btn.activa {
+            color: #ffc107;
+        }
+
+        /* Chips rápidos para sugerir comentarios */
+        .chip-sugerencia {
+            border: 1px solid #ced4da;
+            background-color: #ffffff;
+            color: #333333;
+            font-size: 0.8rem;
+            border-radius: 999px;
+            padding: 0.3rem 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .chip-sugerencia:hover {
+            border-color: #018701;
+            color: #005200;
+            background-color: #f1fbf1;
+        }
+
         /* Estilo para los botones de confirmación en las modales de SweetAlert */
         .swal2-confirm.btn-verde-modal {
             background-color: #018701 !important;
@@ -60,73 +112,74 @@
 
     <!-- Contenedor centrado para el formulario -->
     <div id="contenidoPrincipal" class="p-4 d-flex flex-column align-items-center justify-content-center bg-white" style="min-height: 100vh;">
-        <div class="container px-3" style="max-width: 600px;">
+        <div class="container px-3" style="max-width: 580px;">
             
             <!-- Tarjeta principal del formulario -->
-            <div class="card shadow-sm border rounded-4 p-5 bg-white">
+            <div class="card shadow-sm border rounded-4 p-4 p-md-5 bg-white">
                 
                 <!-- Cabecera del formulario -->
-                <div class="d-flex align-items-center mb-4">
-                    <div>
-                        <h3 class="fw-bold mb-1" style="color: #005200;">
-                            <i class="bi bi-star-fill me-2"></i>{{ "Editar Calificación #" ~ calificacion.id_calificacion if calificacion else "Registrar Nueva Calificación" }}
-                        </h3>
-                        <p class="text-muted small mb-0">Completa la información solicitada en el formulario institucional.</p>
-                    </div>
+                <div class="mb-4">
+                    <h3 class="fw-bold mb-1" style="color: #005200;">
+                        <i class="bi me-2 text-warning"></i>{{ "Editar Calificación #" ~ calificacion.id_calificacion if calificacion else "Registrar Calificación" }}
+                    </h3>
+                    <p class="text-muted small mb-0" id="subtituloContexto">
+                        Selecciona una puntuación en estrellas y escribe tu comentario.
+                    </p>
                 </div>
 
                 <!-- Formulario dinámico (Guardar o Actualizar según contexto) -->
                 <form id="formularioCalificacion" action="{{ '/calificacion/actualizar' if calificacion else '/calificacion/guardar' }}" method="POST">
                     
-                    <!-- Campo oculto y visible solo si se está editando un registro existente -->
                     {% if calificacion %}
                     <input type="hidden" name="id_calificacion" value="{{ calificacion.id_calificacion }}">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary small">ID del Registro</label>
-                        <input type="text" class="form-control bg-light fw-bold text-muted" value="#{{ calificacion.id_calificacion }}" readonly>
-                    </div>
                     {% endif %}
 
-                    <!-- Campo de Puntuación (1-5) -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary small">Puntuación (1 al 5)</label>
-                        <input type="number" id="puntuacion" name="puntuacion" min="1" max="5" class="form-control py-2" value="{{ calificacion.puntuacion if calificacion else '' }}" placeholder="Ej. 5" required>
-                    </div>
+                    <!-- Datos detectados automáticamente (ocultos) -->
+                    {% set id_usuario_auto = (calificacion.id_usuario if calificacion and calificacion.id_usuario else (usuario.id_usuario if usuario and usuario.id_usuario else '')) %}
+                    {% set id_viaje_auto = (calificacion.id_viaje if calificacion and calificacion.id_viaje else (id_viaje_preseleccionado if id_viaje_preseleccionado else '')) %}
+                    {% set id_pasajero_auto = (calificacion.id_pasajero if calificacion and calificacion.id_pasajero else (id_pasajero_preseleccionado if id_pasajero_preseleccionado else '')) %}
+                    {% set tipo_auto = (calificacion.tipo if calificacion and calificacion.tipo else ('conductor_a_pasajero' if id_pasajero_auto else '')) %}
 
-                    <!-- Campo de Comentario -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary small">Comentario / Reseña</label>
-                        <textarea id="comentario" name="comentario" class="form-control py-2" rows="3" placeholder="Ej. Excelente servicio y puntualidad..." required>{{ calificacion.comentario if calificacion else '' }}</textarea>
-                    </div>
+                    <input type="hidden" id="id_usuario" name="id_usuario" value="{{ id_usuario_auto }}">
+                    <input type="hidden" id="id_viaje" name="id_viaje" value="{{ id_viaje_auto }}">
+                    <input type="hidden" id="id_pasajero" name="id_pasajero" value="{{ id_pasajero_auto }}">
+                    <input type="hidden" id="tipo_calificacion" name="tipo" value="{{ tipo_auto }}">
 
-                    <!-- Lista desplegable para seleccionar el Usuario -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold text-secondary small">Usuario Emisor</label>
-                        <select id="id_usuario" name="id_usuario" class="form-select py-2" required>
-                            <option value="" disabled selected>Selecciona un usuario...</option>
-                            {% for usuario in usuarios %}
-                            <option value="{{ usuario.id_usuario }}" {% if calificacion and calificacion.id_usuario == usuario.id_usuario %}selected{% endif %}>
-                                {{ usuario.nombre }} {{ usuario.apellido_paterno }} ({{ usuario.correo_institucional }})
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <!-- Lista desplegable para seleccionar el Viaje -->
+                    <!-- 1. Selector de Estrellitas (1 a 5) -->
+                    {% set puntuacion_inicial = (calificacion.puntuacion if calificacion and calificacion.puntuacion is not none else (calificacion.estrellas if calificacion and calificacion.estrellas is not none else '')) %}
                     <div class="mb-4">
-                        <label class="form-label fw-semibold text-secondary small">Viaje Calificado</label>
-                        <select id="id_viaje" name="id_viaje" class="form-select py-2" required>
-                            <option value="" disabled selected>Selecciona un viaje...</option>
-                            {% for viaje in viajes %}
-                            <option value="{{ viaje.id_viaje }}" {% if calificacion and calificacion.id_viaje == viaje.id_viaje %}selected{% endif %}>
-                                Viaje #{{ viaje.id_viaje }} ({{ viaje.origen }} ➔ {{ viaje.destino }})
-                            </option>
-                            {% endfor %}
-                        </select>
+                        <label class="form-label fw-semibold text-secondary small">Puntuación</label>
+                        <div class="selector-estrellas-box d-flex justify-content-between align-items-center flex-wrap gap-2" id="cajaEstrellas">
+                            <div class="estrellas-interactivas" id="selectorEstrellas" role="radiogroup" aria-label="Puntuación de 1 a 5 estrellas">
+                                {% for valor in range(1, 6) %}
+                                <button type="button"
+                                        class="estrella-btn"
+                                        data-valor="{{ valor }}"
+                                        aria-label="{{ valor }} estrella{% if valor > 1 %}s{% endif %}">
+                                    <i class="bi bi-star"></i>
+                                </button>
+                                {% endfor %}
+                            </div>
+                            <span id="textoPuntuacion" class="small fw-semibold text-muted">
+                                {% if puntuacion_inicial %}{{ puntuacion_inicial }} de 5 estrellas{% else %}Sin seleccionar{% endif %}
+                            </span>
+                        </div>
+                        <input type="hidden" id="puntuacion" name="puntuacion" value="{{ puntuacion_inicial }}" required>
+                    </div>
+
+                    <!-- 2. Campo de Comentario -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary small">Comentario</label>
+                        <div class="d-flex flex-wrap gap-1 mb-2" id="chipsComentario">
+                            <button type="button" class="chip-sugerencia" data-texto="Muy puntual y amable durante el trayecto.">Puntual y amable</button>
+                            <button type="button" class="chip-sugerencia" data-texto="Buen trato y respeto en todo momento.">Buen trato</button>
+                            <button type="button" class="chip-sugerencia" data-texto="Trayecto seguro y sin contratiempos.">Trayecto seguro</button>
+                        </div>
+                        <textarea id="comentario" name="comentario" class="form-control py-2" rows="3" placeholder="Escribe tu reseña o toca una sugerencia..." required>{{ calificacion.comentario if calificacion else '' }}</textarea>
                     </div>
 
                     <!-- Botones de acción del formulario -->
-                    <div class="d-flex justify-content-end gap-2">
+                    <div class="d-flex justify-content-end gap-2 pt-2">
                         <a href="/calificacion" class="btn btn-outline-secondary px-4 fw-semibold rounded-pill">Cancelar</a>
                         <button type="button" onclick="confirmarGuardado()" class="btn boton-verde px-5 fw-bold shadow-sm rounded-pill">
                             {{ "Guardar Cambios" if calificacion else "Registrar Calificación" }}
@@ -141,24 +194,187 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Función principal que valida el formulario y muestra modales de confirmación
+        const etiquetasEstrellas = {
+            1: "1 de 5 · Malo",
+            2: "2 de 5 · Deficiente",
+            3: "3 de 5 · Regular",
+            4: "4 de 5 · Muy bueno",
+            5: "5 de 5 · Excelente"
+        };
+
+        const mapaUsuarios = {
+            {% for u in usuarios %}
+            "{{ u.id_usuario }}": {{ ((u.nombre or '') ~ ' ' ~ (u.apellido_paterno or '')) | trim | tojson }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        };
+
+        const mapaViajes = {
+            {% for v in viajes %}
+            "{{ v.id_viaje }}": {{ ((v.origen or '') ~ ' ➔ ' ~ (v.destino or '')) | trim | tojson }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        };
+
+        function obtenerCookie(nombre) {
+            const match = document.cookie.match(new RegExp('(^| )' + nombre + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+
+        function pintarEstrellas(valorSeleccionado, valorHover = 0) {
+            const activo = valorHover > 0 ? valorHover : valorSeleccionado;
+            const botones = document.querySelectorAll('#selectorEstrellas .estrella-btn');
+            const caja = document.getElementById('cajaEstrellas');
+
+            botones.forEach((btn) => {
+                const v = Number(btn.getAttribute('data-valor'));
+                const icono = btn.querySelector('i');
+                const iluminada = activo > 0 && v <= activo;
+
+                btn.classList.toggle('activa', iluminada);
+                if (icono) {
+                    icono.className = iluminada ? 'bi bi-star-fill' : 'bi bi-star';
+                }
+            });
+
+            if (caja) {
+                caja.classList.toggle('seleccionado', valorSeleccionado > 0);
+            }
+
+            const etiqueta = document.getElementById('textoPuntuacion');
+            if (etiqueta) {
+                if (activo > 0) {
+                    etiqueta.textContent = etiquetasEstrellas[activo] || `${activo} de 5 estrellas`;
+                    etiqueta.className = 'small fw-semibold text-success';
+                } else {
+                    etiqueta.textContent = 'Sin seleccionar';
+                    etiqueta.className = 'small fw-semibold text-muted';
+                }
+            }
+        }
+
+        function autocompletarContexto() {
+            const params = new URLSearchParams(window.location.search);
+            const idViajeUrl = (params.get('id_viaje') || '').trim();
+            const idPasajeroUrl = (params.get('id_pasajero') || '').trim();
+            const idUsuarioUrl = (params.get('id_usuario') || '').trim();
+            const idStorage = (localStorage.getItem('velox_usuario_id') || '').trim();
+            const idCookie = (obtenerCookie('velox_usuario_id') || '').trim();
+
+            const inputUsuario = document.getElementById('id_usuario');
+            const inputViaje = document.getElementById('id_viaje');
+            const inputPasajero = document.getElementById('id_pasajero');
+            const inputTipo = document.getElementById('tipo_calificacion');
+
+            if (inputUsuario && !inputUsuario.value) {
+                inputUsuario.value = idUsuarioUrl || idStorage || idCookie || '';
+            }
+            if (inputViaje && !inputViaje.value && idViajeUrl) {
+                inputViaje.value = idViajeUrl;
+            }
+            if (inputPasajero && !inputPasajero.value && idPasajeroUrl) {
+                inputPasajero.value = idPasajeroUrl;
+            }
+            if (inputTipo && !inputTipo.value && (inputPasajero?.value || idPasajeroUrl)) {
+                inputTipo.value = 'conductor_a_pasajero';
+            }
+
+            const subtitulo = document.getElementById('subtituloContexto');
+            const pId = (inputPasajero?.value || idPasajeroUrl || '').trim();
+            const vId = (inputViaje?.value || idViajeUrl || '').trim();
+            if (subtitulo && (pId || vId)) {
+                const partes = [];
+                if (pId) partes.push(`Pasajero: ${mapaUsuarios[pId] || '#' + pId}`);
+                if (vId) partes.push(`Viaje #${vId} (${mapaViajes[vId] || ''})`);
+                subtitulo.textContent = partes.join(' · ');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            autocompletarContexto();
+
+            const inputPuntuacion = document.getElementById('puntuacion');
+            const inicial = parseInt(inputPuntuacion.value, 10) || 0;
+            pintarEstrellas(inicial);
+
+            document.querySelectorAll('#selectorEstrellas .estrella-btn').forEach((btn) => {
+                const valor = Number(btn.getAttribute('data-valor'));
+
+                btn.addEventListener('click', () => {
+                    inputPuntuacion.value = String(valor);
+                    pintarEstrellas(valor);
+                });
+
+                btn.addEventListener('mouseenter', () => {
+                    const actual = parseInt(inputPuntuacion.value, 10) || 0;
+                    pintarEstrellas(actual, valor);
+                });
+
+                btn.addEventListener('mouseleave', () => {
+                    const actual = parseInt(inputPuntuacion.value, 10) || 0;
+                    pintarEstrellas(actual, 0);
+                });
+            });
+
+            document.querySelectorAll('#chipsComentario .chip-sugerencia').forEach((chip) => {
+                chip.addEventListener('click', () => {
+                    const texto = chip.getAttribute('data-texto') || '';
+                    const area = document.getElementById('comentario');
+                    if (!area) return;
+                    const actual = area.value.trim();
+                    if (!actual) {
+                        area.value = texto;
+                    } else if (!actual.includes(texto)) {
+                        area.value = `${actual} ${texto}`;
+                    }
+                    area.focus();
+                });
+            });
+        });
+
         function confirmarGuardado() {
-            // Captura los valores de los inputs obligatorios
+            autocompletarContexto();
             const puntuacion = document.getElementById('puntuacion').value.trim();
             const comentario = document.getElementById('comentario').value.trim();
-            const idUsuario = document.getElementById('id_usuario').value;
-            const idViaje = document.getElementById('id_viaje').value;
-            
-            // Si falta algún dato, activa la validación nativa del navegador
-            if(!puntuacion || !comentario || !idUsuario || !idViaje) {
-                document.getElementById('formularioCalificacion').reportValidity();
+            const idUsuario = document.getElementById('id_usuario').value.trim();
+            const idViaje = document.getElementById('id_viaje').value.trim();
+
+            if (!puntuacion) {
+                Swal.fire({
+                    title: 'Selecciona una puntuación',
+                    text: 'Toca entre 1 y 5 estrellitas antes de guardar.',
+                    icon: 'warning',
+                    iconColor: '#7097a8',
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        popup: 'rounded-4 p-4',
+                        confirmButton: 'btn-verde-modal'
+                    }
+                });
                 return;
             }
 
-            // Muestra la ventana modal de confirmación
+            if (!comentario) {
+                document.getElementById('comentario').reportValidity();
+                return;
+            }
+
+            if (!idUsuario || !idViaje) {
+                Swal.fire({
+                    title: 'Faltan datos del viaje o usuario',
+                    text: 'Abre la calificación desde un viaje o asegúrate de tener sesión activa.',
+                    icon: 'warning',
+                    iconColor: '#7097a8',
+                    confirmButtonText: 'Entendido',
+                    customClass: {
+                        popup: 'rounded-4 p-4',
+                        confirmButton: 'btn-verde-modal'
+                    }
+                });
+                return;
+            }
+
             Swal.fire({
-                title: '¿Guardar cambios?',
-                text: 'Se registrarán tus datos en el sistema de manera segura.',
+                title: '¿Guardar calificación?',
+                text: 'Se registrará tu valoración en el sistema.',
                 icon: 'question',
                 iconColor: '#7097a8',
                 showCancelButton: true,
@@ -170,11 +386,10 @@
                     cancelButton: 'rounded-3 px-4 fw-bold'
                 }
             }).then((resultado) => {
-                // Si el usuario acepta, muestra la modal de éxito y envía el formulario
                 if (resultado.isConfirmed) {
                     Swal.fire({
                         title: '¡Operación Exitosa!',
-                        text: 'El registro se ha completado correctamente.',
+                        text: 'La calificación se ha registrado correctamente.',
                         icon: 'success',
                         iconColor: '#018701',
                         confirmButtonText: 'Aceptar',

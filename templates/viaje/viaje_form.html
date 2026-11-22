@@ -122,7 +122,9 @@
                         <select id="rutaAsignada" name="id_ruta" class="form-select py-2" required>
                             <option value="" disabled {% if not viaje %}selected{% endif %}>Selecciona una ruta...</option>
                             {% for ruta in rutas %}
-                            <option value="{{ ruta.id_ruta }}" {% if viaje and viaje.id_ruta == ruta.id_ruta %}selected{% endif %}>
+                            <option value="{{ ruta.id_ruta }}"
+                                    data-owner-ids="{{ ruta.id_usuario or '' }},{{ ruta.id_conductor or '' }},{{ ruta.usuario_id or '' }},{{ ruta.conductor_id or '' }}"
+                                    {% if viaje and viaje.id_ruta == ruta.id_ruta %}selected{% endif %}>
                                 Ruta #{{ ruta.id_ruta }} ({{ ruta.origen }} ➔ {{ ruta.destino }})
                             </option>
                             {% endfor %}
@@ -131,7 +133,7 @@
 
                     <!-- Contenedor responsivo de botones (Cancelar y Submit) -->
                     <div class="grupo-botones d-flex justify-content-end gap-2">
-                        <a href="/viaje" class="btn btn-outline-secondary px-4 fw-semibold rounded-pill">Cancelar</a>
+                        <a id="btnCancelarViaje" href="/viaje" class="btn btn-outline-secondary px-4 fw-semibold rounded-pill">Cancelar</a>
                         <button type="button" onclick="confirmarGuardado()" class="btn boton-verde px-5 fw-bold shadow-sm rounded-pill">
                             {{ "Guardar Cambios" if viaje else "Registrar Viaje" }}
                         </button>
@@ -145,16 +147,66 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Sincronizamos el ID del conductor autenticado desde localStorage al crear un nuevo viaje
-        document.addEventListener('DOMContentLoaded', function () {
+        const esAdminVista = {{ 'true' if es_admin else 'false' }};
+
+        function obtenerCookie(nombre) {
+            const match = document.cookie.match(new RegExp('(^| )' + nombre + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+
+        function obtenerIdUsuarioActivo() {
+            const params = new URLSearchParams(window.location.search);
+            const idQuery = (params.get("id_usuario") || "").trim();
+            const idStorage = (localStorage.getItem("velox_usuario_id") || "").trim();
+            const idCookie = (obtenerCookie("velox_usuario_id") || "").trim();
+            const idInput = (document.getElementById("usuarioConductor")?.value || "").trim();
+            return idQuery || idStorage || idCookie || idInput || "";
+        }
+
+        function filtrarRutasPorUsuario() {
             const esEdicion = {{ 'true' if viaje else 'false' }};
-            if (!esEdicion) {
-                const idSesion = parseInt(localStorage.getItem('velox_usuario_id'), 10);
-                if (!Number.isNaN(idSesion) && idSesion > 0) {
-                    document.getElementById('usuarioConductor').value = idSesion;
+            const inputConductor = document.getElementById('usuarioConductor');
+            const selectRuta = document.getElementById('rutaAsignada');
+            const btnCancelar = document.getElementById('btnCancelarViaje');
+            const form = document.getElementById('formularioViaje');
+            const idActivo = obtenerIdUsuarioActivo();
+
+            if (!esEdicion && inputConductor && idActivo) {
+                const idNum = parseInt(idActivo, 10);
+                if (!Number.isNaN(idNum) && idNum > 0) {
+                    inputConductor.value = idNum;
                 }
             }
-        });
+
+            if (esAdminVista) {
+                if (btnCancelar) btnCancelar.href = "/viaje?rol=admin";
+                if (form) form.action = `${form.getAttribute("action")}?rol=admin`;
+                return;
+            }
+
+            if (idActivo) {
+                if (btnCancelar) btnCancelar.href = `/viaje?id_usuario=${encodeURIComponent(idActivo)}`;
+                if (form) form.action = `${form.getAttribute("action")}?id_usuario=${encodeURIComponent(idActivo)}`;
+            }
+
+            if (selectRuta && idActivo) {
+                Array.from(selectRuta.options).forEach((opt) => {
+                    if (!opt.value) return;
+                    const ownerIds = (opt.dataset.ownerIds || "")
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean);
+                    const pertenece = ownerIds.includes(idActivo);
+                    if (!pertenece && !opt.selected) {
+                        opt.hidden = true;
+                        opt.disabled = true;
+                    }
+                });
+            }
+        }
+
+        // Sincronizamos el ID del conductor y filtramos las rutas al cargar la vista
+        document.addEventListener('DOMContentLoaded', filtrarRutasPorUsuario);
 
         /**
          * Función JS para validar los campos visibles e invocar las alertas modales interactivas (SweetAlert2).

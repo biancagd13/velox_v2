@@ -220,6 +220,7 @@
                         {% if viaje.pasajeros %}
                         <div class="d-flex flex-column gap-3 mb-4">
                             {% for pasajero in viaje.pasajeros %}
+                            {% set id_pasajero_valor = pasajero.id_usuario or pasajero.id_pasajero or pasajero.usuario_id or 0 %}
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-3 border rounded-3 bg-white">
                                 <div class="d-flex align-items-center">
                                     <div class="avatar-pasajero rounded-circle d-flex justify-content-center align-items-center me-3 fw-bold shadow-sm">
@@ -230,9 +231,19 @@
                                         <span class="text-muted small">Punto de encuentro: {{ pasajero.punto_encuentro }}</span>
                                     </div>
                                 </div>
-                                <span class="badge badge-velox-confirmado rounded-pill px-3 py-1 fw-semibold">
-                                    <i class="bi bi-check-circle-fill me-1" style="color: #018701;"></i>{{ pasajero.estado_texto }}
-                                </span>
+
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge badge-velox-confirmado rounded-pill px-3 py-1 fw-semibold">
+                                        <i class="bi bi-check-circle-fill me-1" style="color: #018701;"></i>{{ pasajero.estado_texto }}
+                                    </span>
+
+                                    {% if es_finalizado %}
+                                    <a href="/calificacion/nuevo?id_viaje={{ viaje.id_viaje or 0 }}&id_pasajero={{ id_pasajero_valor }}"
+                                       class="btn btn-sm btn-verde-custom rounded-pill px-3 fw-semibold">
+                                        <i class="bi bi-star-fill me-1"></i>Calificar
+                                    </a>
+                                    {% endif %}
+                                </div>
                             </div>
                             {% endfor %}
                         </div>
