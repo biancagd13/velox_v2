@@ -214,56 +214,13 @@
             </a>
         </li>
 
+
         <li class="nav-item">
-            <a href="/ia/practica04/" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/ia/practica04') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-diagram-3-fill me-2" style="color: #005200;"></i> Práctica 04 (Árboles)
+            <a href="/ia-integral/" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/ia-integral') else '' }} py-2 px-3 fw-semibold" data-ruta="/ia-integral">
+                <i class="bi bi-stars me-2" style="color: #005200;"></i> IA Integral
             </a>
         </li>
 
-        <!--
-        <li class="nav-item">
-            <a href="/ia/practica05/" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/ia/practica05') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-collection-fill me-2"></i> Práctica 05 (Comparación)
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="/ia/practica06/" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/ia/practica06') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-sliders me-2"></i> Práctica 06 (Optimización)
-            </a>
-        </li>
-        -->
-
-        <li class="nav-item">
-            <a href="/ia/practica07/" class="nav-link enlace-navegacion py-2 px-3 fw-semibold">
-                <i class="bi bi-diagram-3-fill me-2" style="color: #005200;"></i> Práctica 07 (K-Means)
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="/ia/practica08/" class="nav-link enlace-navegacion py-2 px-3 fw-semibold">
-                <i class="bi bi-sliders me-2" style="color: #005200;"></i> Práctica 08 (Optimización)
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="/ia/practica09/" class="nav-link enlace-navegacion py-2 px-3 fw-semibold">
-                <i class="bi bi-sliders me-2" style="color: #005200;"></i> Práctica 09 (PCA)
-            </a>
-        </li>
-
-        <!-- Módulo de Servicios IA, Reglas BFS y Contexto LogiSmart -->
-        <li class="nav-item">
-            <a href="/ia/servicios/panel" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/ia/servicios') else '' }} py-2 px-3 fw-semibold" data-ruta="/ia/servicios">
-                <i class="bi bi-stars me-2" style="color: #005200;"></i> Servicios IA & LogiSmart
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link {% if '/logismart-v2' in request.url.path %}active bg-success text-white fw-bold rounded-3{% else %}text-dark{% endif %}" href="/logismart-v2/">
-                <i class="bi bi-chat-dots-fill me-2"></i>LogiSmart v2 (Chat)
-            </a>
-        </li>
         
     </ul>
 

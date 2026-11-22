@@ -1,0 +1,3 @@
+﻿arquitectura,tamano_disco_mb,tiempo_lectura_seg,tiempo_agregacion_seg,tiempo_ml_seg,tiempo_total_seg,accuracy,f1_score
+Tradicional (CSV + Pandas + Sklearn),5.073,0.1493,0.0564,0.5244,0.7301,0.9997,0.9998
+Columnar (Parquet + PyArrow),0.958,0.1846,0.0031,0.0,0.1877,0.0,0.0

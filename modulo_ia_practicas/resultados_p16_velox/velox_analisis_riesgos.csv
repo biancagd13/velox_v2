@@ -1,0 +1,3 @@
+﻿origen,destino,costo,asientos_disponibles,estado,motivo_riesgo
+No especificado,UTVT,20.0,3,cancelado,Estado no consolidado (Cancelado/Pendiente)
+No especificado,UTVT,18.0,2,pendiente,Estado no consolidado (Cancelado/Pendiente)

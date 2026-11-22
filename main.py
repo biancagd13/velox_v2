@@ -34,6 +34,7 @@ from routers import practica06_router
 from routers import practica07_router
 from routers import practica08_router
 from routers import practica09_router
+from routers import ia_integral_router
 
 
 # ==========================================================
@@ -72,6 +73,7 @@ app.include_router(practica06_router.router)
 app.include_router(practica07_router.router)
 app.include_router(practica08_router.router)
 app.include_router(practica09_router.router)
+app.include_router(ia_integral_router.router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

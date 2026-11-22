@@ -32,8 +32,12 @@ def obtener_datos_mongodb():
     lista_viajes = []
     cursor = db.viaje.find({}, {"_id": 0, "costo": 1, "asientos_disponibles": 1, "estado": 1})
     for doc in cursor:
-        costo = float(doc.get("costo", 0))
-        asientos = int(doc.get("asientos_disponibles", 0))
+        valor_costo = doc.get("costo")
+        costo = float(valor_costo) if valor_costo is not None else 0.0
+
+        valor_asientos = doc.get("asientos_disponibles")
+        asientos = int(valor_asientos) if valor_asientos is not None else 0
+
         estado = doc.get("estado", "")
         exitoso = 1 if estado in ["en_curso", "finalizado", "activo"] else 0
         lista_viajes.append({
@@ -49,10 +53,13 @@ async def vista_practica04(request: Request):
     df = obtener_datos_mongodb()
 
     if len(df) < 5:
-        return templates.TemplateResponse("practica04.html", {
-            "request": request,
-            "error": "No hay suficientes registros en MongoDB (mínimo 5 viajes) para ejecutar el entrenamiento."
-        })
+        return templates.TemplateResponse(
+            request,
+            "ia_modulo/practica04.html",
+            {
+                "error": "No hay suficientes registros en MongoDB (mínimo 5 viajes) para ejecutar el entrenamiento."
+            }
+        )
 
     X = df[["costo", "asientos_disponibles"]]
     y = df["viaje_exitoso"]
@@ -117,7 +124,8 @@ async def vista_practica04(request: Request):
     }
 
     # Validación cruzada
-    cv_folds = min(5, len(X_ent)) if len(X_ent) >= 2 else 2
+    min_clase_ent = int(y_ent.value_counts().min()) if len(y_ent) > 0 else 0
+    cv_folds = min(5, len(X_ent), min_clase_ent) if min_clase_ent >= 2 else 2
     scores_cv = cross_val_score(
         DecisionTreeClassifier(max_depth=prof_sel, random_state=SEMILLA),
         X_ent, y_ent, cv=cv_folds, scoring="accuracy"
@@ -169,8 +177,8 @@ async def vista_practica04(request: Request):
     plt.close()
 
     return templates.TemplateResponse(
-        request, 
-        "ia_modulo/practica04.html", 
+        request,
+        "ia_modulo/practica04.html",
         {
             "total_registros": len(df),
             "conteos": {

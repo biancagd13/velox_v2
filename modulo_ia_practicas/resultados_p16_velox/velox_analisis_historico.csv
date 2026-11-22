@@ -1,0 +1,6 @@
+﻿id_viaje,origen,destino,costo,asientos_disponibles,estado,viaje_exitoso
+6b0343283dbae2d1f85ce9f9,,UTVT,20.0,3,cancelado,0
+6b0343133dbae2d1f85ce9f8,,UTVT,16.0,2,aceptado,0
+6b0342fb3dbae2d1f85ce9f7,,UTVT,12.0,2,aceptado,0
+6b0305f8fa3ddb471b807d5e,,UTVT,18.0,2,pendiente,0
+6b026edea4c1545e651175f9,,UTVT,12.0,1,finalizado,1

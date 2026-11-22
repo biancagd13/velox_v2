@@ -1,0 +1,3 @@
+﻿modelo,accuracy,precision,recall,f1_score
+Perceptrón Simple (Lineal),0.75,0.6176,0.75,0.6774
+"Red Neuronal MLP (32, 16)",0.9625,0.931,0.9643,0.9474

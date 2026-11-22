@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inteligencia Operativa - Velox UTVT</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        body {
+            background-color: #FFFFFF !important;
+            color: #212529;
+        }
+
+        #mainContent {
+            background-color: #FFFFFF !important;
+            transition: margin-left 0.28s ease-in-out;
+        }
+
+        #mainContent .card {
+            background-color: #FFFFFF !important;
+        }
+
+        #mainContent .btn-verde-custom {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border: none;
+            transition: all 0.2s ease-in-out;
+        }
+        #mainContent .btn-verde-custom:hover {
+            background-color: #005200 !important;
+            color: #ffffff !important;
+            transform: translateY(-2px);
+        }
+
+        #mainContent .stat-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-left: 4px solid #018701;
+        }
+        #mainContent .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.12) !important;
+        }
+
+        #mainContent .nav-pills .nav-link {
+            color: #005200;
+            background-color: #FFFFFF;
+            border: 1px solid #dee2e6;
+            border-radius: 50rem;
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding: 0.55rem 1.1rem;
+            transition: all 0.2s ease;
+        }
+        #mainContent .nav-pills .nav-link:hover {
+            background-color: #f8f9fa;
+            color: #005200;
+        }
+        #mainContent .nav-pills .nav-link.active {
+            background-color: #005200 !important;
+            color: #ffffff !important;
+            border-color: #005200 !important;
+        }
+
+        #mainContent .grafica-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: contain;
+            background: #FFFFFF;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        #mainContent .grafica-card img:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'components/sidebar.html' %}
+
+    <div id="mainContent" class="p-4 bg-white min-vh-100">
+
+        <div class="container-fluid px-0" style="max-width: 1250px;">
+
+            <!-- Encabezado -->
+            <div class="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-end flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1" style="color: #005200;">
+                        <i class="bi bi-cpu-fill me-2" style="color: #005200;"></i>Centro de Inteligencia y Analítica Velox
+                    </h3>
+                    <p class="text-muted small mb-0">
+                        Predicción de ocupación, segmentación de movilidad, gráficas analíticas y exportación de reportes.
+                    </p>
+                </div>
+                <span class="badge bg-light text-secondary border rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-cloud-check-fill me-1" style="color: #018701;"></i> Velox Cloud Conectado
+                </span>
+            </div>
+
+            <!-- Botones de navegación por área funcional -->
+            <ul class="nav nav-pills gap-2 mb-4" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-operacion" type="button">
+                        <i class="bi bi-speedometer2 me-1"></i> Operación y Datos
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-predictor" type="button">
+                        <i class="bi bi-magic me-1"></i> Predictor de Viajes
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-ml" type="button">
+                        <i class="bi bi-diagram-3-fill me-1"></i> Clasificación y Segmentación
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-bigdata" type="button">
+                        <i class="bi bi-hdd-network-fill me-1"></i> Procesamiento Masivo
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-redes" type="button">
+                        <i class="bi bi-graph-up-arrow me-1"></i> Redes Neuronales
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-archivos" type="button">
+                        <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Gráficas y Reportes CSV
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <!-- ================================================= -->
+                <!-- 1. OPERACIÓN Y DATOS REALES                       -->
+                <!-- ================================================= -->
+                <div class="tab-pane fade show active" id="tab-operacion">
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-lg">
+                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Viajes Reales</p>
+                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-viajes">—</h3>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg">
+                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">
+                                    <i class="bi bi-people-fill me-1" style="color: #005200;"></i>Usuarios
+                                </p>
+                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-usuarios">—</h3>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg">
+                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Reservas</p>
+                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-reservas">—</h3>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg">
+                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Tarifa Media</p>
+                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-costo">—</h3>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg">
+                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Cupo Medio</p>
+                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-asientos">—</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-lg-5">
+                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                                <h5 class="fw-bold mb-2" style="color: #005200;">
+                                    <i class="bi bi-sliders2-vertical me-2"></i>Acciones de Datos y Reglas
+                                </h5>
+                                <p class="text-muted small mb-3">
+                                    Actualiza la depuración de usuarios, valida reglas de tarifa y exporta los registros reales de Velox.
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-verde-custom fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('reglas_motor')">
+                                        <i class="bi bi-check2-square me-2"></i>Validar Reglas Operativas
+                                    </button>
+                                    <button class="btn btn-outline-secondary fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('limpieza_datos')">
+                                        <i class="bi bi-funnel-fill me-2" style="color: #018701;"></i>Depurar Base de Usuarios
+                                    </button>
+                                    <button class="btn btn-outline-secondary fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('modelo_base')">
+                                        <i class="bi bi-cpu me-2" style="color: #018701;"></i>Calibrar Modelo Inicial
+                                    </button>
+                                    <button class="btn btn-outline-secondary fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('extraccion_atlas')">
+                                        <i class="bi bi-cloud-download-fill me-2" style="color: #018701;"></i>Sincronizar y Exportar Datos Cloud
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-7">
+                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                                <h5 class="fw-bold mb-3" style="color: #005200;">
+                                    <i class="bi bi-clock-history me-2"></i>Viajes Registrados en Plataforma
+                                </h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="bg-light">
+                                            <tr><th>Trayecto</th><th>Cooperación</th><th>Lugares</th><th>Estatus</th></tr>
+                                        </thead>
+                                        <tbody id="tabla-historial"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================= -->
+                <!-- 2. PREDICTOR INTERACTIVO DE OCUPACIÓN             -->
+                <!-- ================================================= -->
+                <div class="tab-pane fade" id="tab-predictor">
+                    <div class="row g-4">
+                        <div class="col-lg-7">
+                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                                <h5 class="fw-bold mb-1" style="color: #005200;">
+                                    <i class="bi bi-sliders me-2"></i>Simulador de Aceptación de Viaje
+                                </h5>
+                                <p class="text-muted small mb-4">
+                                    Evalúa en vivo la probabilidad de que tu salida hacia Campus UTVT consiga pasajeros.
+                                </p>
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-semibold small text-secondary">COOPERACIÓN ($ MXN)</label>
+                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-costo" value="15" min="5" max="200">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-semibold small text-secondary">ASIENTOS DISPONIBLES</label>
+                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-asientos" value="3" min="1" max="6">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-semibold small text-secondary">DISTANCIA AL CAMPUS (KM)</label>
+                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-distancia" value="16.5" step="0.5">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-semibold small text-secondary">PUNTUALIDAD CONDUCTOR (%)</label>
+                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-puntualidad" value="92" min="0" max="100">
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-verde-custom fw-bold rounded-pill px-4 py-2 mt-4 shadow-sm" onclick="predecirViaje()">
+                                    <i class="bi bi-lightning-charge-fill me-2"></i>Calcular Probabilidad
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-5">
+                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-center text-center" id="panel-resultado">
+                                <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3" style="width: 70px; height: 70px;">
+                                    <i class="bi bi-stars fs-2" style="color: #018701;"></i>
+                                </div>
+                                <h5 class="fw-bold" style="color: #005200;">Listo para analizar</h5>
+                                <p class="text-muted small mb-0">Configura los parámetros y presiona calcular.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================= -->
+                <!-- 3. CLASIFICACIÓN Y SEGMENTACIÓN                   -->
+                <!-- ================================================= -->
+                <div class="tab-pane fade" id="tab-ml">
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+                        <h5 class="fw-bold mb-1" style="color: #005200;">
+                            <i class="bi bi-diagram-3-fill me-2"></i>Clasificación y Segmentación de Rutas
+                        </h5>
+                        <p class="text-muted small mb-4">
+                            Selecciona un análisis para generar sus gráficas comparativas, matrices de confusión y perfiles de viaje.
+                        </p>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('arbol_decision')">
+                                    <i class="bi bi-diagram-2-fill d-block fs-4 mb-1"></i>
+                                    Árboles de Decisión
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('comparativa_algoritmos')">
+                                    <i class="bi bi-bar-chart-steps d-block fs-4 mb-1"></i>
+                                    Comparativa de Algoritmos
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('hiperparametros')">
+                                    <i class="bi bi-sliders2 d-block fs-4 mb-1"></i>
+                                    Ajuste de Hiperparámetros
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('optimizacion_clusters')">
+                                    <i class="bi bi-bullseye d-block fs-4 mb-1 text-primary"></i>
+                                    Segmentación de Perfiles (K-Means)
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('reduccion_pca')">
+                                    <i class="bi bi-bounding-box d-block fs-4 mb-1 text-warning"></i>
+                                    Proyección de Componentes (PCA)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================= -->
+                <!-- 4. PROCESAMIENTO MASIVO                           -->
+                <!-- ================================================= -->
+                <div class="tab-pane fade" id="tab-bigdata">
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+                        <h5 class="fw-bold mb-1" style="color: #005200;">
+                            <i class="bi bi-hdd-network-fill me-2"></i>Análisis de Demanda a Gran Escala (50,000 Trayectos)
+                        </h5>
+                        <p class="text-muted small mb-4">
+                            Procesa el historial masivo del Valle de Toluca hacia Campus UTVT y descarga los resúmenes por zona.
+                        </p>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('generador_masivo')">
+                                    <i class="bi bi-database-fill-add d-block fs-4 mb-1 text-primary"></i>
+                                    1. Generar Historial Masivo
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('conversion_parquet')">
+                                    <i class="bi bi-file-earmark-zip-fill d-block fs-4 mb-1 text-warning"></i>
+                                    2. Optimizar Almacenamiento Parquet
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('spark_procesamiento')">
+                                    <i class="bi bi-lightning-fill d-block fs-4 mb-1"></i>
+                                    3. Demanda por Punto de Origen
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('spark_mllib')">
+                                    <i class="bi bi-cpu-fill d-block fs-4 mb-1"></i>
+                                    4. Clasificación Distribuida Masiva
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('benchmark_bigdata')">
+                                    <i class="bi bi-speedometer d-block fs-4 mb-1 text-primary"></i>
+                                    5. Comparativa de Rendimiento y Velocidad
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================= -->
+                <!-- 5. REDES NEURONALES                               -->
+                <!-- ================================================= -->
+                <div class="tab-pane fade" id="tab-redes">
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+                        <h5 class="fw-bold mb-1" style="color: #005200;">
+                            <i class="bi bi-graph-up-arrow me-2"></i>Entrenamiento de Redes Neuronales
+                        </h5>
+                        <p class="text-muted small mb-4">
+                            Ejecuta los modelos neuronales para visualizar sus curvas de aprendizaje, precisión y métricas de validación.
+                        </p>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('perceptron_lineal')">
+                                    <i class="bi bi-node-plus-fill d-block fs-4 mb-1 text-primary"></i>
+                                    1. Neurona Perceptrón Base
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('red_mlp')">
+                                    <i class="bi bi-diagram-3-fill d-block fs-4 mb-1 text-warning"></i>
+                                    2. Red Multicapa (MLP)
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('deep_learning_pytorch')">
+                                    <i class="bi bi-fire d-block fs-4 mb-1"></i>
+                                    3. Red Neuronal Profunda (PyTorch)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================================================= -->
+                <!-- 6. GRÁFICAS REALES Y DESCARGAS CSV                -->
+                <!-- ================================================= -->
+                <div class="tab-pane fade" id="tab-archivos">
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0" style="color: #005200;">
+                                <i class="bi bi-images me-2"></i>Galería de Gráficas Analíticas (<span id="count-imgs">0</span>)
+                            </h5>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="cargarEstado()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                            </button>
+                        </div>
+                        <div class="row g-3" id="galeria-imagenes"></div>
+                    </div>
+
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
+                        <h5 class="fw-bold mb-3" style="color: #005200;">
+                            <i class="bi bi-file-earmark-arrow-down-fill me-2"></i>Reportes y Datasets CSV (<span id="count-csvs">0</span>)
+                        </h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Nombre del Reporte</th>
+                                        <th>Tamaño</th>
+                                        <th class="text-end">Opciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-csvs"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ===================================================== -->
+            <!-- PANEL VISUAL DE RESULTADOS Y JUSTIFICACIÓN            -->
+            <!-- ===================================================== -->
+            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mt-4 border-top border-4" style="border-top-color: #018701 !important; display:none;" id="tarjeta-resultado-accion">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                    <div>
+                        <span class="badge rounded-pill px-3 py-1 mb-2" id="res-estado-badge">Completado</span>
+                        <h5 class="fw-bold mb-1" style="color: #005200;" id="res-titulo">Resultado del Análisis</h5>
+                        <p class="text-muted small mb-0" id="res-descripcion"></p>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="cerrarTarjetaResultado()">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Indicadores KPI extraídos automáticamente -->
+                <div class="row g-3 mb-4" id="res-indicadores"></div>
+
+                <!-- Justificación y explicación operativa -->
+                <div class="row g-3 mb-4" id="res-bloque-explicacion" style="display:none;">
+                    <div class="col-lg-7">
+                        <div class="p-3 rounded-4 bg-light border-start border-4 h-100" style="border-left-color: #018701 !important;">
+                            <h6 class="fw-bold mb-2" style="color: #005200;">
+                                <i class="bi bi-info-circle-fill me-2" style="color: #7097a8;"></i>Interpretación de Resultados
+                            </h6>
+                            <p class="text-secondary small mb-2" id="res-justificacion"></p>
+                            <ul class="small text-muted mb-0 ps-3" id="res-hallazgos"></ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="p-3 rounded-4 bg-light border h-100">
+                            <h6 class="fw-bold mb-2" style="color: #005200;">
+                                <i class="bi bi-lightbulb-fill me-2 text-warning"></i>Recomendación Operativa
+                            </h6>
+                            <p class="text-secondary small mb-0" id="res-recomendacion"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficas generadas/actualizadas -->
+                <div class="mb-3" id="res-bloque-graficas" style="display:none;">
+                    <h6 class="fw-bold mb-2" style="color: #005200;">
+                        <i class="bi bi-bar-chart-fill me-2 text-primary"></i>Visualizaciones Generadas
+                    </h6>
+                    <div class="row g-3" id="res-graficas-grid"></div>
+                </div>
+
+                <!-- Botones directos de descarga CSV -->
+                <div id="res-bloque-csvs" style="display:none;">
+                    <h6 class="fw-bold mb-2" style="color: #005200;">
+                        <i class="bi bi-file-earmark-spreadsheet me-2" style="color: #018701;"></i>Archivos Listos para Descargar
+                    </h6>
+                    <div class="d-flex flex-wrap gap-2" id="res-csvs-lista"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal para ampliar gráficas o previsualizar CSV -->
+    <div class="modal fade" id="modalVisor" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content bg-white rounded-4 border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: #005200;" id="modalVisorTitulo">Vista Previa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalVisorCuerpo"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const modalVisor = new bootstrap.Modal(document.getElementById('modalVisor'));
+
+        function renderizarArtefactos(imagenes, csvs) {
+            document.getElementById('count-imgs').textContent = imagenes.length;
+            document.getElementById('count-csvs').textContent = csvs.length;
+
+            document.getElementById('galeria-imagenes').innerHTML = imagenes.map(img => `
+                <div class="col-sm-6 col-lg-4">
+                    <div class="card border rounded-4 p-3 h-100 grafica-card">
+                        <img src="/ia-integral/archivo/imagen?ruta=${encodeURIComponent(img.ruta_rel)}&t=${Date.now()}"
+                             alt="${img.nombre}"
+                             onclick="ampliarImagen('${img.nombre}', '${img.ruta_rel}')">
+                        <div class="mt-2 d-flex justify-content-between align-items-center">
+                            <strong class="text-truncate small" style="color: #005200;">${img.nombre}</strong>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill ms-2"
+                                    onclick="ampliarImagen('${img.nombre}', '${img.ruta_rel}')">
+                                <i class="bi bi-arrows-fullscreen"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('') || '<div class="col-12 text-muted">Aún no hay gráficas generadas.</div>';
+
+            document.getElementById('tabla-csvs').innerHTML = csvs.map(c => `
+                <tr>
+                    <td class="fw-semibold" style="color: #005200;">${c.nombre}</td>
+                    <td><span class="badge bg-light text-secondary border">${c.tam_kb} KB</span></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill me-1"
+                                onclick="verPreviewCsv('${c.ruta_rel}')">
+                            <i class="bi bi-table me-1 text-primary"></i>Vista Previa
+                        </button>
+                        <a href="/ia-integral/archivo/descargar-csv?ruta=${encodeURIComponent(c.ruta_rel)}"
+                           class="btn btn-sm btn-verde-custom rounded-pill">
+                            <i class="bi bi-download me-1"></i>Descargar CSV
+                        </a>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="3" class="text-muted">No hay archivos CSV disponibles todavía.</td></tr>';
+        }
+
+        async function cargarEstado() {
+            const res = await fetch('/ia-integral/api/estado');
+            const data = await res.json();
+
+            document.getElementById('kpi-viajes').textContent = data.kpis.total_viajes;
+            document.getElementById('kpi-usuarios').textContent = data.kpis.total_usuarios;
+            document.getElementById('kpi-reservas').textContent = data.kpis.total_reservas;
+            document.getElementById('kpi-costo').textContent = '$' + data.kpis.costo_promedio;
+            document.getElementById('kpi-asientos').textContent = data.kpis.asientos_promedio;
+
+            document.getElementById('tabla-historial').innerHTML = data.historial.map(v => `
+                <tr>
+                    <td><span class="fw-semibold" style="color: #005200;">${v.origen}</span> <i class="bi bi-arrow-right mx-1" style="color: #018701;"></i> ${v.destino}</td>
+                    <td class="fw-bold" style="color: #018701;">$${v.costo.toFixed(2)}</td>
+                    <td class="text-secondary">${v.asientos} lugares</td>
+                    <td><span class="badge bg-light border rounded-pill px-3" style="color: #005200;">${v.estado}</span></td>
+                </tr>
+            `).join('') || '<tr><td colspan="4" class="text-muted">Sin viajes registrados.</td></tr>';
+
+            renderizarArtefactos(data.imagenes, data.csvs);
+        }
+
+        async function ejecutarProceso(clave) {
+            const tarjeta = document.getElementById('tarjeta-resultado-accion');
+            const badge = document.getElementById('res-estado-badge');
+            const titulo = document.getElementById('res-titulo');
+            const desc = document.getElementById('res-descripcion');
+            const contInd = document.getElementById('res-indicadores');
+            const bloqueExp = document.getElementById('res-bloque-explicacion');
+            const bloqueGraf = document.getElementById('res-bloque-graficas');
+            const bloqueCsv = document.getElementById('res-bloque-csvs');
+
+            tarjeta.style.display = 'block';
+            badge.className = 'badge bg-warning text-dark rounded-pill px-3 py-1 mb-2';
+            badge.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Procesando...';
+            titulo.textContent = 'Ejecutando análisis inteligente';
+            desc.textContent = 'Calculando indicadores, redactando diagnóstico y actualizando visualizaciones...';
+            contInd.innerHTML = '';
+            bloqueExp.style.display = 'none';
+            bloqueGraf.style.display = 'none';
+            bloqueCsv.style.display = 'none';
+            tarjeta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            try {
+                const res = await fetch('/ia-integral/api/ejecutar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clave_proceso: clave })
+                });
+                const data = await res.json();
+
+                badge.className = data.ok
+                    ? 'badge rounded-pill px-3 py-1 mb-2'
+                    : 'badge bg-warning text-dark rounded-pill px-3 py-1 mb-2';
+                if (data.ok) {
+                    badge.style.backgroundColor = '#018701';
+                    badge.style.color = '#ffffff';
+                } else {
+                    badge.style.backgroundColor = '';
+                    badge.style.color = '';
+                }
+                badge.innerHTML = data.ok
+                    ? '<i class="bi bi-check-circle-fill me-1"></i> Análisis Completado'
+                    : '<i class="bi bi-exclamation-triangle-fill me-1"></i> Revisar Datos';
+
+                titulo.textContent = data.titulo;
+                desc.textContent = data.descripcion;
+
+                if (data.indicadores && data.indicadores.length) {
+                    contInd.innerHTML = data.indicadores.map(ind => `
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-4 bg-light border-start border-4" style="border-left-color: #018701 !important;">
+                                <small class="text-muted fw-bold d-block text-uppercase" style="font-size:0.72rem;">${ind.etiqueta}</small>
+                                <span class="fs-4 fw-bold" style="color: #005200;">${ind.valor}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                if (data.narrativa) {
+                    bloqueExp.style.display = 'flex';
+                    document.getElementById('res-justificacion').textContent = data.narrativa.justificacion || '';
+                    document.getElementById('res-recomendacion').textContent = data.narrativa.recomendacion || '';
+                    const listaHallazgos = document.getElementById('res-hallazgos');
+                    if (data.narrativa.hallazgos && data.narrativa.hallazgos.length) {
+                        listaHallazgos.innerHTML = data.narrativa.hallazgos
+                            .map(h => `<li class="mb-1">${h}</li>`)
+                            .join('');
+                    } else {
+                        listaHallazgos.innerHTML = '';
+                    }
+                }
+
+                if (data.imagenes_nuevas && data.imagenes_nuevas.length) {
+                    bloqueGraf.style.display = 'block';
+                    document.getElementById('res-graficas-grid').innerHTML = data.imagenes_nuevas.map(img => `
+                        <div class="col-md-4">
+                            <div class="card border rounded-4 p-2 grafica-card">
+                                <img src="/ia-integral/archivo/imagen?ruta=${encodeURIComponent(img.ruta_rel)}&t=${Date.now()}"
+                                     alt="${img.nombre}"
+                                     onclick="ampliarImagen('${img.nombre}', '${img.ruta_rel}')">
+                                <small class="fw-semibold text-center mt-2 d-block text-truncate" style="color: #005200;">${img.nombre}</small>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                if (data.csvs_nuevos && data.csvs_nuevos.length) {
+                    bloqueCsv.style.display = 'block';
+                    document.getElementById('res-csvs-lista').innerHTML = data.csvs_nuevos.map(c => `
+                        <div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 py-2 gap-2">
+                            <span class="fw-semibold small" style="color: #005200;">${c.nombre} (${c.tam_kb} KB)</span>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2"
+                                    onclick="verPreviewCsv('${c.ruta_rel}')">Ver</button>
+                            <a href="/ia-integral/archivo/descargar-csv?ruta=${encodeURIComponent(c.ruta_rel)}"
+                               class="btn btn-sm btn-verde-custom rounded-pill py-0 px-2">Descargar</a>
+                        </div>
+                    `).join('');
+                }
+
+                if (data.imagenes && data.csvs) {
+                    renderizarArtefactos(data.imagenes, data.csvs);
+                }
+            } catch (err) {
+                badge.className = 'badge bg-warning text-dark rounded-pill px-3 py-1 mb-2';
+                badge.textContent = 'Error de conexión';
+                desc.textContent = 'No se pudo completar la operación con el servidor.';
+            }
+        }
+
+        function cerrarTarjetaResultado() {
+            document.getElementById('tarjeta-resultado-accion').style.display = 'none';
+        }
+
+        function ampliarImagen(titulo, rutaRel) {
+            document.getElementById('modalVisorTitulo').textContent = titulo;
+            document.getElementById('modalVisorCuerpo').innerHTML = `
+                <div class="text-center">
+                    <img src="/ia-integral/archivo/imagen?ruta=${encodeURIComponent(rutaRel)}&t=${Date.now()}"
+                         class="img-fluid rounded-3" alt="${titulo}">
+                </div>
+            `;
+            modalVisor.show();
+        }
+
+        async function verPreviewCsv(rutaRel) {
+            const res = await fetch(`/ia-integral/api/vista-previa-csv?ruta=${encodeURIComponent(rutaRel)}`);
+            const data = await res.json();
+
+            document.getElementById('modalVisorTitulo').textContent = `${data.nombre} (primeros 15 registros)`;
+            const ths = data.columnas.map(c => `<th>${c}</th>`).join('');
+            const trs = data.filas.map(fila => `
+                <tr>${data.columnas.map(c => `<td>${fila[c]}</td>`).join('')}</tr>
+            `).join('');
+
+            document.getElementById('modalVisorCuerpo').innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped table-bordered mb-0">
+                        <thead class="bg-light"><tr>${ths}</tr></thead>
+                        <tbody>${trs}</tbody>
+                    </table>
+                </div>
+            `;
+            modalVisor.show();
+        }
+
+        async function predecirViaje() {
+            const payload = {
+                costo: parseFloat(document.getElementById('in-costo').value),
+                asientos_disponibles: parseInt(document.getElementById('in-asientos').value),
+                distancia_km: parseFloat(document.getElementById('in-distancia').value),
+                puntualidad: parseFloat(document.getElementById('in-puntualidad').value)
+            };
+            const res = await fetch('/ia-integral/api/predecir', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const r = await res.json();
+
+            const colorEstilo = r.viable ? 'color: #018701;' : 'color: #d39e00;';
+            const icono = r.viable ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+            const factoresHtml = (r.factores || [])
+                .map(f => `<li class="mb-1">${f}</li>`)
+                .join('');
+
+            document.getElementById('panel-resultado').innerHTML = `
+                <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto mb-2" style="width: 64px; height: 64px;">
+                    <i class="bi ${icono} fs-2" style="${colorEstilo}"></i>
+                </div>
+                <span class="text-muted small fw-bold text-uppercase">Probabilidad Estimada de Ocupación</span>
+                <h1 class="fw-bold my-1" style="font-size: 2.8rem; ${colorEstilo}">${r.probabilidad_exito}%</h1>
+                <p class="text-secondary fw-semibold small mb-3">${r.recomendacion}</p>
+                <div class="text-start bg-light rounded-3 p-3 border-start border-4" style="border-left-color: #018701 !important;">
+                    <small class="fw-bold text-uppercase d-block mb-1" style="color:#005200;font-size:0.72rem;">Justificación del cálculo</small>
+                    <ul class="small text-muted mb-0 ps-3">${factoresHtml}</ul>
+                </div>
+            `;
+        }
+
+        cargarEstado();
+    </script>
+</body>
+</html>

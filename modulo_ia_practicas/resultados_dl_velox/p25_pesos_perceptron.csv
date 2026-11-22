@@ -1,0 +1,2 @@
+﻿peso_w1_costo,peso_w2_asientos,sesgo_b,accuracy_test,precision_test,recall_test,f1_test
+-0.256767,0.137483,0.05,0.975,0.9524,1.0,0.9756

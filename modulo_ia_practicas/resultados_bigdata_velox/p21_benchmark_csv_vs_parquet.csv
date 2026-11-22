@@ -1,0 +1,3 @@
+﻿formato,tamano_mb,lectura_completa_seg,lectura_3_columnas_seg
+CSV (Plano UTF-8),5.073,0.156,0.0536
+Apache Parquet (Snappy),0.958,0.0347,0.0062
