@@ -251,6 +251,20 @@
                 <i class="bi bi-sliders me-2" style="color: #005200;"></i> Práctica 09 (PCA)
             </a>
         </li>
+
+        <!-- Módulo de Servicios IA, Reglas BFS y Contexto LogiSmart -->
+        <li class="nav-item">
+            <a href="/ia/servicios/panel" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/ia/servicios') else '' }} py-2 px-3 fw-semibold" data-ruta="/ia/servicios">
+                <i class="bi bi-stars me-2" style="color: #005200;"></i> Servicios IA & LogiSmart
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link {% if '/logismart-v2' in request.url.path %}active bg-success text-white fw-bold rounded-3{% else %}text-dark{% endif %}" href="/logismart-v2/">
+                <i class="bi bi-chat-dots-fill me-2"></i>LogiSmart v2 (Chat)
+            </a>
+        </li>
+        
     </ul>
 
     <hr class="text-secondary my-2">

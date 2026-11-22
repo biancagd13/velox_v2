@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios IA y LogiSmart - Velox UTVT</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        body { background-color: #FFFFFF !important; }
+        #mainContent { margin-left: 280px; transition: margin-left 0.3s ease-in-out; }
+        .card-metrica { border-left: 4px solid #018701 !important; }
+        .table-custom th { background-color: #f8f9fa; color: #005200; font-weight: 600; }
+        .btn-velox { background-color: #018701; color: #fff; border: none; }
+        .btn-velox:hover { background-color: #005200; color: #fff; }
+        @media (max-width: 768px) { #mainContent { margin-left: 0 !important; } }
+    </style>
+</head>
+<body>
+
+    {% include 'components/sidebar.html' %}
+
+    <div id="mainContent" class="p-4 bg-white" style="min-height: 100vh;">
+        <div class="container-fluid px-3">
+
+            <!-- ENCABEZADO -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1" style="color: #005200;">
+                        <i class="bi bi-robot me-2"></i>Servicios de IA, Reglas BFS y LogiSmart
+                    </h3>
+                    <p class="text-muted small mb-0">VELOX UTVT - Agregaciones en MongoDB Atlas, calidad de viajes, estimación de ocupación y contexto para LogiSmart.</p>
+                </div>
+                <div>
+                    <a href="/ia/servicios/panel" class="btn btn-velox rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Actualizar Panel
+                    </a>
+                </div>
+            </div>
+
+            <!-- 1. TARJETAS DE AGREGACIONES EN ATLAS -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card shadow-sm border rounded-4 p-3 bg-white card-metrica">
+                        <span class="text-muted small fw-semibold">Total Viajes (Atlas)</span>
+                        <h4 class="fw-bold mb-0 mt-1" style="color: #005200;">{{ resumen.total_viajes }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm border rounded-4 p-3 bg-white card-metrica">
+                        <span class="text-muted small fw-semibold">Costo Promedio</span>
+                        <h4 class="fw-bold mb-0 mt-1 text-success">${{ resumen.costo_promedio }} MXN</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm border rounded-4 p-3 bg-white card-metrica">
+                        <span class="text-muted small fw-semibold">Asientos Disp. Promedio</span>
+                        <h4 class="fw-bold mb-0 mt-1 text-secondary">{{ resumen.asientos_promedio }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card shadow-sm border rounded-4 p-3 bg-white card-metrica">
+                        <span class="text-muted small fw-semibold">Calidad de Viajes</span>
+                        <h4 class="fw-bold mb-0 mt-1" style="color: #005200;">
+                            {{ calidad.cantidad_validos }} ok / {{ calidad.cantidad_observaciones }} obs
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. BÚSQUEDA BFS Y ESTIMACIÓN DE OCUPACIÓN (INTERACTIVOS) -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100">
+                        <h5 class="fw-bold mb-3" style="color: #005200;">
+                            <i class="bi bi-signpost-split-fill me-2"></i>Búsqueda de Ruta BFS
+                        </h5>
+
+                        <form id="formBfs" class="row g-2 mb-3">
+                            <div class="col-sm-5">
+                                <label class="form-label small fw-semibold mb-1">Origen</label>
+                                <input type="text" id="bfsOrigen" class="form-control form-control-sm" value="{{ viaje_real.origen }}" required>
+                            </div>
+                            <div class="col-sm-5">
+                                <label class="form-label small fw-semibold mb-1">Destino</label>
+                                <input type="text" id="bfsDestino" class="form-control form-control-sm" value="{{ viaje_real.destino }}" required>
+                            </div>
+                            <div class="col-sm-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-velox btn-sm w-100">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+
+                        <div id="resultadoBfs">
+                            <p class="mb-1"><strong>Origen:</strong> {{ ruta_ejemplo.inicio }} → <strong>Destino:</strong> {{ ruta_ejemplo.destino }}</p>
+                            {% if ruta_ejemplo.encontrada %}
+                                <p class="mb-2"><strong>Trayecto:</strong> <span class="badge bg-success">{{ ruta_ejemplo.ruta | join(' → ') }}</span></p>
+                                <p class="text-muted small mb-0">Conexiones / tramos: {{ ruta_ejemplo.conexiones }}</p>
+                            {% else %}
+                                <div class="alert alert-warning py-2 small mb-0">{{ ruta_ejemplo.mensaje }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100">
+                        <h5 class="fw-bold mb-3" style="color: #005200;">
+                            <i class="bi bi-people-fill me-2"></i>Estimación de Ocupación
+                        </h5>
+
+                        <form id="formOcupacion" class="row g-2 mb-3">
+                            <div class="col-sm-4">
+                                <label class="form-label small fw-semibold mb-1">Costo ($ MXN)</label>
+                                <input type="number" step="0.5" min="0" max="500" id="ocCosto" class="form-control form-control-sm" value="{{ viaje_real.costo }}" required>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label small fw-semibold mb-1">Asientos disp.</label>
+                                <input type="number" min="0" max="6" id="ocAsientos" class="form-control form-control-sm" value="{{ viaje_real.asientos_disponibles }}" required>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label small fw-semibold mb-1">Capacidad total</label>
+                                <input type="number" min="1" max="10" id="ocCapacidad" class="form-control form-control-sm" value="{{ viaje_real.capacidad_total }}">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-velox btn-sm px-3">
+                                    <i class="bi bi-calculator me-1"></i>Estimar Ocupación
+                                </button>
+                            </div>
+                        </form>
+
+                        <div id="resultadoOcupacion">
+                            <ul class="list-group list-group-flush mb-2">
+                                <li class="list-group-item px-0 py-1"><strong>Costo evaluado:</strong> ${{ ocupacion_ejemplo.costo }} MXN</li>
+                                <li class="list-group-item px-0 py-1"><strong>Asientos disponibles / Capacidad:</strong> {{ ocupacion_ejemplo.asientos_disponibles }} / {{ ocupacion_ejemplo.capacidad_total }}</li>
+                                <li class="list-group-item px-0 py-1"><strong>Ocupación estimada:</strong> {{ ocupacion_ejemplo.asientos_ocupados_estimados }} asientos ({{ ocupacion_ejemplo.porcentaje_llenado_estimado }}%)</li>
+                            </ul>
+                            <span class="badge bg-success rounded-pill px-3">Demanda {{ ocupacion_ejemplo.nivel_demanda }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. TOP RUTAS FRECUENTES EN ATLAS -->
+            <div class="card shadow-sm border rounded-4 p-4 bg-white mb-4">
+                <h5 class="fw-bold mb-3" style="color: #005200;">
+                    <i class="bi bi-bar-chart-fill me-2"></i>Top Rutas Frecuentes en MongoDB Atlas
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle table-custom">
+                        <thead>
+                            <tr>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Total Viajes</th>
+                                <th>Costo Promedio</th>
+                                <th>Asientos Promedio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in top_rutas %}
+                            <tr>
+                                <td class="fw-bold">{{ r.origen }}</td>
+                                <td>{{ r.destino }}</td>
+                                <td><span class="badge bg-success rounded-pill px-3">{{ r.total_viajes }}</span></td>
+                                <td>${{ r.costo_promedio }} MXN</td>
+                                <td>{{ r.asientos_promedio }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted small">Sin rutas registradas aún en MongoDB Atlas.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. VALIDADOR DE REGLAS + BLOQUE DE CONTEXTO LOGISMART -->
+            <div class="card shadow-sm border rounded-4 p-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h5 class="fw-bold mb-0" style="color: #005200;">
+                        <i class="bi bi-chat-square-text-fill me-2"></i>Validación de Reglas y Contexto para LogiSmart
+                    </h5>
+                    <span id="badgeRegla" class="badge bg-success rounded-pill px-3">Reglas listas</span>
+                </div>
+
+                <form id="formLogiSmart" class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold mb-1">Correo solicitante (@utvt.edu.mx / @utvtol.edu.mx)</label>
+                        <input type="email" id="lsCorreo" class="form-control form-control-sm" value="{{ viaje_real.correo_usuario_ejemplo }}" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold mb-1">ID Viaje</label>
+                        <input type="text" id="lsIdViaje" class="form-control form-control-sm" value="{{ viaje_real.id_viaje }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold mb-1">Origen</label>
+                        <input type="text" id="lsOrigen" class="form-control form-control-sm" value="{{ viaje_real.origen }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold mb-1">Destino</label>
+                        <input type="text" id="lsDestino" class="form-control form-control-sm" value="{{ viaje_real.destino }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold mb-1">Correo conductor</label>
+                        <input type="email" id="lsConductor" class="form-control form-control-sm" value="{{ viaje_real.correo_conductor }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold mb-1">Asientos disp.</label>
+                        <input type="number" min="0" max="6" id="lsAsientos" class="form-control form-control-sm" value="{{ viaje_real.asientos_disponibles }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold mb-1">Costo ($ MXN)</label>
+                        <input type="number" step="0.5" min="0" max="500" id="lsCosto" class="form-control form-control-sm" value="{{ viaje_real.costo }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-semibold mb-1">Estado</label>
+                        <select id="lsEstado" class="form-select form-select-sm">
+                            <option value="disponible" {{ 'selected' if viaje_real.estado == 'disponible' else '' }}>disponible</option>
+                            <option value="pendiente" {{ 'selected' if viaje_real.estado == 'pendiente' else '' }}>pendiente</option>
+                            <option value="en_curso" {{ 'selected' if viaje_real.estado == 'en_curso' else '' }}>en_curso</option>
+                            <option value="finalizado" {{ 'selected' if viaje_real.estado == 'finalizado' else '' }}>finalizado</option>                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-velox btn-sm w-100">
+                            <i class="bi bi-shield-check me-1"></i>Validar y Generar Contexto
+                        </button>
+                    </div>
+                </form>
+
+                <div id="mensajeValidacion" class="alert alert-light border py-2 small mb-3">
+                    Ingresa datos y pulsa <strong>Validar y Generar Contexto</strong> para evaluar reglas de reserva y actualizar el bloque.
+                </div>
+
+                <pre id="bloqueLogiSmart" class="bg-light p-3 rounded-3 border small text-dark mb-0" style="font-family: monospace; white-space: pre-wrap;">{{ bloque_logismart }}</pre>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const capacidadInicial = {{ viaje_real.capacidad_total | tojson }};
+
+        // 1. Búsqueda BFS en vivo
+        document.getElementById("formBfs").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const origen = document.getElementById("bfsOrigen").value.trim();
+            const destino = document.getElementById("bfsDestino").value.trim();
+            const contenedor = document.getElementById("resultadoBfs");
+
+            try {
+                const resp = await fetch(`/ia/servicios/ruta?origen=${encodeURIComponent(origen)}&destino=${encodeURIComponent(destino)}`);
+                const data = await resp.json();
+
+                if (data.encontrada) {
+                    contenedor.innerHTML = `
+                        <p class="mb-1"><strong>Origen:</strong> ${data.inicio} → <strong>Destino:</strong> ${data.destino}</p>
+                        <p class="mb-2"><strong>Trayecto:</strong> <span class="badge bg-success">${data.ruta.join(" → ")}</span></p>
+                        <p class="text-muted small mb-0">Conexiones / tramos: ${data.conexiones}</p>
+                    `;
+                } else {
+                    contenedor.innerHTML = `
+                        <p class="mb-1"><strong>Origen:</strong> ${data.inicio || origen} → <strong>Destino:</strong> ${data.destino || destino}</p>
+                        <div class="alert alert-warning py-2 small mb-0">${data.mensaje || "No se encontró ruta."}</div>
+                    `;
+                }
+            } catch (err) {
+                contenedor.innerHTML = `<div class="alert alert-danger py-2 small mb-0">Error al consultar BFS.</div>`;
+            }
+        });
+
+        // 2. Estimación de ocupación en vivo
+        document.getElementById("formOcupacion").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const payload = {
+                costo: parseFloat(document.getElementById("ocCosto").value),
+                asientos_disponibles: parseInt(document.getElementById("ocAsientos").value, 10),
+                capacidad_total: parseInt(document.getElementById("ocCapacidad").value, 10) || null
+            };
+            const contenedor = document.getElementById("resultadoOcupacion");
+
+            try {
+                const resp = await fetch("/ia/servicios/estimar-ocupacion", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+
+                contenedor.innerHTML = `
+                    <ul class="list-group list-group-flush mb-2">
+                        <li class="list-group-item px-0 py-1"><strong>Costo evaluado:</strong> $${data.costo} MXN</li>
+                        <li class="list-group-item px-0 py-1"><strong>Asientos disponibles / Capacidad:</strong> ${data.asientos_disponibles} / ${data.capacidad_total}</li>
+                        <li class="list-group-item px-0 py-1"><strong>Ocupación estimada:</strong> ${data.asientos_ocupados_estimados} asientos (${data.porcentaje_llenado_estimado}%)</li>
+                    </ul>
+                    <span class="badge bg-success rounded-pill px-3">Demanda ${data.nivel_demanda}</span>
+                `;
+            } catch (err) {
+                contenedor.innerHTML = `<div class="alert alert-danger py-2 small mb-0">Error al estimar ocupación.</div>`;
+            }
+        });
+
+        // 3. Validación de reglas + actualización de contexto LogiSmart
+        document.getElementById("formLogiSmart").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const correoSolicitante = document.getElementById("lsCorreo").value.trim();
+            const capacidadForm = parseInt(document.getElementById("ocCapacidad").value, 10) || capacidadInicial;
+            const viajeCandidato = {
+                id_viaje: document.getElementById("lsIdViaje").value.trim(),
+                correo_conductor: document.getElementById("lsConductor").value.trim(),
+                asientos_disponibles: parseInt(document.getElementById("lsAsientos").value, 10) || 0,
+                capacidad_total: capacidadForm,
+                costo: parseFloat(document.getElementById("lsCosto").value) || 0,
+                estado: document.getElementById("lsEstado").value
+            };
+            const origen = document.getElementById("lsOrigen").value.trim();
+            const destino = document.getElementById("lsDestino").value.trim();
+
+            const badge = document.getElementById("badgeRegla");
+            const alerta = document.getElementById("mensajeValidacion");
+            const preBloque = document.getElementById("bloqueLogiSmart");
+
+            try {
+                const [respVal, respCtx] = await Promise.all([
+                    fetch("/ia/servicios/validar-reserva", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            correo_solicitante: correoSolicitante,
+                            viaje: viajeCandidato
+                        })
+                    }),
+                    fetch("/ia/servicios/logismart/contexto", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            origen: origen || null,
+                            destino: destino || null,
+                            correo_usuario: correoSolicitante || null,
+                            viaje_candidato: viajeCandidato
+                        })
+                    })
+                ]);
+
+                const dataVal = await respVal.json();
+                const dataCtx = await respCtx.json();
+
+                if (dataVal.es_valido) {
+                    badge.className = "badge bg-success rounded-pill px-3";
+                    badge.textContent = "Reserva Aprobada";
+                    alerta.className = "alert alert-success py-2 small mb-3";
+                } else {
+                    badge.className = "badge bg-danger rounded-pill px-3";
+                    badge.textContent = "Reserva Rechazada";
+                    alerta.className = "alert alert-warning py-2 small mb-3";
+                }
+                alerta.textContent = dataVal.motivo;
+
+                if (dataCtx.prompt_bloque) {
+                    preBloque.textContent = dataCtx.prompt_bloque;
+                }
+            } catch (err) {
+                badge.className = "badge bg-secondary rounded-pill px-3";
+                badge.textContent = "Error";
+                alerta.className = "alert alert-danger py-2 small mb-3";
+                alerta.textContent = "No se pudo validar o generar el contexto.";
+            }
+        });
+    </script>
+</body>
+</html>

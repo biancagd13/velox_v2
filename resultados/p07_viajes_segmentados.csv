@@ -1,56 +1,501 @@
 ﻿costo,asientos_disponibles,cluster,perfil
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-20.0,3,0,Alta Demanda / Premium
-10.0,3,2,Compromiso Intermedio
-10.0,1,1,Demanda Baja / Económico
-10.0,3,2,Compromiso Intermedio
-10.0,1,1,Demanda Baja / Económico
-10.0,2,2,Compromiso Intermedio
+12.0,1,1,Demanda Baja / Económico
+18.0,2,1,Demanda Baja / Económico
+159.3120887400734,3,0,Alta Demanda / Premium
+98.99811915536942,2,1,Demanda Baja / Económico
+174.54762558404883,5,0,Alta Demanda / Premium
+145.5262452306855,3,0,Alta Demanda / Premium
+36.951922619776916,5,2,Compromiso Intermedio
+195.61202329461608,4,0,Alta Demanda / Premium
+157.00514635826354,3,0,Alta Demanda / Premium
+161.4915749498517,5,2,Compromiso Intermedio
+43.06045388159826,1,1,Demanda Baja / Económico
+101.06946882120208,5,2,Compromiso Intermedio
+86.74364436186463,5,2,Compromiso Intermedio
+186.81769799274832,3,0,Alta Demanda / Premium
+135.89572161451963,4,2,Compromiso Intermedio
+168.0970903887494,3,0,Alta Demanda / Premium
+99.8145557889196,2,1,Demanda Baja / Económico
+60.90296992125984,4,2,Compromiso Intermedio
+119.82526166285027,2,0,Alta Demanda / Premium
+31.48710609875156,2,1,Demanda Baja / Económico
+168.97361095866478,3,0,Alta Demanda / Premium
+133.69959184197165,5,2,Compromiso Intermedio
+156.4557932153673,2,0,Alta Demanda / Premium
+83.8146742633763,3,1,Demanda Baja / Económico
+194.7256443910826,1,0,Alta Demanda / Premium
+180.7618018379956,1,0,Alta Demanda / Premium
+160.10902947327713,1,0,Alta Demanda / Premium
+55.03496741335417,1,1,Demanda Baja / Económico
+104.00978067086615,5,2,Compromiso Intermedio
+27.88467784170118,5,2,Compromiso Intermedio
+47.77210857215861,5,2,Compromiso Intermedio
+142.94881158364183,1,0,Alta Demanda / Premium
+154.0571880634071,1,0,Alta Demanda / Premium
+194.1517518381578,2,0,Alta Demanda / Premium
+78.64856446486735,3,1,Demanda Baja / Económico
+86.6827470862764,2,1,Demanda Baja / Económico
+104.52004602964543,3,1,Demanda Baja / Económico
+54.104844635171425,1,1,Demanda Baja / Económico
+43.38587096038489,4,2,Compromiso Intermedio
+105.62688672066807,2,1,Demanda Baja / Económico
+60.84368282915914,1,1,Demanda Baja / Económico
+140.56651904285187,4,0,Alta Demanda / Premium
+98.68734539701953,5,2,Compromiso Intermedio
+169.88207529041074,1,0,Alta Demanda / Premium
+146.04771836040484,3,0,Alta Demanda / Premium
+76.22599544876739,5,2,Compromiso Intermedio
+169.8067642511362,4,0,Alta Demanda / Premium
+164.85758434942434,5,2,Compromiso Intermedio
+89.7461082254314,3,1,Demanda Baja / Económico
+71.89905870744394,2,1,Demanda Baja / Económico
+142.84919071549558,4,0,Alta Demanda / Premium
+45.155447049675765,1,1,Demanda Baja / Económico
+55.9834764455195,2,1,Demanda Baja / Económico
+21.325208555180993,4,2,Compromiso Intermedio
+161.6463879503849,4,0,Alta Demanda / Premium
+139.6731541865658,1,0,Alta Demanda / Premium
+146.92976815274034,3,0,Alta Demanda / Premium
+160.5312255839542,2,0,Alta Demanda / Premium
+102.60483959690119,3,1,Demanda Baja / Económico
+122.37341527152087,5,2,Compromiso Intermedio
+45.16345966297834,1,1,Demanda Baja / Económico
+40.61541323647522,5,2,Compromiso Intermedio
+140.3125331222849,3,0,Alta Demanda / Premium
+104.79731710576385,4,2,Compromiso Intermedio
+121.74249916661398,3,0,Alta Demanda / Premium
+157.69979433488461,2,0,Alta Demanda / Premium
+134.24929760010633,4,2,Compromiso Intermedio
+119.64429211843925,4,2,Compromiso Intermedio
+120.65728893417443,1,1,Demanda Baja / Económico
+74.7110176512702,4,2,Compromiso Intermedio
+25.547210222229094,4,2,Compromiso Intermedio
+98.60913006182523,2,1,Demanda Baja / Económico
+58.62524110751526,5,2,Compromiso Intermedio
+93.53515587043451,4,2,Compromiso Intermedio
+173.6125531882699,2,0,Alta Demanda / Premium
+62.10910745576133,1,1,Demanda Baja / Económico
+30.494493504031883,4,2,Compromiso Intermedio
+70.64910056395938,2,1,Demanda Baja / Económico
+72.84687639800305,4,2,Compromiso Intermedio
+139.1449726508411,3,0,Alta Demanda / Premium
+120.2657874214301,3,0,Alta Demanda / Premium
+161.10167763915442,1,0,Alta Demanda / Premium
+139.57643725892976,4,0,Alta Demanda / Premium
+93.1496350592127,1,1,Demanda Baja / Económico
+166.52366923988623,3,0,Alta Demanda / Premium
+50.055125583386705,5,2,Compromiso Intermedio
+24.088173164094886,5,2,Compromiso Intermedio
+36.208614939615515,5,2,Compromiso Intermedio
+150.02468310736106,5,2,Compromiso Intermedio
+103.13790144524972,3,1,Demanda Baja / Económico
+49.02892022604832,2,1,Demanda Baja / Económico
+110.18805951860544,5,2,Compromiso Intermedio
+47.41617848837031,5,2,Compromiso Intermedio
+145.33766751399247,5,2,Compromiso Intermedio
+100.30812960332553,4,2,Compromiso Intermedio
+88.58382069736685,1,1,Demanda Baja / Económico
+74.27217604661777,3,1,Demanda Baja / Económico
+133.45086676139994,3,0,Alta Demanda / Premium
+85.12626989961028,5,2,Compromiso Intermedio
+35.776985476898176,2,1,Demanda Baja / Económico
+41.24106238169276,2,1,Demanda Baja / Económico
+193.1415796189126,1,0,Alta Demanda / Premium
+183.54452432736926,5,0,Alta Demanda / Premium
+145.94728408593494,4,0,Alta Demanda / Premium
+67.85659306271353,1,1,Demanda Baja / Económico
+194.4517479225903,3,0,Alta Demanda / Premium
+160.17516271384304,3,0,Alta Demanda / Premium
+149.0402340486192,3,0,Alta Demanda / Premium
+100.88507038588196,5,2,Compromiso Intermedio
+69.00348113212863,1,1,Demanda Baja / Económico
+37.35037318762987,2,1,Demanda Baja / Económico
+182.4684313778915,1,0,Alta Demanda / Premium
+102.03973217004999,2,1,Demanda Baja / Económico
+56.425405663141454,5,2,Compromiso Intermedio
+75.07219234711745,5,2,Compromiso Intermedio
+124.25952240954128,1,1,Demanda Baja / Económico
+51.819100929061705,4,2,Compromiso Intermedio
+174.1905711366276,2,0,Alta Demanda / Premium
+156.53351537033782,1,0,Alta Demanda / Premium
+149.50333207116861,2,0,Alta Demanda / Premium
+97.77674715951866,1,1,Demanda Baja / Económico
+132.91559132643977,3,0,Alta Demanda / Premium
+125.1376344042924,5,2,Compromiso Intermedio
+136.9723882798676,3,0,Alta Demanda / Premium
+35.19997780518004,4,2,Compromiso Intermedio
+94.84533239070973,3,1,Demanda Baja / Económico
+27.490551295140648,1,1,Demanda Baja / Económico
+108.91834746401341,1,1,Demanda Baja / Económico
+79.37501821990136,2,1,Demanda Baja / Económico
+46.01435399588844,2,1,Demanda Baja / Económico
+38.61253419005929,5,2,Compromiso Intermedio
+125.77602299198817,5,2,Compromiso Intermedio
+50.7067343366395,5,2,Compromiso Intermedio
+186.5216213078235,4,0,Alta Demanda / Premium
+124.5910051460711,3,0,Alta Demanda / Premium
+82.43656481627067,4,2,Compromiso Intermedio
+126.36478846665501,3,0,Alta Demanda / Premium
+24.10469678534555,4,2,Compromiso Intermedio
+192.54065838346017,4,0,Alta Demanda / Premium
+106.81461864972204,4,2,Compromiso Intermedio
+160.89234090505153,4,0,Alta Demanda / Premium
+34.89139998603894,1,1,Demanda Baja / Económico
+107.59849955086887,4,2,Compromiso Intermedio
+108.32725898381376,2,1,Demanda Baja / Económico
+188.8087618954969,4,0,Alta Demanda / Premium
+122.91104942769357,3,0,Alta Demanda / Premium
+105.22809219025169,5,2,Compromiso Intermedio
+68.05561935654084,2,1,Demanda Baja / Económico
+79.6824195216594,5,2,Compromiso Intermedio
+113.7210324448768,5,2,Compromiso Intermedio
+99.0040628549084,2,1,Demanda Baja / Económico
+23.890174378459477,3,1,Demanda Baja / Económico
+168.7325463549844,3,0,Alta Demanda / Premium
+181.308938931158,4,0,Alta Demanda / Premium
+45.24483601974994,4,2,Compromiso Intermedio
+119.7265058370289,5,2,Compromiso Intermedio
+39.54363340437984,2,1,Demanda Baja / Económico
+141.0032167471661,3,0,Alta Demanda / Premium
+70.6220810910215,3,1,Demanda Baja / Económico
+138.69607424454233,5,2,Compromiso Intermedio
+150.85903057163887,2,0,Alta Demanda / Premium
+158.35654854517827,3,0,Alta Demanda / Premium
+39.39337027206138,1,1,Demanda Baja / Económico
+184.8821321247694,5,0,Alta Demanda / Premium
+61.43851836107855,2,1,Demanda Baja / Económico
+26.73426011171236,2,1,Demanda Baja / Económico
+119.87344449046701,3,0,Alta Demanda / Premium
+86.76601109523898,3,1,Demanda Baja / Económico
+169.36215376383436,5,2,Compromiso Intermedio
+165.48526497157434,3,0,Alta Demanda / Premium
+77.08500070808876,3,1,Demanda Baja / Económico
+191.5218911125541,1,0,Alta Demanda / Premium
+72.36521086522134,1,1,Demanda Baja / Económico
+112.71028326170861,2,1,Demanda Baja / Económico
+66.07371630216849,5,2,Compromiso Intermedio
+188.4878426088134,5,0,Alta Demanda / Premium
+49.629407164763265,4,2,Compromiso Intermedio
+28.08391149061922,4,2,Compromiso Intermedio
+98.31747080054683,2,1,Demanda Baja / Económico
+198.62760153005067,1,0,Alta Demanda / Premium
+180.50190792588452,1,0,Alta Demanda / Premium
+154.74944350225087,2,0,Alta Demanda / Premium
+180.34264835813448,2,0,Alta Demanda / Premium
+180.82039514561538,1,0,Alta Demanda / Premium
+113.39450486956083,2,1,Demanda Baja / Económico
+76.86722932954274,1,1,Demanda Baja / Económico
+158.96223777997784,4,0,Alta Demanda / Premium
+139.099027370197,5,2,Compromiso Intermedio
+87.25839119726781,4,2,Compromiso Intermedio
+37.00400025107275,3,1,Demanda Baja / Económico
+154.42213004282468,3,0,Alta Demanda / Premium
+67.24289286611564,2,1,Demanda Baja / Económico
+188.62636709608026,1,0,Alta Demanda / Premium
+63.374703501023255,3,1,Demanda Baja / Económico
+42.096427834067484,3,1,Demanda Baja / Económico
+169.6002809824831,1,0,Alta Demanda / Premium
+47.59117699240893,3,1,Demanda Baja / Económico
+52.268295468393035,2,1,Demanda Baja / Económico
+127.88890247375183,1,1,Demanda Baja / Económico
+177.42116735074362,4,0,Alta Demanda / Premium
+55.358239828623184,3,1,Demanda Baja / Económico
+75.85826112201707,4,2,Compromiso Intermedio
+159.93287088341197,4,0,Alta Demanda / Premium
+194.92875669097413,5,0,Alta Demanda / Premium
+110.13341351642161,5,2,Compromiso Intermedio
+45.90155045922514,4,2,Compromiso Intermedio
+22.50853178747628,5,2,Compromiso Intermedio
+61.33808539979395,3,1,Demanda Baja / Económico
+43.72799920157379,5,2,Compromiso Intermedio
+141.97856125031433,4,0,Alta Demanda / Premium
+41.9298508331356,4,2,Compromiso Intermedio
+111.13938769171394,5,2,Compromiso Intermedio
+144.96723841571958,3,0,Alta Demanda / Premium
+124.60098965976242,4,2,Compromiso Intermedio
+55.95961729881037,2,1,Demanda Baja / Económico
+164.7424147128073,5,2,Compromiso Intermedio
+148.7732833308443,4,0,Alta Demanda / Premium
+153.01712070479752,4,0,Alta Demanda / Premium
+43.590395280316386,3,1,Demanda Baja / Económico
+42.27568465706203,5,2,Compromiso Intermedio
+186.96125918117139,1,0,Alta Demanda / Premium
+91.56407488848932,1,1,Demanda Baja / Económico
+74.17076452056915,3,1,Demanda Baja / Económico
+107.945128163276,4,2,Compromiso Intermedio
+139.31555829744485,5,2,Compromiso Intermedio
+192.0121862684546,3,0,Alta Demanda / Premium
+71.56032083876991,4,2,Compromiso Intermedio
+186.4655172761649,3,0,Alta Demanda / Premium
+24.474708449526137,5,2,Compromiso Intermedio
+119.93564761882844,4,2,Compromiso Intermedio
+134.11552010259533,3,0,Alta Demanda / Premium
+39.061532675135595,5,2,Compromiso Intermedio
+45.261127471504274,1,1,Demanda Baja / Económico
+95.44057747693469,5,2,Compromiso Intermedio
+193.9217441857727,1,0,Alta Demanda / Premium
+127.2876595821871,2,0,Alta Demanda / Premium
+187.944179888038,5,0,Alta Demanda / Premium
+164.78496481033474,4,0,Alta Demanda / Premium
+104.12868827995247,5,2,Compromiso Intermedio
+161.25742086539373,4,0,Alta Demanda / Premium
+23.21062111585779,4,2,Compromiso Intermedio
+39.64591941783229,2,1,Demanda Baja / Económico
+169.29715067889254,1,0,Alta Demanda / Premium
+163.42707589852913,1,0,Alta Demanda / Premium
+61.875333553958065,2,1,Demanda Baja / Económico
+115.53852630782963,1,1,Demanda Baja / Económico
+129.08284772600197,3,0,Alta Demanda / Premium
+176.193011679682,4,0,Alta Demanda / Premium
+128.5592883209706,5,2,Compromiso Intermedio
+94.26288246926246,3,1,Demanda Baja / Económico
+87.35312781329289,5,2,Compromiso Intermedio
+96.65877554723178,5,2,Compromiso Intermedio
+137.34758460439537,5,2,Compromiso Intermedio
+176.14831371541848,3,0,Alta Demanda / Premium
+101.70143877373395,2,1,Demanda Baja / Económico
+64.61112133124446,5,2,Compromiso Intermedio
+62.599225339564605,2,1,Demanda Baja / Económico
+154.28257044382036,3,0,Alta Demanda / Premium
+166.98237741630388,1,0,Alta Demanda / Premium
+38.95005437374249,4,2,Compromiso Intermedio
+31.980594251932068,4,2,Compromiso Intermedio
+126.99805947616132,1,1,Demanda Baja / Económico
+46.31118395468569,2,1,Demanda Baja / Económico
+168.43955428214144,3,0,Alta Demanda / Premium
+75.86024130633339,3,1,Demanda Baja / Económico
+45.89694793480568,5,2,Compromiso Intermedio
+185.77468504774103,2,0,Alta Demanda / Premium
+49.79571009235007,5,2,Compromiso Intermedio
+71.2496148208284,3,1,Demanda Baja / Económico
+47.650411134570554,5,2,Compromiso Intermedio
+40.78821145976389,2,1,Demanda Baja / Económico
+23.806642940559207,1,1,Demanda Baja / Económico
+29.971173649566822,1,1,Demanda Baja / Económico
+51.435464768453485,2,1,Demanda Baja / Económico
+29.60874787289157,5,2,Compromiso Intermedio
+126.40588689997482,1,1,Demanda Baja / Económico
+142.52861482391114,2,0,Alta Demanda / Premium
+90.85348222976508,1,1,Demanda Baja / Económico
+77.2383974513689,5,2,Compromiso Intermedio
+110.81472266400142,4,2,Compromiso Intermedio
+177.50088960222953,4,0,Alta Demanda / Premium
+173.2036928279971,4,0,Alta Demanda / Premium
+27.82551116230255,4,2,Compromiso Intermedio
+52.66971372737434,4,2,Compromiso Intermedio
+62.61407679879128,1,1,Demanda Baja / Económico
+64.88976364979813,5,2,Compromiso Intermedio
+122.82187731369909,4,2,Compromiso Intermedio
+94.92723662657461,4,2,Compromiso Intermedio
+28.86574158696692,2,1,Demanda Baja / Económico
+87.25054492272288,5,2,Compromiso Intermedio
+114.2755307691747,2,1,Demanda Baja / Económico
+38.300942522668876,1,1,Demanda Baja / Económico
+170.02253968194074,5,2,Compromiso Intermedio
+29.353135963718767,2,1,Demanda Baja / Económico
+186.47153642325117,1,0,Alta Demanda / Premium
+37.840365484377585,4,2,Compromiso Intermedio
+171.8434912875955,2,0,Alta Demanda / Premium
+182.47756590697108,5,0,Alta Demanda / Premium
+196.32272250558668,3,0,Alta Demanda / Premium
+164.36465844924683,1,0,Alta Demanda / Premium
+160.3059573388392,5,2,Compromiso Intermedio
+135.64698967919858,3,0,Alta Demanda / Premium
+160.21934382406323,2,0,Alta Demanda / Premium
+44.21939751436648,4,2,Compromiso Intermedio
+116.49224647057471,3,0,Alta Demanda / Premium
+112.5601166342746,1,1,Demanda Baja / Económico
+174.36298594206036,4,0,Alta Demanda / Premium
+103.30388580683285,3,1,Demanda Baja / Económico
+89.31610929806362,4,2,Compromiso Intermedio
+135.12138882267982,5,2,Compromiso Intermedio
+67.96339715015229,4,2,Compromiso Intermedio
+45.15831397171223,4,2,Compromiso Intermedio
+106.01790932427424,2,1,Demanda Baja / Económico
+95.0400863470793,2,1,Demanda Baja / Económico
+61.86258929519727,3,1,Demanda Baja / Económico
+86.15212582072304,5,2,Compromiso Intermedio
+85.95064096872453,3,1,Demanda Baja / Económico
+78.94920159425818,2,1,Demanda Baja / Económico
+88.30353435084722,4,2,Compromiso Intermedio
+143.43380218207017,5,2,Compromiso Intermedio
+73.43776542283135,5,2,Compromiso Intermedio
+190.79442680876127,2,0,Alta Demanda / Premium
+184.942643516872,4,0,Alta Demanda / Premium
+106.56387709401415,3,1,Demanda Baja / Económico
+79.10501690084399,3,1,Demanda Baja / Económico
+116.37826216940057,2,1,Demanda Baja / Económico
+172.74088797925242,1,0,Alta Demanda / Premium
+137.46572130081836,2,0,Alta Demanda / Premium
+164.79052903047395,3,0,Alta Demanda / Premium
+115.89000969183323,5,2,Compromiso Intermedio
+133.92517326817173,5,2,Compromiso Intermedio
+71.86801055284312,1,1,Demanda Baja / Económico
+152.28076921585233,4,0,Alta Demanda / Premium
+56.432826762629304,1,1,Demanda Baja / Económico
+145.06366318732967,4,0,Alta Demanda / Premium
+174.92943229866094,2,0,Alta Demanda / Premium
+43.77851071427791,3,1,Demanda Baja / Económico
+130.58835329754555,4,2,Compromiso Intermedio
+37.117234681388226,3,1,Demanda Baja / Económico
+150.62881308885684,5,2,Compromiso Intermedio
+35.208779388233644,3,1,Demanda Baja / Económico
+188.4691680861127,5,0,Alta Demanda / Premium
+44.73342740680439,4,2,Compromiso Intermedio
+192.59844426363446,2,0,Alta Demanda / Premium
+164.1591516953174,4,0,Alta Demanda / Premium
+126.86276080394374,3,0,Alta Demanda / Premium
+160.87233883331845,3,0,Alta Demanda / Premium
+163.12067101695547,1,0,Alta Demanda / Premium
+190.28487130711946,1,0,Alta Demanda / Premium
+65.60900369105369,3,1,Demanda Baja / Económico
+126.21366116449565,1,1,Demanda Baja / Económico
+37.10885556159222,5,2,Compromiso Intermedio
+130.90982600434182,5,2,Compromiso Intermedio
+50.832434736701984,4,2,Compromiso Intermedio
+121.69111006503954,4,2,Compromiso Intermedio
+123.03749252609295,3,0,Alta Demanda / Premium
+103.87732753662092,1,1,Demanda Baja / Económico
+114.0737195923621,2,1,Demanda Baja / Económico
+157.50621020118584,3,0,Alta Demanda / Premium
+163.864048972172,5,2,Compromiso Intermedio
+108.58757880357724,2,1,Demanda Baja / Económico
+127.92681947407021,3,0,Alta Demanda / Premium
+187.62252242421832,2,0,Alta Demanda / Premium
+41.552045930202105,1,1,Demanda Baja / Económico
+41.07864186201989,1,1,Demanda Baja / Económico
+35.787622143938314,2,1,Demanda Baja / Económico
+138.415391307295,1,0,Alta Demanda / Premium
+95.3494941422683,1,1,Demanda Baja / Económico
+159.3778549055318,2,0,Alta Demanda / Premium
+140.82165439554666,2,0,Alta Demanda / Premium
+80.05479649908287,3,1,Demanda Baja / Económico
+181.70597852507643,1,0,Alta Demanda / Premium
+157.2557864727174,2,0,Alta Demanda / Premium
+68.69628936383162,3,1,Demanda Baja / Económico
+85.55456319896972,5,2,Compromiso Intermedio
+76.59919643676733,4,2,Compromiso Intermedio
+48.37009675249994,5,2,Compromiso Intermedio
+46.6010070575945,2,1,Demanda Baja / Económico
+188.50294340763392,3,0,Alta Demanda / Premium
+98.82272669577559,3,1,Demanda Baja / Económico
+88.99756809993377,5,2,Compromiso Intermedio
+151.34342756192802,5,2,Compromiso Intermedio
+119.53875174552199,5,2,Compromiso Intermedio
+188.5051976309232,4,0,Alta Demanda / Premium
+160.4542689036906,3,0,Alta Demanda / Premium
+106.28652154241726,3,1,Demanda Baja / Económico
+87.74470522654872,5,2,Compromiso Intermedio
+197.59367808637796,2,0,Alta Demanda / Premium
+149.19684248065582,2,0,Alta Demanda / Premium
+191.2150388006914,5,0,Alta Demanda / Premium
+41.326143899067446,2,1,Demanda Baja / Económico
+173.09606225434086,2,0,Alta Demanda / Premium
+134.67329911841736,3,0,Alta Demanda / Premium
+41.94590210032027,2,1,Demanda Baja / Económico
+125.88643999445972,5,2,Compromiso Intermedio
+143.4973457189808,5,2,Compromiso Intermedio
+22.21448345994851,2,1,Demanda Baja / Económico
+101.77723313151438,3,1,Demanda Baja / Económico
+168.5719120153378,5,2,Compromiso Intermedio
+73.16462456193618,4,2,Compromiso Intermedio
+102.5386547237392,2,1,Demanda Baja / Económico
+99.61654287222078,3,1,Demanda Baja / Económico
+74.34693045964849,4,2,Compromiso Intermedio
+185.31954119279976,4,0,Alta Demanda / Premium
+160.63292637767285,1,0,Alta Demanda / Premium
+39.90591397929989,2,1,Demanda Baja / Económico
+199.46623841076314,5,0,Alta Demanda / Premium
+178.25600437539416,2,0,Alta Demanda / Premium
+71.10351881552701,2,1,Demanda Baja / Económico
+170.6413843389689,2,0,Alta Demanda / Premium
+39.15551573684891,1,1,Demanda Baja / Económico
+199.83885148536297,1,0,Alta Demanda / Premium
+139.82325249917665,2,0,Alta Demanda / Premium
+137.02250280058345,5,2,Compromiso Intermedio
+36.27933085714389,1,1,Demanda Baja / Económico
+181.46601180139254,2,0,Alta Demanda / Premium
+25.219910576804494,1,1,Demanda Baja / Económico
+63.34905044740647,3,1,Demanda Baja / Económico
+45.7439375299943,2,1,Demanda Baja / Económico
+159.81822932459934,4,0,Alta Demanda / Premium
+55.67676089832162,3,1,Demanda Baja / Económico
+183.91488088355936,4,0,Alta Demanda / Premium
+138.12842707894822,4,0,Alta Demanda / Premium
+26.509287889045318,3,1,Demanda Baja / Económico
+20.977370143166084,5,2,Compromiso Intermedio
+29.298425062591807,3,1,Demanda Baja / Económico
+129.06653197659097,5,2,Compromiso Intermedio
+164.26672595469475,5,2,Compromiso Intermedio
+62.939507712929924,3,1,Demanda Baja / Económico
+172.89359172615312,4,0,Alta Demanda / Premium
+30.301749227586868,2,1,Demanda Baja / Económico
+164.17349365550172,5,2,Compromiso Intermedio
+187.00317743101047,4,0,Alta Demanda / Premium
+158.9795118387885,5,2,Compromiso Intermedio
+145.6617411161547,2,0,Alta Demanda / Premium
+170.83643935796894,4,0,Alta Demanda / Premium
+27.227233918471956,3,1,Demanda Baja / Económico
+56.32077992942997,1,1,Demanda Baja / Económico
+42.486262275015754,1,1,Demanda Baja / Económico
+110.81557823473757,3,0,Alta Demanda / Premium
+154.133863099192,2,0,Alta Demanda / Premium
+133.40213202375176,1,0,Alta Demanda / Premium
+173.2035979571483,3,0,Alta Demanda / Premium
+47.93833863939636,4,2,Compromiso Intermedio
+152.23179654832907,2,0,Alta Demanda / Premium
+54.747468356402734,5,2,Compromiso Intermedio
+68.73657523720405,4,2,Compromiso Intermedio
+147.7828455106347,3,0,Alta Demanda / Premium
+196.43686128176273,5,0,Alta Demanda / Premium
+130.0778490758725,3,0,Alta Demanda / Premium
+29.810056698433208,1,1,Demanda Baja / Económico
+130.93561458695592,1,0,Alta Demanda / Premium
+27.623099284430076,5,2,Compromiso Intermedio
+179.1462280460271,5,0,Alta Demanda / Premium
+147.72409131811173,4,0,Alta Demanda / Premium
+51.16301235605058,1,1,Demanda Baja / Económico
+36.50978104835565,2,1,Demanda Baja / Económico
+53.035981198457414,1,1,Demanda Baja / Económico
+196.40489231975465,1,0,Alta Demanda / Premium
+102.54091564252816,2,1,Demanda Baja / Económico
+161.13457070145344,3,0,Alta Demanda / Premium
+134.55350157939984,1,0,Alta Demanda / Premium
+123.03436699255472,5,2,Compromiso Intermedio
+46.12344583970895,3,1,Demanda Baja / Económico
+190.2844016404571,2,0,Alta Demanda / Premium
+74.24167385264923,3,1,Demanda Baja / Económico
+124.04309884535759,4,2,Compromiso Intermedio
+145.95967002603192,2,0,Alta Demanda / Premium
+136.8619679441556,1,0,Alta Demanda / Premium
+189.30699374519332,1,0,Alta Demanda / Premium
+46.71901818561044,5,2,Compromiso Intermedio
+111.50349292044957,1,1,Demanda Baja / Económico
+92.72619033333787,4,2,Compromiso Intermedio
+105.35037130687127,2,1,Demanda Baja / Económico
+41.45915471559403,4,2,Compromiso Intermedio
+44.13702977709776,1,1,Demanda Baja / Económico
+70.05359824062633,5,2,Compromiso Intermedio
+74.84682867694963,4,2,Compromiso Intermedio
+97.022578462643,3,1,Demanda Baja / Económico
+129.9777584665931,2,0,Alta Demanda / Premium
+134.23324113528736,5,2,Compromiso Intermedio
+94.12596138540265,2,1,Demanda Baja / Económico
+93.58095969716548,3,1,Demanda Baja / Económico
+59.17313480545316,2,1,Demanda Baja / Económico
+125.89512471362148,2,0,Alta Demanda / Premium
+77.06736403710282,3,1,Demanda Baja / Económico
+26.490770169925465,1,1,Demanda Baja / Económico
+95.31200794823486,1,1,Demanda Baja / Económico
+105.34388151623065,2,1,Demanda Baja / Económico
+60.60671627675798,1,1,Demanda Baja / Económico
+123.04242796198082,3,0,Alta Demanda / Premium
+121.83894207774577,5,2,Compromiso Intermedio
+146.36039259986686,1,0,Alta Demanda / Premium
+136.6307267962178,1,0,Alta Demanda / Premium
+137.43795017378568,1,0,Alta Demanda / Premium
+76.91854732832776,3,1,Demanda Baja / Económico
+161.7377999574717,2,0,Alta Demanda / Premium
+118.8459890479423,3,0,Alta Demanda / Premium
+97.65527513238023,1,1,Demanda Baja / Económico
+132.68224656939026,2,0,Alta Demanda / Premium

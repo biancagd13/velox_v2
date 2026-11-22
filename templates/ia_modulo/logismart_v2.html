@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiSmart v2 (Chat Comparativo) - Velox UTVT</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        body { background-color: #FFFFFF !important; }
+        #mainContent { margin-left: 280px; transition: margin-left 0.3s ease-in-out; }
+        .btn-velox { background-color: #018701; color: #fff; border: none; }
+        .btn-velox:hover { background-color: #005200; color: #fff; }
+        .chat-box { height: 420px; overflow-y: auto; background: #f8f9fa; border-radius: 12px; padding: 16px; }
+        .burbuja-user { background: #018701; color: #fff; border-radius: 14px 14px 2px 14px; padding: 10px 14px; max-width: 82%; margin-left: auto; }
+        .burbuja-ia { background: #fff; color: #212529; border: 1px solid #dee2e6; border-radius: 14px 14px 14px 2px; padding: 10px 14px; max-width: 85%; white-space: pre-wrap; }
+        @media (max-width: 768px) { #mainContent { margin-left: 0 !important; } }
+    </style>
+</head>
+<body>
+
+    {% include 'components/sidebar.html' %}
+
+    <div id="mainContent" class="p-4 bg-white" style="min-height: 100vh;">
+        <div class="container-fluid px-3">
+
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1" style="color: #005200;">
+                        <i class="bi bi-chat-dots-fill me-2"></i>LogiSmart v2 · Chat Enriquecido (Comparativo)
+                    </h3>
+                    <p class="text-muted small mb-0">
+                        Chat paralelo conectado a <code>/logismart/preparar-respuesta</code> sin modificar tu asistente actual.
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" id="btnLimpiarChat" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                        <i class="bi bi-trash3 me-1"></i>Limpiar chat
+                    </button>
+                    <a href="/ia/servicios/panel" class="btn btn-velox btn-sm rounded-pill px-3">
+                        <i class="bi bi-sliders me-1"></i>Ver Panel IA
+                    </a>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- COLUMNA IZQUIERDA: CHAT -->
+                <div class="col-lg-7">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-semibold" style="color: #005200;">Conversación con LogiSmart v2</span>
+                            <span id="badgeMotor" class="badge bg-success rounded-pill px-3">Listo · {{ modelo_ollama }}</span>
+                        </div>
+
+                        <div id="chatMensajes" class="chat-box mb-3 d-flex flex-column gap-3">
+                            <div class="burbuja-ia small">
+                                ¡Hola! Soy <strong>LogiSmart v2</strong>. Pregúntame por viajes disponibles, rutas BFS, ocupación estimada o validación de reservas con los datos reales de Velox UTVT.
+                            </div>
+                        </div>
+
+                        <form id="formChatV2" class="d-flex gap-2">
+                            <input type="text" id="inputMensaje" class="form-control" placeholder="Escribe tu pregunta sobre viajes, rutas o reservas..." required>
+                            <button type="submit" id="btnEnviar" class="btn btn-velox px-4">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: PARÁMETROS Y CONTEXTO INYECTADO -->
+                <div class="col-lg-5">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white mb-3">
+                        <h6 class="fw-bold mb-3" style="color: #005200;">
+                            <i class="bi bi-funnel-fill me-1"></i>Parámetros de Contexto (Opcionales)
+                        </h6>
+                        <div class="row g-2">
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-semibold mb-1">Origen BFS</label>
+                                <input type="text" id="ctxOrigen" class="form-control form-control-sm" placeholder="Ej. Toluca o Lerma">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-semibold mb-1">Destino BFS</label>
+                                <input type="text" id="ctxDestino" class="form-control form-control-sm" placeholder="Ej. UTVT">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold mb-1">Correo solicitante</label>
+                                <input type="email" id="ctxCorreo" class="form-control form-control-sm" placeholder="alumno@utvt.edu.mx">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white">
+                        <h6 class="fw-bold mb-2" style="color: #005200;">
+                            <i class="bi bi-code-square me-1"></i>Contexto Real Inyectado en el Turno
+                        </h6>
+                        <pre id="visorContexto" class="bg-light p-3 rounded-3 border small text-dark mb-0" style="font-family: monospace; white-space: pre-wrap; max-height: 240px; overflow-y: auto;">Envía un mensaje para inspeccionar el contexto real recuperado de MongoDB y los servicios de IA.</pre>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const chatBox = document.getElementById("chatMensajes");
+        const visorContexto = document.getElementById("visorContexto");
+        const badgeMotor = document.getElementById("badgeMotor");
+        const historial = [];
+
+        function agregarBurbuja(texto, esUsuario) {
+            const div = document.createElement("div");
+            div.className = esUsuario ? "burbuja-user small" : "burbuja-ia small";
+            div.textContent = texto;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return div;
+        }
+
+        document.getElementById("btnLimpiarChat").addEventListener("click", () => {
+            historial.length = 0;
+            chatBox.innerHTML = `
+                <div class="burbuja-ia small">
+                    Chat reiniciado. Haz una nueva pregunta para comparar respuestas con los datos actuales de Velox UTVT.
+                </div>
+            `;
+        });
+
+        document.getElementById("formChatV2").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const input = document.getElementById("inputMensaje");
+            const mensaje = input.value.trim();
+            if (!mensaje) return;
+
+            const origen = document.getElementById("ctxOrigen").value.trim() || null;
+            const destino = document.getElementById("ctxDestino").value.trim() || null;
+            const correo_usuario = document.getElementById("ctxCorreo").value.trim() || null;
+
+            agregarBurbuja(mensaje, true);
+            input.value = "";
+
+            const burbujaEspera = agregarBurbuja("Consultando contexto real y generando respuesta...", false);
+            const btnEnviar = document.getElementById("btnEnviar");
+            btnEnviar.disabled = true;
+
+            try {
+                const resp = await fetch("/logismart-v2/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        mensaje,
+                        origen,
+                        destino,
+                        correo_usuario,
+                        historial: historial.slice(-6)
+                    })
+                });
+                const data = await resp.json();
+
+                burbujaEspera.textContent = data.respuesta || "Sin respuesta.";
+                historial.push({ role: "user", content: mensaje });
+                historial.push({ role: "assistant", content: data.respuesta || "" });
+
+                if (data.motor) {
+                    badgeMotor.textContent = data.motor;
+                }
+                if (data.bloque_contexto) {
+                    visorContexto.textContent = data.bloque_contexto;
+                }
+            } catch (err) {
+                burbujaEspera.textContent = "Ocurrió un error al consultar /logismart-v2/chat.";
+            } finally {
+                btnEnviar.disabled = false;
+                input.focus();
+            }
+        });
+    </script>
+</body>
+</html>
