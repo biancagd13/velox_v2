@@ -675,7 +675,7 @@ def panel_pasajero(solicitud: Request, id_pasajero: int = 2):
     contexto = _obtener_contexto_pasajero(id_pasajero, vista_activa="buscar")
     return motor_plantillas.TemplateResponse(
         request=solicitud,
-        name="pasajero/pasajero_inicio.html",
+        name="pasajeros/pasajero_inicio.html",
         context=contexto,
     )
 
@@ -686,7 +686,7 @@ def detalle_mi_viaje(solicitud: Request, id_pasajero: int = 2):
     contexto = _obtener_contexto_pasajero(id_pasajero, vista_activa="detalle")
     return motor_plantillas.TemplateResponse(
         request=solicitud,
-        name="pasajero/pasajero_inicio.html",
+        name="pasajeros/pasajero_inicio.html",
         context=contexto,
     )
 
@@ -704,7 +704,7 @@ def historial_viajes(
     contexto["aviso_calificado"] = bool(calificado)
     return motor_plantillas.TemplateResponse(
         request=solicitud,
-        name="pasajero/pasajero_inicio.html",
+        name="pasajeros/pasajero_inicio.html",
         context=contexto,
     )
 
@@ -716,7 +716,7 @@ def simulador_ia_pasajero_get(solicitud: Request, id_pasajero: int = 2):
     contexto["sim_ia"] = _construir_datos_simulador("Terminal Toluca", "Rectoría UTVT", "A*")
     return motor_plantillas.TemplateResponse(
         request=solicitud,
-        name="pasajero/pasajero_inicio.html",
+        name="pasajeros/pasajero_inicio.html",
         context=contexto,
     )
 
@@ -734,7 +734,7 @@ def simulador_ia_pasajero_post(
     contexto["sim_ia"] = _construir_datos_simulador(origen, destino, algoritmo)
     return motor_plantillas.TemplateResponse(
         request=solicitud,
-        name="pasajero/pasajero_inicio.html",
+        name="pasajeros/pasajero_inicio.html",
         context=contexto,
     )
 
