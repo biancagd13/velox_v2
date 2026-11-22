@@ -63,7 +63,7 @@
     <div id="contenidoPrincipal" class="p-4">
 
         <div class="d-flex align-items-center mb-3">
-            <button class="btn boton-verde p-1 px-2 me-3 shadow-sm rounded-3 d-block d-md-none" id="btnAbrirMenu" title="Mostrar Menú">
+            <button type="button" class="btn boton-verde p-1 px-2 me-3 shadow-sm rounded-3 d-block d-md-none btn-abrir-menu" id="btnAbrirMenu" title="Mostrar Menú">
                 <i class="bi bi-list fs-4"></i>
             </button>
         </div>
@@ -73,7 +73,7 @@
             <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
                 <div>
                     <h2 class="fw-bold mb-1" style="color: #005200;">
-                        <i class="bi bi-person-vcard me-2"></i>Mi Perfil de Conductor
+                        <i class="bi bi-person-vcard me-2"></i>Mi Perfil de Usuario
                     </h2>
                     <p class="text-muted small mb-0">Gestiona tu información personal y los detalles de tu vehículo.</p>
                 </div>
@@ -87,13 +87,15 @@
                 <!-- COLUMNA IZQUIERDA -->
                 <div class="col-lg-4">
                     <div class="card shadow-sm border-0 rounded-4 p-4 text-center bg-white h-100">
-                        <div class="avatar-circle mb-3 fw-bold shadow-sm">
+                        <div id="perfilAvatar" class="avatar-circle mb-3 fw-bold shadow-sm">
                             {{ (usuario.nombre | default('U'))[0] | upper }}
                         </div>
 
-                        <h4 class="fw-bold text-dark mb-1">{{ usuario.nombre | default('Conductor') }} {{ usuario.apellido_paterno | default('') }}</h4>
-                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill fw-bold mb-4">
-                            <i class="bi bi-steering me-1"></i>{{ usuario.rol | default('Conductor') }} Activo
+                        <h4 id="perfilNombreCompleto" class="fw-bold text-dark mb-1">
+                            {{ usuario.nombre | default('Usuario') }} {{ usuario.apellido_paterno | default('') }}
+                        </h4>
+                        <span id="perfilRolBadge" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill fw-bold mb-4">
+                            <i class="bi bi-person-badge me-1"></i><span id="perfilRolTexto">{{ usuario.rol | default('Usuario') }}</span> Activo
                         </span>
 
                         <hr class="text-secondary opacity-25 my-2">
@@ -103,19 +105,19 @@
                         <div class="d-flex justify-content-between gap-2 mb-3">
                             <div class="stat-card flex-fill">
                                 <i class="bi bi-star-fill text-warning fs-4 mb-1 d-block"></i>
-                                <h5 class="fw-bold mb-0 text-dark">{{ usuario.calificacion | default('5.0') }}</h5>
+                                <h5 id="perfilCalificacion" class="fw-bold mb-0 text-dark">{{ usuario.calificacion | default('5.0') }}</h5>
                                 <span class="text-muted" style="font-size: 0.7rem;">Estrellas</span>
                             </div>
                             <div class="stat-card flex-fill">
                                 <i class="bi bi-signpost-split-fill text-success fs-4 mb-1 d-block"></i>
-                                <h5 class="fw-bold mb-0 text-dark">{{ usuario.viajes_completados | default('0') }}</h5>
+                                <h5 id="perfilViajes" class="fw-bold mb-0 text-dark">{{ usuario.viajes_completados | default('0') }}</h5>
                                 <span class="text-muted" style="font-size: 0.7rem;">Viajes</span>
                             </div>
                         </div>
 
                         <div class="stat-card w-100 text-center py-3">
                             <h6 class="text-muted small mb-1">Aportación Generada</h6>
-                            <h4 class="fw-bold mb-0" style="color: #018701;">${{ usuario.ganancias_estimadas | default('0') }} <span class="fs-6 text-muted">MXN</span></h4>
+                            <h4 class="fw-bold mb-0" style="color: #018701;">$<span id="perfilGanancias">{{ usuario.ganancias_estimadas | default('0') }}</span> <span class="fs-6 text-muted">MXN</span></h4>
                         </div>
                     </div>
                 </div>
@@ -136,7 +138,7 @@
                                 <div class="bg-light rounded-3 p-2 border d-flex align-items-center justify-content-center mb-2" style="height: 120px; overflow: hidden;">
                                     <i class="bi bi-car-front text-secondary opacity-50" style="font-size: 4rem;"></i>
                                 </div>
-                                <button class="btn btn-sm btn-outline-secondary w-100 fw-semibold" onclick="verGaleria()">
+                                <button type="button" class="btn btn-sm btn-outline-secondary w-100 fw-semibold" onclick="verGaleria()">
                                     <i class="bi bi-images me-1"></i>Ver fotos
                                 </button>
                             </div>
@@ -146,24 +148,24 @@
                                     <div class="col-6">
                                         <span class="text-secondary fw-semibold small d-block mb-1">PLACA OFICIAL</span>
                                         <div class="bg-light border rounded-3 px-3 py-2 text-center">
-                                            <span class="fw-bold text-dark font-monospace fs-6">{{ usuario.placas | default('SIN PLACA') }}</span>
+                                            <span id="perfilPlacas" class="fw-bold text-dark font-monospace fs-6">{{ usuario.placas | default('SIN PLACA') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-6">
                                         <span class="text-secondary fw-semibold small d-block mb-1">COLOR</span>
                                         <div class="bg-light border rounded-3 px-3 py-2">
-                                            <span class="fw-bold text-dark fs-6">{{ usuario.color_vehiculo | default('No especificado') }}</span>
+                                            <span id="perfilColorVehiculo" class="fw-bold text-dark fs-6">{{ usuario.color_vehiculo | default('No especificado') }}</span>
                                         </div>
                                     </div>
                                     <div class="col-12 mt-2">
                                         <span class="text-secondary fw-semibold small d-block mb-1">MODELO Y MARCA</span>
                                         <div class="bg-light border rounded-3 px-3 py-2">
-                                            <span class="fw-bold text-dark fs-6">{{ usuario.vehiculo_principal | default('Vehículo no registrado') }}</span>
+                                            <span id="perfilVehiculoPrincipal" class="fw-bold text-dark fs-6">{{ usuario.vehiculo_principal | default('Vehículo no registrado') }}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="text-end mt-2">
-                                    <button class="btn btn-sm btn-danger px-3 py-2 fw-bold rounded-pill shadow-sm" onclick="confirmarBajaVehiculo()">
+                                    <button type="button" class="btn btn-sm btn-danger px-3 py-2 fw-bold rounded-pill shadow-sm" onclick="confirmarBajaVehiculo()">
                                         <i class="bi bi-x-circle-fill me-1"></i>Dar de baja vehículo
                                     </button>
                                 </div>
@@ -174,7 +176,7 @@
                     <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-building me-2"></i>Información Institucional</h5>
-                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" onclick="mostrarAlertaProx()">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" onclick="mostrarAlertaProx()">
                                 <i class="bi bi-pencil-fill me-1"></i>Editar
                             </button>
                         </div>
@@ -184,14 +186,14 @@
                                 <label class="form-label fw-semibold text-secondary small mb-1">Matrícula Escolar</label>
                                 <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
                                     <i class="bi bi-credit-card-2-front text-muted me-3 fs-5"></i>
-                                    <span class="fw-bold text-dark fs-6">{{ usuario.matricula | default('N/A') }}</span>
+                                    <span id="perfilMatricula" class="fw-bold text-dark fs-6">{{ usuario.matricula | default('N/A') }}</span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold text-secondary small mb-1">Correo Institucional</label>
                                 <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
                                     <i class="bi bi-envelope-at text-muted me-3 fs-5"></i>
-                                    <span class="fw-bold text-dark fs-6 text-truncate" title="{{ usuario.correo_institucional }}">{{ usuario.correo_institucional | default('Sin correo') }}</span>
+                                    <span id="perfilCorreo" class="fw-bold text-dark fs-6 text-truncate" title="{{ usuario.correo_institucional }}">{{ usuario.correo_institucional | default('Sin correo') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -204,6 +206,84 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function aplicarDatosUsuario(datos) {
+            if (!datos) return;
+
+            const nombre = (datos.nombre || '').trim();
+            const apellido = (datos.apellido_paterno || '').trim();
+            const nombreCompleto = `${nombre} ${apellido}`.trim();
+
+            if (nombreCompleto) {
+                document.getElementById('perfilNombreCompleto').textContent = nombreCompleto;
+                const inicial = (datos.inicial || nombreCompleto.charAt(0)).toUpperCase();
+                document.getElementById('perfilAvatar').textContent = inicial;
+            }
+
+            if (datos.rol) {
+                document.getElementById('perfilRolTexto').textContent = datos.rol;
+            }
+
+            if (datos.calificacion !== undefined && datos.calificacion !== null) {
+                document.getElementById('perfilCalificacion').textContent = datos.calificacion;
+            }
+
+            if (datos.viajes_completados !== undefined && datos.viajes_completados !== null) {
+                document.getElementById('perfilViajes').textContent = datos.viajes_completados;
+            }
+
+            if (datos.ganancias_estimadas !== undefined && datos.ganancias_estimadas !== null) {
+                document.getElementById('perfilGanancias').textContent = datos.ganancias_estimadas;
+            }
+
+            if (datos.placas) {
+                document.getElementById('perfilPlacas').textContent = datos.placas;
+            }
+
+            if (datos.color_vehiculo) {
+                document.getElementById('perfilColorVehiculo').textContent = datos.color_vehiculo;
+            }
+
+            if (datos.vehiculo_principal) {
+                document.getElementById('perfilVehiculoPrincipal').textContent = datos.vehiculo_principal;
+            }
+
+            if (datos.matricula) {
+                document.getElementById('perfilMatricula').textContent = datos.matricula;
+            }
+
+            if (datos.correo_institucional) {
+                const correoEl = document.getElementById('perfilCorreo');
+                correoEl.textContent = datos.correo_institucional;
+                correoEl.title = datos.correo_institucional;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const nombreSesion = (localStorage.getItem('velox_usuario_nombre') || '').trim();
+            const rolSesion = (localStorage.getItem('velox_usuario_rol') || '').trim();
+            const idSesion = (localStorage.getItem('velox_usuario_id') || '').trim();
+
+            // 1. Aplica primero lo guardado en sesión local para cualquier usuario autenticado
+            aplicarDatosUsuario({
+                nombre: nombreSesion,
+                rol: rolSesion
+            });
+
+            // 2. Si hay id_usuario en sesión, intenta traer sus datos reales desde el backend
+            if (idSesion) {
+                try {
+                    const resp = await fetch(`/usuario/api/${encodeURIComponent(idSesion)}`);
+                    if (resp.ok) {
+                        const payload = await resp.json();
+                        const datosPerfil = payload.usuario || payload;
+                        aplicarDatosUsuario(datosPerfil);
+                    }
+                } catch (_) {
+                    // Si el endpoint no existe aún, conserva los datos del servidor y localStorage
+                }
+            }
+        });
+
         function mostrarAlertaProx() {
             Swal.fire({
                 title: 'Próximamente',
@@ -236,7 +316,7 @@
                 cancelButtonText: 'Cancelar',
                 customClass: { popup: 'rounded-4' }
             });
-        }   
+        }
     </script>
 </body>
 </html>

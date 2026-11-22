@@ -12,6 +12,14 @@ router = APIRouter(prefix="/reserva", tags=["Reserva"])
 motor_plantillas = Jinja2Templates(directory="templates")
 
 
+def _es_admin(solicitud: Request) -> bool:
+    """Detecta si la petición pertenece a una sesión de Administrador."""
+    rol_query = (solicitud.query_params.get("rol") or "").strip().lower()
+    rol_header = (solicitud.headers.get("x-velox-rol") or "").strip().lower()
+    rol_cookie = (solicitud.cookies.get("velox_usuario_rol") or "").strip().lower()
+    return "admin" in rol_query or "admin" in rol_header or "admin" in rol_cookie
+
+
 def _resolver_ruta_viaje(viaje_doc: dict) -> tuple[str, str]:
     """Obtiene origen y destino de un viaje, buscando en 'ruta' si solo tiene id_ruta."""
     origen = viaje_doc.get("origen") or viaje_doc.get("punto_partida")
@@ -66,28 +74,32 @@ def listar_reservas(solicitud: Request):
         reserva_dict["analisis_ia"] = predecir_confiabilidad_pasajero(
             historial_asistencia=historial_asistencia,
             cancelaciones_previas=cancelaciones_previas,
-            viajes_totales=viajes_totales
+            viajes_totales=viajes_totales,
         )
 
         reservas_enriquecidas.append(reserva_dict)
 
-    # Ordenamos para que las solicitudes más recientes aparezcan arriba
     reservas_enriquecidas.sort(key=lambda r: r.get("id_reserva", 0), reverse=True)
+
+    es_admin = _es_admin(solicitud)
+    plantilla = "admin/reserva_inicio_admin.html" if es_admin else "reserva/reserva_inicio.html"
 
     return motor_plantillas.TemplateResponse(
         solicitud,
-        "reserva/reserva_inicio.html",
+        plantilla,
         {
             "reservas": reservas_enriquecidas,
-            "usuario": {"nombre": "Brandon Rivera"}
+            "usuario": {"nombre": "Brandon Rivera"},
+            "es_admin": es_admin,
         },
     )
 
 
 @router.post("/estado/{id_reserva}")
 def cambiar_estado_reserva(
+    solicitud: Request,
     id_reserva: int,
-    nuevo_estado: str = Form(...)
+    nuevo_estado: str = Form(...),
 ):
     """
     Actualiza el estado de una solicitud ('aceptada' o 'rechazada') desde el panel
@@ -101,20 +113,20 @@ def cambiar_estado_reserva(
 
         db["reserva"].update_one(
             {"id_reserva": id_reserva},
-            {"$set": {"estado": estado_limpio}}
+            {"$set": {"estado": estado_limpio}},
         )
 
-        # Descontamos 1 asiento solo si pasa a 'aceptada' por primera vez
         if estado_limpio == "aceptada" and estado_previo != "aceptada":
             id_viaje = reserva_actual.get("id_viaje")
             if id_viaje is not None:
                 db["viaje"].update_one(
                     {"id_viaje": id_viaje, "asientos_disponibles": {"$gt": 0}},
-                    {"$inc": {"asientos_disponibles": -1}}
+                    {"$inc": {"asientos_disponibles": -1}},
                 )
 
+    url_retorno = "/reserva/?rol=admin" if _es_admin(solicitud) else "/reserva/"
     return RedirectResponse(
-        url="/reserva/",
+        url=url_retorno,
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
@@ -131,35 +143,41 @@ def vista_crear_reserva(solicitud: Request):
         v["destino"] = destino
         viajes.append(v)
 
+    es_admin = _es_admin(solicitud)
+    plantilla = "admin/reserva_form_admin.html" if es_admin else "reserva/reserva_form.html"
+
     return motor_plantillas.TemplateResponse(
         solicitud,
-        "reserva/reserva_form.html",
+        plantilla,
         {
             "reserva": None,
             "usuarios": usuarios,
-            "viajes": viajes
-        }
+            "viajes": viajes,
+            "es_admin": es_admin,
+        },
     )
 
 
 @router.post("/guardar")
 def guardar_reserva(
+    solicitud: Request,
     estado: str = Form(...),
     id_usuario: int = Form(...),
-    id_viaje: int = Form(...)
+    id_viaje: int = Form(...),
 ):
     """Procesa el formulario de creación y almacena la nueva reserva."""
     nueva_reserva = ReservaModel(
         estado=estado.lower(),
         fecha_solicitud="",
         id_usuario=id_usuario,
-        id_viaje=id_viaje
+        id_viaje=id_viaje,
     )
 
     ReservaController.crear_reserva(nueva_reserva)
 
+    url_retorno = "/reserva/?rol=admin" if _es_admin(solicitud) else "/reserva/"
     return RedirectResponse(
-        url="/reserva/",
+        url=url_retorno,
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
@@ -178,45 +196,52 @@ def vista_editar_reserva(solicitud: Request, id_reserva: int):
         v["destino"] = destino
         viajes.append(v)
 
+    es_admin = _es_admin(solicitud)
+    plantilla = "admin/reserva_form_admin.html" if es_admin else "reserva/reserva_form.html"
+
     return motor_plantillas.TemplateResponse(
         solicitud,
-        "reserva/reserva_form.html",
+        plantilla,
         {
             "reserva": reserva_encontrada,
             "usuarios": usuarios,
-            "viajes": viajes
-        }
+            "viajes": viajes,
+            "es_admin": es_admin,
+        },
     )
 
 
 @router.post("/actualizar")
 def actualizar_reserva(
+    solicitud: Request,
     id_reserva: int = Form(...),
     estado: str = Form(None),
     id_usuario: int = Form(None),
-    id_viaje: int = Form(None)
+    id_viaje: int = Form(None),
 ):
     """Procesa la actualización parcial de una reserva existente."""
     reserva_actualizacion = ReservaUpdateModel(
         estado=estado.lower() if estado else None,
         id_usuario=id_usuario,
-        id_viaje=id_viaje
+        id_viaje=id_viaje,
     )
 
     ReservaController.actualizar_reserva(id_reserva, reserva_actualizacion)
 
+    url_retorno = "/reserva/?rol=admin" if _es_admin(solicitud) else "/reserva/"
     return RedirectResponse(
-        url="/reserva/",
+        url=url_retorno,
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
 
 @router.get("/eliminar/{id_reserva}")
-def eliminar_reserva(id_reserva: int):
+def eliminar_reserva(solicitud: Request, id_reserva: int):
     """Procesa la eliminación definitiva de una reserva."""
     ReservaController.eliminar_reserva(id_reserva)
 
+    url_retorno = "/reserva/?rol=admin" if _es_admin(solicitud) else "/reserva/"
     return RedirectResponse(
-        url="/reserva/",
+        url=url_retorno,
         status_code=status.HTTP_303_SEE_OTHER,
     )

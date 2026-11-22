@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { 
+        body {
             background-color: #E8F5E9 !important;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -28,18 +28,24 @@
             border-radius: 1rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
+        .logo-login {
+            max-height: 115px;
+            max-width: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
 
-    <div class="container px-3">
-        <div class="card border-0 bg-white p-5 login-card mx-auto">
+    <div class="container px-3 py-4">
+        <div class="card border-0 bg-white p-4 p-sm-5 login-card mx-auto">
             <div class="text-center mb-4">
-                <div class="d-inline-block bg-success bg-opacity-10 p-3 rounded-circle mb-3">
-                    <i class="bi bi-car-front-fill" style="font-size: 2.5rem; color: #018701;"></i>
-                </div>
-                <h3 class="fw-bold" style="color: #005200; letter-spacing: -0.5px;">Velox UTVT</h3>
-                <p class="text-muted small">Ingresa con tu correo institucional para continuar</p>
+                <img src="/static/img/logo_velox.png"
+                     alt="Logotipo Velox UTVT"
+                     class="logo-login mb-2">
+                <p class="text-muted small mb-0">Ingresa con tu correo institucional para continuar</p>
             </div>
 
             <form id="formularioLogin" onsubmit="procesarLogin(event)">
@@ -54,7 +60,7 @@
                 <div class="mb-4">
                     <label class="form-label fw-semibold text-secondary small d-flex justify-content-between">
                         Contraseña
-                        <a href="#" class="text-decoration-none text-success small">¿Olvidaste tu contraseña?</a>
+                        <a href="#" id="linkRecuperar" class="text-decoration-none text-success small">¿Olvidaste tu contraseña?</a>
                     </label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
@@ -65,53 +71,107 @@
                 <button type="submit" class="btn boton-verde w-100 fw-bold py-2 rounded-3 shadow-sm mb-3">
                     Iniciar Sesión
                 </button>
-                
+
                 <div class="alert alert-secondary py-2 px-3 text-center border-0 rounded-3 mb-0 mt-3" role="alert" style="font-size: 0.75rem;">
-                    <strong>Credenciales Demo:</strong><br>
-                    Admin: <span class="font-monospace">al222@utvt.edu.mx</span><br>
-                    Conductor: <span class="font-monospace">al22288@utvt.edu.mx</span><br>
-                    Pasajero: <span class="font-monospace">pasajero@utvt.edu.mx</span>
+                    <strong>Acceso Institucional:</strong><br>
+                    Usa tu correo <span class="font-monospace">@utvtol.edu.mx</span> registrado en el sistema.
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        function procesarLogin(event) {
+        document.getElementById('linkRecuperar').addEventListener('click', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Recuperación de acceso',
+                text: 'Comunícate con el administrador del sistema o con soporte institucional @utvtol.edu.mx.',
+                icon: 'info',
+                confirmButtonColor: '#018701'
+            });
+        });
+
+        async function procesarLogin(event) {
             event.preventDefault();
-            
+
             const correo = document.getElementById('correoInput').value.trim().toLowerCase();
             const password = document.getElementById('passwordInput').value;
 
-            if (password.length > 0) {
+            if (!correo.endsWith('@utvtol.edu.mx')) {
                 Swal.fire({
-                    title: 'Autenticando...',
-                    text: 'Verificando credenciales en el sistema',
-                    icon: 'info',
-                    showConfirmButton: false,
-                    timer: 1000
-                }).then(() => {
-                    if (correo === 'al22288@utvt.edu.mx' || correo.includes('conductor')) {
-                        localStorage.setItem('velox_usuario_nombre', 'Brandon Rivera');
-                        localStorage.setItem('velox_usuario_rol', 'Conductor');
-                        localStorage.setItem('velox_usuario_inicial', 'B');
-                        localStorage.setItem('velox_usuario_id', '1');
-                        window.location.href = '/perfil-conductor';
-                    } 
-                    else if (correo === 'al222@utvt.edu.mx' || correo.includes('admin')) {
-                        localStorage.setItem('velox_usuario_nombre', 'Brandon Rivera');
-                        localStorage.setItem('velox_usuario_rol', 'Administrador');
-                        localStorage.setItem('velox_usuario_inicial', 'B');
-                        localStorage.setItem('velox_usuario_id', '1');
-                        window.location.href = '/perfil';
-                    } 
-                    else {
-                        localStorage.setItem('velox_usuario_nombre', 'Jorge Abraham');
-                        localStorage.setItem('velox_usuario_rol', 'Pasajero');
-                        localStorage.setItem('velox_usuario_inicial', 'J');
-                        localStorage.setItem('velox_usuario_id', '2');
-                        window.location.href = '/pasajero/';
-                    }
+                    title: 'Correo no válido',
+                    text: 'Debes utilizar un correo institucional @utvtol.edu.mx.',
+                    icon: 'warning',
+                    confirmButtonColor: '#018701'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Autenticando...',
+                text: 'Verificando credenciales en la base de datos',
+                icon: 'info',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            try {
+                const respuesta = await fetch('/usuario/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo, password })
+                });
+
+                const data = await respuesta.json();
+
+                if (!respuesta.ok || !data.ok) {
+                    Swal.fire({
+                        title: 'Acceso denegado',
+                        text: data.mensaje || 'Correo institucional o contraseña incorrectos.',
+                        icon: 'error',
+                        confirmButtonColor: '#018701'
+                    });
+                    return;
+                }
+
+                const usuario = data.usuario || {};
+                const nombre = usuario.nombre || 'Usuario Velox';
+                const inicial = nombre.trim().charAt(0).toUpperCase() || 'U';
+                const rol = usuario.rol || 'Pasajero';
+                const idUsuario = usuario.id_usuario ?? '';
+
+                localStorage.setItem('velox_usuario_nombre', nombre);
+                localStorage.setItem('velox_usuario_rol', rol);
+                localStorage.setItem('velox_usuario_inicial', inicial);
+                localStorage.setItem('velox_usuario_id', String(idUsuario));
+                document.cookie = `velox_usuario_rol=${encodeURIComponent(rol)}; path=/; SameSite=Lax`;
+
+                const rolNormalizado = rol.trim().toLowerCase();
+                const primeraVistaPorRol = {
+                    administrador: '/rol',
+                    admin: '/rol',
+                    conductor: '/vehiculo',
+                    pasajero: '/ruta'
+                };
+
+                const destinoBackend = (data.destino || '').trim();
+                const esRutaDePerfil =
+                    destinoBackend === '' ||
+                    destinoBackend === '/' ||
+                    destinoBackend.includes('perfil');
+
+                const destinoFinal = esRutaDePerfil
+                    ? (primeraVistaPorRol[rolNormalizado] || '/ruta')
+                    : destinoBackend;
+
+                window.location.href = destinoFinal;
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error de conexión',
+                    text: 'No se pudo comunicar con el servidor.',
+                    icon: 'error',
+                    confirmButtonColor: '#018701'
                 });
             }
         }

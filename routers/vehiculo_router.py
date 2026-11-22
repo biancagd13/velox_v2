@@ -21,18 +21,27 @@ router = APIRouter(prefix="/vehiculo", tags=["Vehículo"])
 motor_plantillas = Jinja2Templates(directory="templates")
 
 
+def _es_admin(solicitud: Request) -> bool:
+    """Detecta si la petición pertenece a una sesión de Administrador."""
+    rol_query = (solicitud.query_params.get("rol") or "").strip().lower()
+    rol_header = (solicitud.headers.get("x-velox-rol") or "").strip().lower()
+    rol_cookie = (solicitud.cookies.get("velox_usuario_rol") or "").strip().lower()
+    return "admin" in rol_query or "admin" in rol_header or "admin" in rol_cookie
+
+
 @router.get("/")
 def listar_vehiculos(solicitud: Request):
     """Ruta HTTP GET para mostrar la vista principal con el listado de todos los vehículos."""
-    # Obtenemos todos los registros de vehículos utilizando la clase VehiculoController
     lista_vehiculos = VehiculoController.obtener_todos_los_vehiculos()
+    es_admin = _es_admin(solicitud)
+    plantilla = "admin/vehiculo_inicio_admin.html" if es_admin else "vehiculo/vehiculo_inicio.html"
 
-    # Renderizamos y retornamos la plantilla HTML 'vehiculo_inicio.html' enviando los vehículos obtenidos
     return motor_plantillas.TemplateResponse(
         solicitud,
-        "vehiculo/vehiculo_inicio.html",
+        plantilla,
         {
             "vehiculos": lista_vehiculos,
+            "es_admin": es_admin,
         },
     )
 
@@ -40,46 +49,46 @@ def listar_vehiculos(solicitud: Request):
 @router.get("/nuevo")
 def vista_crear_vehiculo(solicitud: Request):
     """Ruta HTTP GET para cargar el formulario vacío destinado a registrar un nuevo vehículo."""
-    # Consultamos los usuarios registrados en la base de datos para el selector del propietario
     usuarios = list(db["usuario"].find({}, {"_id": 0}))
+    es_admin = _es_admin(solicitud)
+    plantilla = "admin/vehiculo_form_admin.html" if es_admin else "vehiculo/vehiculo_form.html"
 
-    # Renderizamos la plantilla de formulario pasando 'vehiculo' como None y la lista de usuarios
     return motor_plantillas.TemplateResponse(
-        solicitud, 
-        "vehiculo/vehiculo_form.html", 
+        solicitud,
+        plantilla,
         {
-            "vehiculo": None, 
-            "usuarios": usuarios
-        }
+            "vehiculo": None,
+            "usuarios": usuarios,
+            "es_admin": es_admin,
+        },
     )
 
 
 @router.post("/guardar")
 def guardar_vehiculo(
+    solicitud: Request,
     placa: str = Form(...),
     nombre: str = Form(...),
     modelo: str = Form(...),
     color: str = Form(...),
     capacidad_asientos: int = Form(...),
-    id_usuario: int = Form(...)
+    id_usuario: int = Form(...),
 ):
     """Ruta HTTP POST para procesar el formulario de creación y almacenar el nuevo vehículo."""
-    # Creamos una instancia del modelo Pydantic con los datos recibidos del formulario
     nuevo_vehiculo = VehiculoModel(
         placa=placa,
         nombre=nombre,
         modelo=modelo,
         color=color,
         capacidad_asientos=capacidad_asientos,
-        id_usuario=id_usuario
+        id_usuario=id_usuario,
     )
 
-    # Llamamos al método de la clase controlador para validar e insertar el vehículo
     VehiculoController.crear_vehiculo(nuevo_vehiculo)
 
-    # Redirigimos al usuario a la vista principal de vehículos utilizando el código HTTP 303 (See Other)
+    url_retorno = "/vehiculo?rol=admin" if _es_admin(solicitud) else "/vehiculo"
     return RedirectResponse(
-        url="/vehiculo",
+        url=url_retorno,
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
@@ -87,62 +96,59 @@ def guardar_vehiculo(
 @router.get("/editar/{id_vehiculo}")
 def vista_editar_vehiculo(solicitud: Request, id_vehiculo: int):
     """Ruta HTTP GET para cargar los datos de un vehículo existente dentro del formulario de edición."""
-    # Buscamos el vehículo utilizando nuestro controlador basado en clases
     vehiculo_encontrado = VehiculoController.obtener_vehiculo_por_id(id_vehiculo)
-    
-    # Consultamos la lista de usuarios para mantener activo el selector en modo edición
     usuarios = list(db["usuario"].find({}, {"_id": 0}))
+    es_admin = _es_admin(solicitud)
+    plantilla = "admin/vehiculo_form_admin.html" if es_admin else "vehiculo/vehiculo_form.html"
 
-    # Renderizamos la plantilla del formulario enviando los datos del vehículo y los usuarios
     return motor_plantillas.TemplateResponse(
-        solicitud, 
-        "vehiculo/vehiculo_form.html", 
+        solicitud,
+        plantilla,
         {
-            "vehiculo": vehiculo_encontrado, 
-            "usuarios": usuarios
-        }
+            "vehiculo": vehiculo_encontrado,
+            "usuarios": usuarios,
+            "es_admin": es_admin,
+        },
     )
 
 
 @router.post("/actualizar")
 def actualizar_vehiculo(
+    solicitud: Request,
     id_vehiculo: int = Form(...),
     placa: str = Form(None),
     nombre: str = Form(None),
     modelo: str = Form(None),
     color: str = Form(None),
     capacidad_asientos: int = Form(None),
-    id_usuario: int = Form(None)
+    id_usuario: int = Form(None),
 ):
     """Ruta HTTP POST para procesar la actualización parcial de un vehículo existente."""
-    # Empaquetamos los datos en el modelo de actualización de Pydantic
     vehiculo_actualizacion = VehiculoUpdateModel(
         placa=placa,
         nombre=nombre,
         modelo=modelo,
         color=color,
         capacidad_asientos=capacidad_asientos,
-        id_usuario=id_usuario
+        id_usuario=id_usuario,
     )
 
-    # Delegamos a la clase controlador la actualización en la base de datos
     VehiculoController.actualizar_vehiculo(id_vehiculo, vehiculo_actualizacion)
 
-    # Redirigimos de vuelta al listado principal con el código de redirección correcto
+    url_retorno = "/vehiculo?rol=admin" if _es_admin(solicitud) else "/vehiculo"
     return RedirectResponse(
-        url="/vehiculo",
+        url=url_retorno,
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
 
 @router.get("/eliminar/{id_vehiculo}")
-def eliminar_vehiculo(id_vehiculo: int):
+def eliminar_vehiculo(solicitud: Request, id_vehiculo: int):
     """Ruta HTTP GET para procesar la eliminación definitiva de un vehículo."""
-    # Solicitamos a la clase controlador que elimine el vehículo correspondiente
     VehiculoController.eliminar_vehiculo(id_vehiculo)
 
-    # Redirigimos al listado principal de vehículos una vez completada la baja
+    url_retorno = "/vehiculo?rol=admin" if _es_admin(solicitud) else "/vehiculo"
     return RedirectResponse(
-        url="/vehiculo",
+        url=url_retorno,
         status_code=status.HTTP_303_SEE_OTHER,
     )

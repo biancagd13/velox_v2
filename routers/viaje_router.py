@@ -24,9 +24,16 @@ router = APIRouter(prefix="/viaje", tags=["Viaje"])
 motor_plantillas = Jinja2Templates(directory="templates")
 
 
+def _es_admin(solicitud: Request) -> bool:
+    """Detecta si la petición pertenece a una sesión de Administrador."""
+    rol_query = (solicitud.query_params.get("rol") or "").strip().lower()
+    rol_header = (solicitud.headers.get("x-velox-rol") or "").strip().lower()
+    rol_cookie = (solicitud.cookies.get("velox_usuario_rol") or "").strip().lower()
+    return "admin" in rol_query or "admin" in rol_header or "admin" in rol_cookie
+
+
 def _obtener_id_conductor_actual() -> int:
     """Función auxiliar que obtiene el id_usuario del conductor autenticado desde MongoDB."""
-    # Buscamos primero la cuenta institucional del conductor activo en la colección 'usuario'
     conductor = db["usuario"].find_one(
         {"correo_institucional": "al22288@utvt.edu.mx"},
         {"_id": 0, "id_usuario": 1},
@@ -34,22 +41,22 @@ def _obtener_id_conductor_actual() -> int:
     if conductor and conductor.get("id_usuario") is not None:
         return int(conductor["id_usuario"])
 
-    # Si no se encuentra por correo, devolvemos el identificador base del conductor (1)
     return 1
 
 
 @router.get("/")
 def listar_viajes(solicitud: Request):
     """Ruta HTTP GET para mostrar la vista principal con el listado de todos los viajes."""
-    # Consultamos todos los viajes registrados mediante la clase ViajeController
     lista_viajes = ViajeController.obtener_todos_los_viajes()
+    es_admin = _es_admin(solicitud)
+    plantilla = "admin/viaje_inicio_admin.html" if es_admin else "viaje/viaje_inicio.html"
 
-    # Renderizamos la plantilla principal enviando el listado obtenido
     return motor_plantillas.TemplateResponse(
         solicitud,
-        "viaje/viaje_inicio.html",
+        plantilla,
         {
             "viajes": lista_viajes,
+            "es_admin": es_admin,
         },
     )
 
@@ -57,10 +64,8 @@ def listar_viajes(solicitud: Request):
 @router.get("/nuevo")
 def vista_crear_viaje(solicitud: Request):
     """Ruta HTTP GET para cargar el formulario vacío destinado a registrar un nuevo viaje."""
-    # Obtenemos el ID del conductor autenticado para enviarlo de forma oculta en el formulario
     id_conductor_actual = _obtener_id_conductor_actual()
 
-    # Consultamos las rutas disponibles y normalizamos origen y destino para el selector
     rutas_raw = list(db["ruta"].find({}, {"_id": 0}))
     rutas = []
     for r in rutas_raw:
@@ -68,20 +73,24 @@ def vista_crear_viaje(solicitud: Request):
         r["destino"] = r.get("destino", "Destino")
         rutas.append(r)
 
-    # Renderizamos el formulario sin exponer selectores innecesarios de estado ni conductor
+    es_admin = _es_admin(solicitud)
+    plantilla = "admin/viaje_form_admin.html" if es_admin else "viaje/viaje_form.html"
+
     return motor_plantillas.TemplateResponse(
         solicitud,
-        "viaje/viaje_form.html",
+        plantilla,
         {
             "viaje": None,
             "rutas": rutas,
             "id_conductor_actual": id_conductor_actual,
+            "es_admin": es_admin,
         },
     )
 
 
 @router.post("/guardar")
 def guardar_viaje(
+    solicitud: Request,
     fecha: str = Form(...),
     asientos_disponibles: int = Form(...),
     costo: int = Form(...),
@@ -90,13 +99,9 @@ def guardar_viaje(
     id_usuario: int | None = Form(None),
 ):
     """Ruta HTTP POST para procesar el formulario de creación y almacenar el nuevo viaje."""
-    # Asignamos automáticamente el conductor autenticado si el formulario no envió un ID explícito
     conductor_id = id_usuario if id_usuario is not None else _obtener_id_conductor_actual()
-
-    # Forzamos el estado inicial 'pendiente' en minúsculas conforme a EstadoViaje
     estado_final = (estado or EstadoViaje.PENDIENTE.value).strip().lower()
 
-    # Empaquetamos y validamos los datos en el modelo Pydantic ViajeModel
     nuevo_viaje = ViajeModel(
         fecha=fecha,
         asientos_disponibles=asientos_disponibles,
@@ -106,12 +111,11 @@ def guardar_viaje(
         id_usuario=conductor_id,
     )
 
-    # Delegamos la inserción en MongoDB a la clase controladora
     ViajeController.crear_viaje(nuevo_viaje)
 
-    # Redirigimos al listado principal de viajes usando código HTTP 303 (See Other)
+    url_retorno = "/viaje?rol=admin" if _es_admin(solicitud) else "/viaje"
     return RedirectResponse(
-        url="/viaje",
+        url=url_retorno,
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
@@ -119,13 +123,9 @@ def guardar_viaje(
 @router.get("/editar/{id_viaje}")
 def vista_editar_viaje(solicitud: Request, id_viaje: int):
     """Ruta HTTP GET para cargar los datos de un viaje existente dentro del formulario de edición."""
-    # Buscamos el registro del viaje solicitado utilizando ViajeController
     viaje_encontrado = ViajeController.obtener_viaje_por_id(id_viaje)
-
-    # Obtenemos el ID del conductor autenticado como respaldo para el campo oculto
     id_conductor_actual = _obtener_id_conductor_actual()
 
-    # Consultamos el catálogo de rutas para llenar el selector en modo edición
     rutas_raw = list(db["ruta"].find({}, {"_id": 0}))
     rutas = []
     for r in rutas_raw:
@@ -133,20 +133,24 @@ def vista_editar_viaje(solicitud: Request, id_viaje: int):
         r["destino"] = r.get("destino", "Destino")
         rutas.append(r)
 
-    # Renderizamos el formulario precargado con los datos del viaje
+    es_admin = _es_admin(solicitud)
+    plantilla = "admin/viaje_form_admin.html" if es_admin else "viaje/viaje_form.html"
+
     return motor_plantillas.TemplateResponse(
         solicitud,
-        "viaje/viaje_form.html",
+        plantilla,
         {
             "viaje": viaje_encontrado,
             "rutas": rutas,
             "id_conductor_actual": id_conductor_actual,
+            "es_admin": es_admin,
         },
     )
 
 
 @router.post("/actualizar")
 def actualizar_viaje(
+    solicitud: Request,
     id_viaje: int = Form(...),
     fecha: str = Form(None),
     asientos_disponibles: int = Form(None),
@@ -156,7 +160,6 @@ def actualizar_viaje(
     id_usuario: int = Form(None),
 ):
     """Ruta HTTP POST para procesar la actualización parcial de un viaje existente."""
-    # Empaquetamos los campos recibidos dentro del modelo de actualización parcial
     viaje_actualizacion = ViajeUpdateModel(
         fecha=fecha,
         asientos_disponibles=asientos_disponibles,
@@ -166,24 +169,22 @@ def actualizar_viaje(
         id_usuario=id_usuario,
     )
 
-    # Delegamos la actualización en base de datos a la clase controladora
     ViajeController.actualizar_viaje(id_viaje, viaje_actualizacion)
 
-    # Redirigimos de vuelta al listado de viajes
+    url_retorno = "/viaje?rol=admin" if _es_admin(solicitud) else "/viaje"
     return RedirectResponse(
-        url="/viaje",
+        url=url_retorno,
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
 
 @router.get("/eliminar/{id_viaje}")
-def eliminar_viaje(id_viaje: int):
+def eliminar_viaje(solicitud: Request, id_viaje: int):
     """Ruta HTTP GET para procesar la eliminación definitiva de un viaje."""
-    # Solicitamos al controlador eliminar el viaje indicado por su identificador
     ViajeController.eliminar_viaje(id_viaje)
 
-    # Redirigimos al listado principal una vez completada la baja
+    url_retorno = "/viaje?rol=admin" if _es_admin(solicitud) else "/viaje"
     return RedirectResponse(
-        url="/viaje",
+        url=url_retorno,
         status_code=status.HTTP_303_SEE_OTHER,
     )

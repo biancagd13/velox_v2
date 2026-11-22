@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Declaración del juego de caracteres para soporte de acentos -->
+    <meta charset="UTF-8">
+    <!-- Configuración del diseño responsivo para diferentes dispositivos -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Título dinámico que cambia dependiendo si se está editando o creando un rol -->
+    <title>{{ "Editar Rol" if rol else "Nuevo Rol" }} - Velox UTVT</title>
+    <!-- Importación de Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Importación de Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Importación de la librería SweetAlert2 para alertas interactivas -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Fondo blanco puro para la página */
+        body {
+            background-color: #FFFFFF !important;
+        }
+        /* Margen para evitar que el contenido se encime con el menú lateral fijo */
+        #mainContent {
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+        /* Estilos universales para los botones de confirmación de las modales */
+        .swal2-confirm.btn-verde-modal {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            padding: 8px 24px !important;
+            font-weight: bold !important;
+            box-shadow: none !important;
+        }
+        /* Efecto hover del botón de la modal a verde fuerte institucional (#005200) */
+        .swal2-confirm.btn-verde-modal:hover {
+            background-color: #005200 !important;
+        }
+        /* Ajuste responsivo para pantallas móviles */
+        @media (max-width: 768px) {
+            #mainContent {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Inclusión del componente de menú lateral flotante -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- Contenedor principal del formulario centrado -->
+    <div id="mainContent" class="p-4 d-flex flex-column align-items-center justify-content-center bg-white" style="min-height: 100vh;">
+        <div class="container px-3" style="max-width: 600px;">
+            <!-- Tarjeta contenedora con bordes redondeados -->
+            <div class="card shadow-sm border rounded-4 p-5 bg-white">
+                <!-- Encabezado del formulario con su icono institucional -->
+                <div class="d-flex align-items-center mb-4">
+                    <div>
+                        <h3 class="fw-bold mb-1" style="color: #005200;">
+                            <i class="bi bi-shield-lock-fill me-2" style="color: #005200;"></i>{{ "Editar Rol #" ~ rol.id_rol if rol else "Registrar Nuevo Rol" }}
+                        </h3>
+                        <p class="text-muted small mb-0">Completa la información solicitada en el formulario.</p>
+                    </div>
+                </div>
+
+                <!-- Formulario HTML apuntando al endpoint correspondiente según sea edición o creación -->
+                <form id="formularioRol" action="{{ '/rol/actualizar' if rol else '/rol/guardar' }}" method="POST">
+                    
+                    <!-- Campo oculto para enviar el ID del rol en caso de actualización -->
+                    {% if rol %}
+                    <input type="hidden" name="id_rol" value="{{ rol.id_rol }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-secondary small">ID del Rol</label>
+                        <input type="text" class="form-control bg-light fw-bold text-muted" value="#{{ rol.id_rol }}" readonly>
+                    </div>
+                    {% endif %}
+
+                    <!-- Campo de texto para ingresar el nombre del rol -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary small">Nombre del Rol</label>
+                        <input type="text" id="nombre_rol" name="nombre_rol" class="form-control py-2" value="{{ rol.nombre_rol if rol else '' }}" placeholder="Ej. Administrador, Conductor, Pasajero" required>
+                    </div>
+
+                    <!-- Botones de navegación y envío del formulario -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="/rol" class="btn btn-outline-secondary px-4 fw-semibold rounded-pill">Cancelar</a>
+                        <button type="button" onclick="confirmarGuardado()" class="btn px-5 fw-bold shadow-sm rounded-pill btn-verde-custom">
+                            {{ "Guardar Cambios" if rol else "Registrar Rol" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* Función para validar el campo de texto y desplegar las modales de confirmación con SweetAlert2 */
+        function confirmarGuardado() {
+            // Obtenemos el valor escrito en el campo de texto del rol
+            const valorNombreRol = document.getElementById('nombre_rol').value;
+            
+            // Validamos si el campo está vacío mediante la validación nativa del navegador
+            if(!valorNombreRol.trim()) {
+                document.getElementById('formularioRol').reportValidity();
+                return;
+            }
+
+            // Despliega la primera ventana modal preguntando si desea guardar los cambios
+            Swal.fire({
+                title: '¿Guardar cambios?',
+                text: 'Se registrarán tus datos en el sistema.',
+                icon: 'question',
+                iconColor: '#7097a8',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    popup: 'rounded-4 p-4',
+                    confirmButton: 'btn-verde-modal',
+                    cancelButton: 'rounded-3 px-4 fw-bold'
+                }
+            }).then((resultado_confirmacion) => {
+                // Si el usuario confirma la acción
+                if (resultado_confirmacion.isConfirmed) {
+                    // Despliega la segunda modal indicando éxito en la operación
+                    Swal.fire({
+                        title: '¡Operación Exitosa!',
+                        text: 'Contenido registrado correctamente.',
+                        icon: 'success',
+                        iconColor: '#018701',
+                        confirmButtonText: 'Aceptar',
+                        customClass: {
+                            popup: 'rounded-4 p-4',
+                            confirmButton: 'btn-verde-modal'
+                        }
+                    }).then(() => {
+                        // Envía los datos del formulario al backend por método POST
+                        document.getElementById('formularioRol').submit();
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

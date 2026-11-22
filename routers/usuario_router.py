@@ -7,11 +7,11 @@ from models.usuario_model import UsuarioModel, UsuarioUpdateModel
 # Importación de la instancia de la base de datos para realizar consultas directas (como la obtención de roles)
 from database import db
 
-# Importación de las herramientas esenciales de FastAPI: APIRouter para subrutas, Form para recepción de formularios y Request para solicitudes HTTP
-from fastapi import APIRouter, Form, Request, status
+# Importación de las herramientas esenciales de FastAPI: APIRouter para subrutas, Body/Form para recepción de datos y Request para solicitudes HTTP
+from fastapi import APIRouter, Body, Form, Request, status
 
-# Importación de RedirectResponse para gestionar redirecciones seguras entre endpoints y Jinja2Templates para renderizar plantillas HTML
-from fastapi.responses import RedirectResponse
+# Importación de respuestas HTTP y Jinja2Templates para renderizar plantillas HTML
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 # Inicialización y configuración del enrutador con un prefijo común y una etiqueta descriptiva en español para la documentación OpenAPI
@@ -21,15 +21,58 @@ router = APIRouter(prefix="/usuario", tags=["Usuarios"])
 motor_plantillas = Jinja2Templates(directory="templates")
 
 
+@router.post("/api/login")
+def login_dinamico(payload: dict = Body(...)):
+    """
+    Autentica al usuario contra MongoDB y devuelve su nombre, rol e ID
+    detectados automáticamente desde las colecciones 'usuario' y 'rol'.
+    """
+    correo = (payload.get("correo") or "").strip()
+    password = payload.get("password") or ""
+
+    if not correo or not password:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"ok": False, "mensaje": "Ingresa tu correo institucional y contraseña."},
+        )
+
+    usuario_autenticado = UsuarioController.autenticar_usuario(correo, password)
+
+    if not usuario_autenticado:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"ok": False, "mensaje": "Correo institucional o contraseña incorrectos."},
+        )
+
+    rol_texto = (usuario_autenticado.get("rol") or "").strip().lower()
+    if "admin" in rol_texto:
+        rol_normalizado = "Administrador"
+        destino = "/perfil"
+    elif "conductor" in rol_texto:
+        rol_normalizado = "Conductor"
+        destino = "/perfil-conductor"
+    else:
+        rol_normalizado = "Pasajero"
+        destino = "/pasajero/"
+
+    usuario_autenticado["rol"] = rol_normalizado
+
+    return {
+        "ok": True,
+        "usuario": usuario_autenticado,
+        "destino": destino,
+    }
+
+
 @router.get("/")
 def listar_usuarios(solicitud: Request):
     """
-    Ruta HTTP GET para mostrar la vista principal de gestión, 
+    Ruta HTTP GET para mostrar la vista principal de gestión,
     recuperando el listado completo de todos los usuarios registrados en el sistema.
     """
     # Solicitamos al controlador la lista completa de registros enriquecidos con sus roles
     lista_usuarios = UsuarioController.obtener_todos_los_usuarios()
-    
+
     # Renderizamos y retornamos la plantilla de inicio pasando la solicitud y la lista de registros
     return motor_plantillas.TemplateResponse(
         solicitud,
@@ -43,12 +86,12 @@ def listar_usuarios(solicitud: Request):
 @router.get("/nuevo")
 def vista_crear_usuario(solicitud: Request):
     """
-    Ruta HTTP GET para cargar la vista del formulario vacío 
+    Ruta HTTP GET para cargar la vista del formulario vacío
     destinado al registro e inserción de un nuevo usuario en el sistema.
     """
     # Consultamos todos los roles disponibles en la colección de la base de datos (excluyendo el _id interno)
     roles = list(db["rol"].find({}, {"_id": 0}))
-    
+
     # Renderizamos el formulario enviando 'usuario' como None (indicando alta) y la lista de roles para el select
     return motor_plantillas.TemplateResponse(
         solicitud, "usuario/usuario_form.html", {"usuario": None, "roles": roles}
@@ -67,10 +110,10 @@ def guardar_usuario(
     id_rol: str = Form(...)
 ):
     """
-    Ruta HTTP POST para procesar los datos enviados desde el formulario de creación, 
+    Ruta HTTP POST para procesar los datos enviados desde el formulario de creación,
     validarlos mediante Pydantic y almacenar el nuevo registro de manera segura en MongoDB.
     """
-    
+
     # Conversión segura del id_rol recibido por el menú desplegable (select) a un valor de tipo entero
     try:
         id_rol_int = int(id_rol)
@@ -103,12 +146,12 @@ def guardar_usuario(
 @router.get("/editar/{id_usuario}")
 def vista_editar_usuario(solicitud: Request, id_usuario: int):
     """
-    Ruta HTTP GET para buscar y cargar los datos de un usuario existente 
+    Ruta HTTP GET para buscar y cargar los datos de un usuario existente
     dentro del formulario para realizar modificaciones o actualizaciones.
     """
     # Buscamos el registro específico en la base de datos a través de su identificador numérico único
     usuario_encontrado = UsuarioController.obtener_usuario_por_id(id_usuario)
-    
+
     # Consultamos nuevamente la lista de roles para mantener activo el menú desplegable en modo edición
     roles = list(db["rol"].find({}, {"_id": 0}))
 
@@ -131,7 +174,7 @@ def actualizar_usuario(
     id_rol: int = Form(None)
 ):
     """
-    Ruta HTTP POST para procesar y aplicar la actualización parcial de un usuario existente 
+    Ruta HTTP POST para procesar y aplicar la actualización parcial de un usuario existente
     utilizando el modelo unificado de actualización.
     """
     # Empaquetamos los campos recibidos dentro del modelo Pydantic de actualización parcial
@@ -159,7 +202,7 @@ def actualizar_usuario(
 @router.get("/eliminar/{id_usuario}")
 def eliminar_usuario(id_usuario: int):
     """
-    Ruta HTTP GET para procesar la baja definitiva de un registro de usuario 
+    Ruta HTTP GET para procesar la baja definitiva de un registro de usuario
     y ejecutar su respectiva eliminación en cascada en las colecciones vinculadas.
     """
     # Solicitamos al controlador la eliminación permanente del registro por su ID
@@ -179,14 +222,14 @@ def eliminar_usuario(id_usuario: int):
 def vista_perfil_conductor(solicitud: Request):
     """
     Ruta HTTP GET para mostrar el perfil dinámico del conductor.
-    Extrae su información personal, busca los viajes que ha realizado y recupera 
+    Extrae su información personal, busca los viajes que ha realizado y recupera
     los comentarios/calificaciones emitidos por los pasajeros en dichos viajes.
     """
-    
+
     # 1. Buscamos en MongoDB al conductor (Para demostración, tomamos el primero con rol "Conductor")
     # Cuando implementes inicio de sesión (Login), aquí sacarás el ID directamente de la sesión
     conductor = db["usuario"].find_one({"rol": "Conductor"}, {"_id": 0})
-    
+
     # Respaldo de seguridad: Si la base de datos de usuarios está vacía, cargamos un perfil simulado
     if not conductor:
         conductor = {
@@ -214,11 +257,11 @@ def vista_perfil_conductor(solicitud: Request):
 
     # 3. Buscamos las calificaciones vinculadas a los viajes de este conductor
     historial_calificaciones = []
-    
+
     if ids_viajes:
         # Consultamos las reseñas asociadas (Límite 10, ordenadas de la más reciente a la más antigua)
         calificaciones_raw = list(db["calificacion"].find(
-            {"id_viaje": {"$in": ids_viajes}}, 
+            {"id_viaje": {"$in": ids_viajes}},
             {"_id": 0}
         ).sort("id_calificacion", -1).limit(10))
 
@@ -227,7 +270,7 @@ def vista_perfil_conductor(solicitud: Request):
             id_pasajero = calif.get("id_usuario")
             # Buscamos al pasajero que dejó el comentario en la colección de usuarios
             pasajero = db["usuario"].find_one({"id_usuario": id_pasajero}, {"_id": 0})
-            
+
             if pasajero:
                 nombre = pasajero.get("nombre", "")
                 apellido = pasajero.get("apellido_paterno", "")
@@ -236,10 +279,10 @@ def vista_perfil_conductor(solicitud: Request):
             else:
                 calif["nombre_pasajero"] = "Usuario Anónimo"
                 calif["matricula_pasajero"] = "Sin registro"
-            
+
             # Aseguramos que la puntuación exista para que Jinja2 pueda renderizar las estrellas
             calif["puntuacion"] = calif.get("puntuacion", 5)
-            
+
             historial_calificaciones.append(calif)
 
     # 5. Renderizamos la plantilla HTML enviando el usuario y su historial estructurado

@@ -10,6 +10,7 @@ coleccion_viaje = db["viaje"]
 coleccion_reserva = db["reserva"]
 coleccion_calificacion = db["calificacion"]
 
+
 class UsuarioController:
     """
     Controlador encargado de gestionar toda la lógica de negocio y operaciones CRUD
@@ -55,7 +56,7 @@ class UsuarioController:
             # Insertamos el documento estructurado en la colección correspondiente
             coleccion_usuario.insert_one(documento_usuario)
             print(f"[ÉXITO] Usuario creado correctamente con ID: {nuevo_id}")
-            
+
             return nuevo_id
 
         except Exception as error:
@@ -70,7 +71,7 @@ class UsuarioController:
             lista_usuarios = list(
                 coleccion_usuario.find({"id_usuario": {"$exists": True}}, {"_id": 0}).sort("id_usuario", 1)
             )
-            
+
             # Cruzamos el id_rol con la colección rol para obtener el nombre del rol dinámicamente
             for u in lista_usuarios:
                 id_rol = u.get("id_rol")
@@ -102,6 +103,53 @@ class UsuarioController:
             return None
 
     @staticmethod
+    def autenticar_usuario(correo_institucional: str, contrasena: str):
+        """
+        Busca un usuario por correo institucional en MongoDB, valida su contraseña
+        y obtiene dinámicamente su nombre y rol desde la colección 'rol'.
+        """
+        try:
+            correo_limpio = correo_institucional.strip().lower()
+            usuario = coleccion_usuario.find_one(
+                {"correo_institucional": {"$regex": f"^{correo_limpio}$", "$options": "i"}},
+                {"_id": 0},
+            )
+
+            if not usuario:
+                return None
+
+            # Validación directa de contraseña (si usas contraseñas hasheadas, cámbialo aquí)
+            if str(usuario.get("contrasena", "")) != str(contrasena):
+                return None
+
+            nombre_rol = "Pasajero"
+            id_rol = usuario.get("id_rol")
+            if id_rol is not None:
+                try:
+                    rol_doc = coleccion_rol.find_one({"id_rol": int(id_rol)}, {"_id": 0})
+                    if rol_doc and rol_doc.get("nombre_rol"):
+                        nombre_rol = rol_doc["nombre_rol"]
+                except (ValueError, TypeError):
+                    pass
+
+            nombre = (usuario.get("nombre") or "").strip()
+            apellido_paterno = (usuario.get("apellido_paterno") or "").strip()
+            nombre_completo = f"{nombre} {apellido_paterno}".strip() or usuario.get("matricula") or "Usuario Velox"
+
+            return {
+                "id_usuario": usuario.get("id_usuario"),
+                "matricula": usuario.get("matricula"),
+                "nombre": nombre_completo,
+                "correo_institucional": usuario.get("correo_institucional"),
+                "id_rol": id_rol,
+                "rol": nombre_rol,
+            }
+
+        except Exception as error:
+            print(f"[ERROR EN TERMINAL] Error al autenticar usuario: {error}")
+            return None
+
+    @staticmethod
     def actualizar_usuario(id_usuario: int, usuario_update: UsuarioUpdateModel):
         """Actualiza de forma parcial los datos existentes según los campos enviados."""
         try:
@@ -116,8 +164,8 @@ class UsuarioController:
 
             # Ejecutamos la actualización en la base de datos utilizando el operador $set
             resultado = coleccion_usuario.update_one(
-                {"id_usuario": id_usuario}, 
-                {"$set": datos_a_actualizar}
+                {"id_usuario": id_usuario},
+                {"$set": datos_a_actualizar},
             )
 
             if resultado.matched_count > 0:
