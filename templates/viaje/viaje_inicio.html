@@ -7,27 +7,71 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        body { background-color: #F8F9FA !important; }
-        
-        #contenidoPrincipal {
+        body {
+            background-color: #FFFFFF !important;
+        }
+        #mainContent {
             margin-left: 280px;
             transition: margin-left 0.3s ease-in-out;
         }
-        
-        .boton-verde {
+        .btn-verde-custom {
             background-color: #018701 !important;
             color: #ffffff !important;
             border: none;
             transition: all 0.2s ease-in-out;
         }
-        .boton-verde:hover { 
-            background-color: #005200 !important; 
+        .btn-verde-custom:hover {
+            background-color: #005200 !important;
             color: #ffffff !important;
             transform: translateY(-2px);
         }
-
+        .btn-danger-custom {
+            background-color: #ff0000 !important;
+            color: #ffffff !important;
+            border: none;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .btn-danger-custom:hover {
+            opacity: 0.85;
+            color: #ffffff !important;
+        }
+        .tarjeta-viaje {
+            border-radius: 1rem;
+            border: 1px solid #dee2e6;
+            border-top: 4px solid #018701;
+            background-color: #FFFFFF;
+        }
+        .badge-velox-horario {
+            background-color: #FFFFFF !important;
+            color: #005200 !important;
+            border: 1px solid #7097a8 !important;
+        }
+        .badge-velox-confirmado {
+            background-color: #FFFFFF !important;
+            color: #005200 !important;
+            border: 1px solid #018701 !important;
+        }
+        .avatar-pasajero {
+            width: 45px;
+            height: 45px;
+            background-color: #FFFFFF;
+            color: #005200;
+            border: 1.5px solid #018701;
+        }
+        .swal2-confirm.btn-verde-modal {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            padding: 8px 24px !important;
+            font-weight: bold !important;
+            box-shadow: none !important;
+        }
+        .swal2-confirm.btn-verde-modal:hover {
+            background-color: #005200 !important;
+        }
         /* Línea de tiempo visual para Origen -> Destino */
         .ruta-timeline {
             position: relative;
@@ -54,128 +98,177 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background-color: white;
+            background-color: #FFFFFF;
             border: 3px solid #018701;
             z-index: 1;
         }
-        .ruta-punto.destino::before { border-color: #dc3545; }
+        .ruta-punto.destino::before { border-color: #005200; }
         .ruta-punto.destino { margin-bottom: 0; }
 
         @media (max-width: 768px) {
-            #contenidoPrincipal { margin-left: 0 !important; padding: 15px !important; }
+            #mainContent {
+                margin-left: 0 !important;
+                padding: 15px !important;
+            }
         }
     </style>
 </head>
-<body>
+<body class="bg-white">
 
     <!-- Menú Lateral -->
     {% include 'components/sidebar.html' %}
 
-    <div id="contenidoPrincipal" class="p-4 min-vh-100">
+    <div id="mainContent" class="p-4 min-vh-100 bg-white">
         
         <!-- Botón menú móvil -->
-        <div class="d-flex align-items-center mb-3">
-            <button class="btn boton-verde p-1 px-2 me-3 shadow-sm rounded-3 d-block d-md-none" id="btnAbrirMenu">
+        <div class="d-flex align-items-center mb-3 d-md-none">
+            <button class="btn btn-verde-custom p-1 px-2 me-3 shadow-sm rounded-3" id="btnAbrirMenu">
                 <i class="bi bi-list fs-4"></i>
             </button>
         </div>
 
         <div class="container-fluid px-0" style="max-width: 900px;">
             
-            <!-- ENCABEZADO (Sin el botón verde de la derecha) -->
-            <div class="mb-4 pb-3 border-bottom">
-                <h2 class="fw-bold mb-1" style="color: #005200;">
-                    <i class="bi bi-signpost-split-fill me-2"></i>Mis Viajes
-                </h2>
-                <p class="text-muted small mb-0">Gestiona tus viajes activos y visualiza a tus pasajeros confirmados.</p>
-            </div>
-
-            <!-- TARJETA DEL VIAJE ACTIVO -->
-            <div class="card shadow-sm border-0 rounded-4 bg-white mb-4 border-top border-4 border-success">
-                <div class="p-4">
-                    
-                    <!-- Cabecera de fecha y estatus -->
-                    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-semibold">
-                            <i class="bi bi-clock me-1"></i> Hoy, 14:30 hrs
-                        </span>
-                        <span class="badge bg-success rounded-pill px-3 py-2 fw-bold">Viaje Activo</span>
-                    </div>
-
-                    <!-- Puntos de Origen y Destino -->
-                    <div class="ruta-timeline mb-4">
-                        <div class="ruta-punto">
-                            <span class="text-secondary small fw-bold d-block text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Origen</span>
-                            <span class="fw-bold text-dark fs-5">UTVT</span>
-                        </div>
-                        <div class="ruta-punto destino">
-                            <span class="text-secondary small fw-bold d-block text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Destino</span>
-                            <span class="fw-bold text-dark fs-5">Terminal de Toluca</span>
-                        </div>
-                    </div>
-
-                    <!-- Estadísticas del viaje -->
-                    <div class="row text-center mb-4 pb-4 border-bottom g-3">
-                        <div class="col-4 border-end">
-                            <span class="text-muted small d-block mb-1">Distancia</span>
-                            <span class="fw-bold text-dark"><i class="bi bi-geo-alt me-1 text-secondary"></i>12.5 km</span>
-                        </div>
-                        <div class="col-4 border-end">
-                            <span class="text-muted small d-block mb-1">Tiempo est.</span>
-                            <span class="fw-bold text-dark"><i class="bi bi-hourglass-split me-1 text-secondary"></i>35 min</span>
-                        </div>
-                        <div class="col-4">
-                            <span class="text-muted small d-block mb-1">Aportación</span>
-                            <span class="fw-bold" style="color: #018701;">$25.00</span>
-                        </div>
-                    </div>
-
-                    <!-- Sección de Pasajeros -->
-                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-people-fill me-2" style="color: #018701;"></i>Pasajeros a Bordo (2/4)</h6>
-                    
-                    <div class="d-flex flex-column gap-3 mb-4">
-                        
-                        <!-- Pasajero 1 -->
-                        <div class="d-flex justify-content-between align-items-center p-3 border rounded-3 bg-light">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-success text-white rounded-circle d-flex justify-content-center align-items-center me-3 fw-bold shadow-sm" style="width: 45px; height: 45px;">
-                                    B
-                                </div>
-                                <div>
-                                    <h6 class="fw-bold text-dark mb-0">Bianca González</h6>
-                                    <span class="text-muted small">Punto de encuentro: UTVT</span>
-                                </div>
-                            </div>
-                            <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill px-3 py-1">
-                                <i class="bi bi-check-circle-fill me-1"></i>Confirmada
-                            </span>
-                        </div>
-
-                        <!-- Pasajero 2 -->
-                        <div class="d-flex justify-content-between align-items-center p-3 border rounded-3 bg-light">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3 fw-bold shadow-sm" style="width: 45px; height: 45px;">
-                                    B
-                                </div>
-                                <div>
-                                    <h6 class="fw-bold text-dark mb-0">Brian Jiménez</h6>
-                                    <span class="text-muted small">Punto de encuentro: UTVT</span>
-                                </div>
-                            </div>
-                            <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill px-3 py-1">
-                                <i class="bi bi-check-circle-fill me-1"></i>Confirmado
-                            </span>
-                        </div>
-                        
-                    </div>
-
-                    <!-- Botón de acción principal -->
-                    <button class="btn boton-verde w-100 fw-bold py-3 rounded-pill shadow-sm fs-6">
-                        <i class="bi bi-car-front-fill me-2"></i>Comenzar Viaje
-                    </button>
-                    
+            <!-- ENCABEZADO CON BOTÓN AGREGAR -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 pb-3 border-bottom">
+                <div>
+                    <h2 class="fw-bold mb-1" style="color: #005200;">
+                        <i class="bi bi-signpost-split-fill me-2" style="color: #018701;"></i>Mis Viajes
+                    </h2>
+                    <p class="text-muted small mb-0">Gestiona tus viajes activos y visualiza a tus pasajeros confirmados.</p>
                 </div>
+
+                <a href="/viaje/nuevo{% if es_admin %}?rol=admin{% endif %}" class="btn fw-bold px-4 py-2 shadow-sm rounded-pill btn-verde-custom">
+                    <i class="bi bi-plus-lg me-2"></i>Nuevo Viaje
+                </a>
             </div>
+
+            {% if viajes %}
+                {% for viaje in viajes %}
+                {% set asientos_valor = viaje.asientos_disponibles if viaje.asientos_disponibles is defined and viaje.asientos_disponibles is not none else viaje.capacidad_lugares %}
+                <div class="card shadow-sm border tarjeta-viaje bg-white mb-4">
+                    <div class="p-4">
+                        
+                        <!-- Cabecera de horario/fecha e íconos Editar / Eliminar -->
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 pb-3 border-bottom">
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="badge badge-velox-horario rounded-pill px-3 py-2 fw-semibold">
+                                    <i class="bi bi-clock me-1" style="color: #018701;"></i>{{ viaje.horario_texto }}
+                                </span>
+                            </div>
+
+                            <div class="d-flex align-items-center">
+                                {% if viaje.id_viaje %}
+                                <a href="/viaje/editar/{{ viaje.id_viaje }}{% if es_admin %}?rol=admin{% endif %}"
+                                   class="btn btn-sm btn-light border shadow-sm me-1"
+                                   style="color: #018701;"
+                                   title="Editar">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+                                <button type="button"
+                                        class="btn btn-sm btn-danger-custom shadow-sm"
+                                        title="Eliminar"
+                                        onclick="confirmarEliminacionViaje('{{ viaje.id_viaje }}')">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Puntos de Origen y Destino -->
+                        <div class="ruta-timeline mb-4">
+                            <div class="ruta-punto">
+                                <span class="text-secondary small fw-bold d-block text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Origen</span>
+                                <span class="fw-bold text-dark fs-5">{{ viaje.origen }}</span>
+                            </div>
+                            <div class="ruta-punto destino">
+                                <span class="text-secondary small fw-bold d-block text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">Destino</span>
+                                <span class="fw-bold text-dark fs-5">{{ viaje.destino }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Datos principales: Costo, Asientos y Estado -->
+                        <div class="row text-center mb-4 pb-4 border-bottom g-3">
+                            <div class="col-4 border-end">
+                                <span class="text-muted small d-block mb-1">Costo</span>
+                                <span class="fw-bold" style="color: #018701;">
+                                    <i class="bi bi-cash-coin me-1"></i>${{ viaje.costo }} MXN
+                                </span>
+                            </div>
+                            <div class="col-4 border-end">
+                                <span class="text-muted small d-block mb-1">Asientos</span>
+                                <span class="fw-bold text-dark">
+                                    <i class="bi bi-person-check-fill me-1" style="color: #7097a8;"></i>{{ asientos_valor }}
+                                </span>
+                            </div>
+                            <div class="col-4">
+                                <span class="text-muted small d-block mb-1">Estado</span>
+                                <span class="fw-bold text-dark">
+                                    <i class="bi bi-info-circle-fill me-1" style="color: #005200;"></i>{{ viaje.estado or viaje.estado_texto }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Sección de Pasajeros -->
+                        <h6 class="fw-bold text-dark mb-3">
+                            <i class="bi bi-people-fill me-2" style="color: #005200;"></i>Pasajeros a Bordo ({{ viaje.pasajeros | length }}/{{ viaje.capacidad_lugares }})
+                        </h6>
+                        
+                        {% if viaje.pasajeros %}
+                        <div class="d-flex flex-column gap-3 mb-4">
+                            {% for pasajero in viaje.pasajeros %}
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-3 border rounded-3 bg-white">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-pasajero rounded-circle d-flex justify-content-center align-items-center me-3 fw-bold shadow-sm">
+                                        {{ pasajero.inicial }}
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">{{ pasajero.nombre }}</h6>
+                                        <span class="text-muted small">Punto de encuentro: {{ pasajero.punto_encuentro }}</span>
+                                    </div>
+                                </div>
+                                <span class="badge badge-velox-confirmado rounded-pill px-3 py-1 fw-semibold">
+                                    <i class="bi bi-check-circle-fill me-1" style="color: #018701;"></i>{{ pasajero.estado_texto }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="p-3 border rounded-3 bg-light text-muted small mb-4">
+                            <i class="bi bi-info-circle me-1" style="color: #7097a8;"></i>Aún no hay pasajeros confirmados para este viaje.
+                        </div>
+                        {% endif %}
+
+                        <!-- Botón de acción principal -->
+                        <form method="post" action="/viaje/estado" id="formEstadoViaje-{{ viaje.id_viaje }}">
+                            <input type="hidden" name="id_viaje" value="{{ viaje.id_viaje }}">
+                            <input type="hidden" name="id_ruta" value="{{ viaje.id_ruta }}">
+                            <input type="hidden" name="nuevo_estado" value="{{ viaje.siguiente_estado }}">
+                            <button type="button"
+                                    class="btn btn-verde-custom w-100 fw-bold py-3 rounded-pill shadow-sm fs-6"
+                                    onclick="confirmarAccionViaje('formEstadoViaje-{{ viaje.id_viaje }}', '{{ viaje.texto_boton }}', '{{ viaje.mensaje_confirmacion }}')">
+                                <i class="bi {{ viaje.icono_boton }} me-2"></i>{{ viaje.texto_boton }}
+                            </button>
+                        </form>
+                        
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="card border shadow-sm rounded-4 p-5 text-center bg-white">
+                    <i class="bi bi-signpost-split fs-1 text-muted mb-2"></i>
+                    <h5 class="fw-bold text-dark">Sin viajes activos por el momento</h5>
+                    <p class="text-muted small mb-3">Registra un nuevo viaje o publica una ruta para ver tus viajes aquí.</p>
+                    <div class="d-flex justify-content-center flex-wrap gap-2">
+                        <a href="/viaje/nuevo{% if es_admin %}?rol=admin{% endif %}" class="btn btn-verde-custom fw-bold px-4 py-2 rounded-pill shadow-sm">
+                            <i class="bi bi-plus-lg me-1"></i>Nuevo Viaje
+                        </a>
+                        <a href="/ruta/nuevo" class="btn btn-outline-secondary fw-bold px-4 py-2 rounded-pill">
+                            <i class="bi bi-geo-alt me-1"></i>Publicar Ruta
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
 
         </div>
     </div>
@@ -183,6 +276,83 @@
     <!-- Scripts Base -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const esAdminVista = {{ 'true' if es_admin else 'false' }};
+
+        function obtenerCookie(nombre) {
+            const match = document.cookie.match(new RegExp('(^| )' + nombre + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+
+        function confirmarAccionViaje(formId, tituloAccion, textoConfirmacion) {
+            Swal.fire({
+                title: tituloAccion + '?',
+                text: textoConfirmacion,
+                icon: 'question',
+                iconColor: '#7097a8',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, continuar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    popup: 'rounded-4 p-4',
+                    confirmButton: 'btn-verde-modal',
+                    cancelButton: 'rounded-3 px-4 fw-bold'
+                }
+            }).then((resultado) => {
+                if (resultado.isConfirmed) {
+                    Swal.fire({
+                        title: '¡Operación Exitosa!',
+                        text: 'El estado del viaje se ha actualizado.',
+                        icon: 'success',
+                        iconColor: '#018701',
+                        confirmButtonText: 'Aceptar',
+                        customClass: {
+                            popup: 'rounded-4 p-4',
+                            confirmButton: 'btn-verde-modal'
+                        }
+                    }).then(() => {
+                        document.getElementById(formId).submit();
+                    });
+                }
+            });
+        }
+
+        function confirmarEliminacionViaje(id_viaje) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Se eliminará este contenido de forma permanente.',
+                icon: 'warning',
+                iconColor: '#f8bb86',
+                showCancelButton: true,
+                confirmButtonColor: '#ff0000',
+                cancelButtonColor: '#555555',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    popup: 'rounded-4 p-4',
+                    confirmButton: 'rounded-3 px-4 fw-bold',
+                    cancelButton: 'rounded-3 px-4 fw-bold'
+                }
+            }).then((resultado_confirmacion) => {
+                if (resultado_confirmacion.isConfirmed) {
+                    Swal.fire({
+                        title: '¡Operación Exitosa!',
+                        text: 'Contenido eliminado correctamente.',
+                        icon: 'success',
+                        iconColor: '#018701',
+                        confirmButtonText: 'Aceptar',
+                        customClass: {
+                            popup: 'rounded-4 p-4',
+                            confirmButton: 'btn-verde-modal',
+                            cancelButton: 'rounded-3 px-4 fw-bold'
+                        }
+                    }).then(() => {
+                        const rolQuery = esAdminVista ? '?rol=admin' : '';
+                        window.location.href = `/viaje/eliminar/${id_viaje}${rolQuery}`;
+                    });
+                }
+            });
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
             const menuLateral = document.getElementById("menuLateral");
             const btnAbrir = document.getElementById("btnAbrirMenu");
@@ -191,6 +361,19 @@
                 btnAbrir.addEventListener("click", function() { 
                     menuLateral.style.transform = "translateX(0)"; 
                 });
+            }
+
+            // Si no viene id_usuario en la URL pero sí en localStorage o cookie, sincroniza la vista del usuario activo
+            const params = new URLSearchParams(window.location.search);
+            const idQuery = (params.get("id_usuario") || "").trim();
+            const idStorage = (localStorage.getItem("velox_usuario_id") || "").trim();
+            const idCookie = (obtenerCookie("velox_usuario_id") || "").trim();
+            const idActivo = idQuery || idStorage || idCookie;
+
+            if (!idQuery && idActivo) {
+                const nuevaUrl = new URL(window.location.href);
+                nuevaUrl.searchParams.set("id_usuario", idActivo);
+                window.location.replace(nuevaUrl.toString());
             }
         });
     </script>

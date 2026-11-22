@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- Configuración base de la vista de Historial de Rutas -->
+    <!-- Configuración base de la vista de Rutas del Conductor -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial de Rutas - Velox UTVT</title>
+    <title>Mis Rutas - Velox UTVT</title>
 
-    <!-- Bootstrap 5 y Bootstrap Icons -->
+    <!-- Bootstrap 5, Bootstrap Icons y SweetAlert2 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        body { background-color: #F8F9FA !important; }
+        body { background-color: #FFFFFF !important; }
 
         /* Margen lateral para convivir con el sidebar fijo */
         #contenidoPrincipal {
@@ -31,11 +32,23 @@
             color: #ffffff !important;
         }
 
+        .btn-rojo-custom {
+            background-color: #ff0000 !important;
+            color: #ffffff !important;
+            border: none;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .btn-rojo-custom:hover {
+            opacity: 0.85;
+            color: #ffffff !important;
+        }
+
         /* Tarjeta horizontal de ruta con borde verde izquierdo */
         .tarjeta-ruta {
             border-radius: 1rem;
-            border: 1px solid #EAECEF;
+            border: 1px solid #dee2e6;
             border-left: 5px solid #018701;
+            background-color: #ffffff;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
@@ -44,12 +57,12 @@
             box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.08) !important;
         }
 
-        /* Círculo de inicial del pasajero */
+        /* Círculo de inicial del conductor */
         .avatar-ruta {
             width: 48px;
             height: 48px;
             border-radius: 50%;
-            background-color: #F1F8F1;
+            background-color: #f8f9fa;
             border: 1.5px solid #018701;
             color: #005200;
             font-weight: 700;
@@ -60,31 +73,17 @@
             flex-shrink: 0;
         }
 
-        /* Celdas compactas de distancia, tiempo, aportación y lugares */
-        .caja-metrica {
-            background-color: #F8F9FA;
-            border: 1px solid #EAECEF;
+        .badge-estado-velox {
+            background-color: #ffffff !important;
+            color: #005200 !important;
+            border: 1px solid #018701 !important;
+        }
+
+        .caja-salida {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
             border-radius: 0.75rem;
-            padding: 0.7rem 0.5rem;
-            text-align: center;
-            height: 100%;
-        }
-
-        /* Estrellas interactivas dentro del modal de calificación */
-        .estrella-btn {
-            background: transparent;
-            border: none;
-            font-size: 2rem;
-            color: #D1D5DB;
-            cursor: pointer;
-            padding: 0 0.2rem;
-            transition: transform 0.15s ease, color 0.15s ease;
-        }
-
-        .estrella-btn.activa,
-        .estrella-btn:hover {
-            color: #FFC107;
-            transform: scale(1.12);
+            padding: 0.65rem 0.9rem;
         }
 
         /* Ajuste responsivo móvil */
@@ -93,12 +92,12 @@
         }
     </style>
 </head>
-<body>
+<body class="bg-white">
 
     <!-- Menú lateral compartido -->
     {% include 'components/sidebar.html' %}
 
-    <div id="contenidoPrincipal" class="p-4 min-vh-100">
+    <div id="contenidoPrincipal" class="p-4 min-vh-100 bg-white">
         <!-- Botón móvil para desplegar el sidebar -->
         <div class="d-flex align-items-center mb-3 d-md-none">
             <button class="btn boton-verde p-1 px-2 shadow-sm rounded-3" id="btnAbrirMenu">
@@ -107,288 +106,136 @@
         </div>
 
         <div class="container-fluid px-0" style="max-width: 1120px;">
-            <!-- Encabezado y selector de filtro por estado de calificación -->
+            <!-- Encabezado y botón para registrar nueva ruta -->
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 pb-3 border-bottom">
                 <div>
                     <h2 class="fw-bold mb-1" style="color: #005200;">
-                        <i class="bi bi-geo-alt-fill me-2"></i>Historial de Rutas
+                        <i class="bi bi-geo-alt-fill me-2" style="color: #018701;"></i>Mis Rutas
                     </h2>
                     <p class="text-muted small mb-0">
-                        Explora los trayectos realizados y califica a tus pasajeros al finalizar cada viaje.
+                        Consulta y administra los trayectos que has publicado en Velox UTVT.
                     </p>
                 </div>
 
-                <!-- Filtro dinámico en cliente (Todas / Pendientes / Calificadas) -->
-                <div class="d-flex align-items-center gap-2">
-                    <select id="filtroRutas" class="form-select rounded-3 shadow-sm" style="min-width: 195px;" onchange="filtrarTarjetasRuta()">
-                        <option value="todas" selected>Mostrar Todas</option>
-                        <option value="pendientes">Pendientes de Calificar</option>
-                        <option value="calificadas">Ya Calificadas</option>
-                    </select>
-                </div>
+                <a href="/ruta/nuevo" class="btn boton-verde fw-bold px-4 py-2 shadow-sm rounded-pill">
+                    <i class="bi bi-plus-lg me-2"></i>Nueva Ruta
+                </a>
             </div>
 
-            <!-- Banner de confirmación cuando el conductor acaba de calificar a un pasajero -->
-            {% if aviso_calificado %}
-                <div class="alert alert-success border-0 shadow-sm rounded-4 d-flex align-items-center mb-4">
-                    <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
-                    <div class="small">
-                        <strong>¡Calificación enviada!</strong> La evaluación quedó guardada en MongoDB y ya es visible en el perfil del pasajero.
-                    </div>
-                </div>
-            {% endif %}
-
-            <!-- Listado de tarjetas de rutas y viajes aceptados -->
+            <!-- Listado de tarjetas de rutas publicadas -->
             <div class="d-flex flex-column gap-3" id="contenedorRutas">
                 {% if rutas %}
                     {% for ruta in rutas %}
-                        <div class="card bg-white shadow-sm p-4 tarjeta-ruta item-ruta"
-                             data-estado-cal="{% if ruta.calificado %}calificadas{% else %}pendientes{% endif %}">
+                        {% set id_editar = ruta.id_ruta or ruta.id_registro %}
+                        <div class="card bg-white shadow-sm p-4 tarjeta-ruta item-ruta">
                             <div class="row align-items-center g-3">
-                                <!-- Columna 1: Datos del pasajero -->
-                                <div class="col-md-3">
+                                <!-- Columna 1: Datos del conductor -->
+                                <div class="col-md-4">
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="avatar-ruta">{{ ruta.inicial }}</div>
                                         <div>
                                             <div class="fw-bold text-dark">{{ ruta.nombre_pasajero }}</div>
+                                            {% if ruta.matricula %}
                                             <div class="text-muted small">
-                                                <i class="bi bi-person-vcard me-1"></i>{{ ruta.matricula }}
+                                                <i class="bi bi-person-vcard me-1" style="color: #7097a8;"></i>{{ ruta.matricula }}
                                             </div>
-                                            {% if ruta.origen_tipo == 'reserva' %}
-                                                <span class="badge bg-success-subtle text-success mt-1" style="font-size: 0.7rem;">
-                                                    Viaje Aceptado #{{ ruta.id_registro }}
-                                                </span>
                                             {% endif %}
+                                            <span class="badge badge-estado-velox mt-1 rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+                                                Ruta #{{ ruta.id_registro }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Columna 2: Origen y Destino del trayecto -->
-                                <div class="col-md-4 border-start-md ps-md-4">
+                                <div class="col-md-5 border-top pt-3 mt-2 border-top-md-0 pt-md-0 mt-md-0 border-start-md ps-md-4">
                                     <div class="mb-2">
                                         <span class="text-muted fw-bold d-block" style="font-size: 0.68rem;">
-                                            <i class="bi bi-record-circle text-success me-1"></i>ORIGEN
+                                            <i class="bi bi-record-circle me-1" style="color: #018701;"></i>ORIGEN
                                         </span>
                                         <span class="fw-bold text-dark">{{ ruta.origen }}</span>
                                     </div>
                                     <div>
                                         <span class="text-muted fw-bold d-block" style="font-size: 0.68rem;">
-                                            <i class="bi bi-record-circle text-danger me-1"></i>DESTINO
+                                            <i class="bi bi-record-circle me-1" style="color: #7097a8;"></i>DESTINO
                                         </span>
                                         <span class="fw-bold text-dark">{{ ruta.destino }}</span>
                                     </div>
                                 </div>
 
-                                <!-- Columna 3: Cuadrícula de métricas (km, minutos, costo y lugares) -->
-                                <div class="col-md-5">
-                                    <div class="row g-2">
-                                        <div class="col-6">
-                                            <div class="caja-metrica">
-                                                <i class="bi bi-speedometer2 text-success d-block"></i>
-                                                <span class="fw-bold text-dark">{{ ruta.distancia_km }} km</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="caja-metrica position-relative">
-                                                {% if ruta.puede_eliminar %}
-                                                    <a href="/ruta/eliminar/{{ ruta.id_registro }}"
-                                                       class="text-danger position-absolute top-0 end-0 m-2 small"
-                                                       title="Eliminar ruta"
-                                                       onclick="return confirm('¿Eliminar esta ruta del historial?');">
-                                                        <i class="bi bi-trash"></i>
-                                                    </a>
-                                                {% endif %}
-                                                <i class="bi bi-clock text-success d-block"></i>
-                                                <span class="fw-bold text-dark">{{ ruta.tiempo_min }} min</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="caja-metrica">
-                                                <i class="bi bi-currency-dollar text-success d-block"></i>
-                                                <span class="fw-bold text-dark">${{ ruta.costo }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-6">
-                                            <div class="caja-metrica">
-                                                <i class="bi bi-people text-success d-block"></i>
-                                                <span class="fw-bold text-dark">{{ ruta.lugares }} lugar{% if ruta.lugares != 1 %}es{% endif %}</span>
-                                            </div>
-                                        </div>
+                                <!-- Columna 3: Hora de salida y acciones de editar/eliminar alineadas a la derecha -->
+                                <div class="col-md-3 d-flex align-items-center justify-content-between justify-content-md-end gap-2">
+                                    <div class="caja-salida text-start text-md-end flex-grow-1 flex-md-grow-0">
+                                        <span class="text-muted fw-bold d-block" style="font-size: 0.68rem;">
+                                            <i class="bi bi-clock me-1" style="color: #018701;"></i>HORA DE SALIDA
+                                        </span>
+                                        <span class="fw-bold text-dark">{{ ruta.hora_salida if ruta.hora_salida else 'No definida' }}</span>
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if id_editar %}
+                                        <a href="/ruta/editar/{{ id_editar }}{% if es_admin %}?rol=admin{% endif %}"
+                                           class="btn btn-sm btn-light border shadow-sm py-2 px-2"
+                                           style="color: #018701;"
+                                           title="Editar ruta">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                        {% endif %}
+
+                                        {% if ruta.puede_eliminar %}
+                                        <button type="button"
+                                                class="btn btn-sm btn-rojo-custom py-2 px-2 shadow-sm"
+                                                title="Eliminar ruta"
+                                                onclick="confirmarEliminacion('{{ ruta.id_registro }}', '{{ ruta.origen_tipo }}')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        {% endif %}
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Barra inferior: muestra calificación enviada o botón para calificar al pasajero -->
-                            <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                {% if ruta.calificado %}
-                                    <div class="small text-secondary">
-                                        <span class="text-warning me-1">
-                                            {% for i in range(1, 6) %}
-                                                {% if i <= (ruta.estrellas_dadas | default(5)) %}
-                                                    <i class="bi bi-star-fill"></i>
-                                                {% else %}
-                                                    <i class="bi bi-star"></i>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </span>
-                                        <strong class="text-dark">Calificación enviada ({{ ruta.estrellas_dadas }}/5):</strong>
-                                        "{{ ruta.comentario_dado }}"
-                                    </div>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2">
-                                        <i class="bi bi-check2-all me-1"></i>Pasajero Calificado
-                                    </span>
-                                {% else %}
-                                    <span class="text-muted small">
-                                        <i class="bi bi-info-circle me-1"></i>Evalúa el comportamiento y puntualidad de <strong>{{ ruta.nombre_pasajero }}</strong> al concluir el viaje.
-                                    </span>
-                                    <!-- Botón que abre el modal cargando los datos del pasajero vía atributos data-* -->
-                                    <button type="button"
-                                            class="btn boton-verde btn-sm rounded-pill px-4 py-2 fw-semibold shadow-sm btn-calificar-pasajero"
-                                            data-origen-tipo="{{ ruta.origen_tipo }}"
-                                            data-id-registro="{{ ruta.id_registro }}"
-                                            data-id-usuario="{{ ruta.id_usuario }}"
-                                            data-nombre="{{ ruta.nombre_pasajero }}"
-                                            data-matricula="{{ ruta.matricula }}"
-                                            data-origen="{{ ruta.origen }}"
-                                            data-destino="{{ ruta.destino }}">
-                                        <i class="bi bi-star-fill me-1"></i>Finalizar y Calificar Pasajero
-                                    </button>
-                                {% endif %}
                             </div>
                         </div>
                     {% endfor %}
                 {% else %}
-                    <!-- Estado vacío si no hay rutas registradas -->
-                    <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+                    <!-- Estado vacío si el conductor aún no publica rutas -->
+                    <div class="card border shadow-sm rounded-4 p-5 text-center bg-white">
                         <i class="bi bi-geo-alt fs-1 text-muted mb-2"></i>
                         <h5 class="fw-bold text-dark">Sin rutas registradas</h5>
-                        <p class="text-muted small mb-0">Cuando tengas trayectos o viajes aceptados aparecerán aquí para evaluarlos.</p>
+                        <p class="text-muted small mb-0">Publica una nueva ruta para que aparezca aquí.</p>
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Modal de calificación del Conductor hacia el Pasajero -->
-    <div class="modal fade" id="modalCalificarPasajero" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow rounded-4">
-                <div class="modal-header border-0 pb-0">
-                    <div>
-                        <h5 class="modal-title fw-bold" style="color: #005200;">
-                            <i class="bi bi-star-fill text-warning me-2"></i>Calificar Pasajero
-                        </h5>
-                        <p id="subtituloModalPasajero" class="text-muted small mb-0"></p>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-
-                <!-- Formulario POST hacia /ruta/calificar-pasajero -->
-                <form method="post" action="/ruta/calificar-pasajero">
-                    <div class="modal-body pt-3">
-                        <!-- Campos ocultos con la referencia exacta del viaje y pasajero -->
-                        <input type="hidden" name="origen_tipo" id="inOrigenTipo">
-                        <input type="hidden" name="id_registro" id="inIdRegistro">
-                        <input type="hidden" name="id_usuario" id="inIdUsuario">
-                        <input type="hidden" name="nombre_pasajero" id="inNombrePasajero">
-                        <input type="hidden" name="matricula" id="inMatricula">
-                        <input type="hidden" name="origen" id="inOrigen">
-                        <input type="hidden" name="destino" id="inDestino">
-                        <input type="hidden" name="estrellas" id="inEstrellas" value="5">
-
-                        <!-- Selector interactivo de 1 a 5 estrellas -->
-                        <div class="text-center py-3 bg-light rounded-4 mb-3">
-                            <div class="small text-muted fw-bold mb-1">
-                                ¿Cómo fue tu viaje con <span id="lblNombrePasajero" class="text-dark"></span>?
-                            </div>
-                            <div id="grupoEstrellasPasajero" class="d-flex justify-content-center my-2">
-                                <button type="button" class="estrella-btn activa" data-valor="1" onclick="fijarEstrellas(1)"><i class="bi bi-star-fill"></i></button>
-                                <button type="button" class="estrella-btn activa" data-valor="2" onclick="fijarEstrellas(2)"><i class="bi bi-star-fill"></i></button>
-                                <button type="button" class="estrella-btn activa" data-valor="3" onclick="fijarEstrellas(3)"><i class="bi bi-star-fill"></i></button>
-                                <button type="button" class="estrella-btn activa" data-valor="4" onclick="fijarEstrellas(4)"><i class="bi bi-star-fill"></i></button>
-                                <button type="button" class="estrella-btn activa" data-valor="5" onclick="fijarEstrellas(5)"><i class="bi bi-star-fill"></i></button>
-                            </div>
-                            <div id="lblTextoEstrellas" class="fw-bold small" style="color: #005200;">5 estrellas — Pasajero excelente</div>
-                        </div>
-
-                        <!-- Comentario opcional que verá el pasajero en su historial -->
-                        <div class="mb-2">
-                            <label class="form-label small fw-bold text-secondary">Comentario para el pasajero</label>
-                            <textarea name="comentario" class="form-control rounded-3" rows="3"
-                                      placeholder="Ej. Muy puntual en el punto de encuentro, amable y respetuoso..."></textarea>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-light border rounded-3" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn boton-verde fw-semibold rounded-3 px-4">
-                            <i class="bi bi-send-check me-1"></i>Guardar Calificación
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts de Bootstrap y lógica del modal y filtro -->
+    <!-- Scripts de Bootstrap y alerta de confirmación al eliminar -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let modalPasajeroInstancia = null;
+        const esAdminVista = {{ 'true' if es_admin else 'false' }};
 
-        // Actualiza el valor oculto de estrellas y resalta los íconos seleccionados
-        function fijarEstrellas(valor) {
-            document.getElementById('inEstrellas').value = valor;
-            const textos = {
-                1: '1 estrella — Mala experiencia',
-                2: '2 estrellas — Impuntual o descuidado',
-                3: '3 estrellas — Buen comportamiento',
-                4: '4 estrellas — Muy buen pasajero',
-                5: '5 estrellas — Pasajero excelente'
-            };
-            document.getElementById('lblTextoEstrellas').textContent = textos[valor] || '';
-
-            document.querySelectorAll('#grupoEstrellasPasajero .estrella-btn').forEach(btn => {
-                const v = parseInt(btn.getAttribute('data-valor'), 10);
-                btn.classList.toggle('activa', v <= valor);
+        function confirmarEliminacion(id_registro, origen_tipo) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esta acción eliminará la ruta de forma permanente del sistema.',
+                icon: 'warning',
+                iconColor: '#f8bb86',
+                showCancelButton: true,
+                confirmButtonColor: '#ff0000',
+                cancelButtonColor: '#555555',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    popup: 'rounded-4 p-4',
+                    confirmButton: 'rounded-3 px-4 fw-bold',
+                    cancelButton: 'rounded-3 px-4 fw-bold'
+                }
+            }).then((resultado_confirmacion) => {
+                if (resultado_confirmacion.isConfirmed) {
+                    const tipo = encodeURIComponent(origen_tipo || 'ruta');
+                    const rolQuery = esAdminVista ? '&rol=admin' : '';
+                    window.location.href = `/ruta/eliminar/${id_registro}?origen_tipo=${tipo}${rolQuery}`;
+                }
             });
         }
-
-        // Filtra visualmente las tarjetas según el valor seleccionado en el dropdown
-        function filtrarTarjetasRuta() {
-            const filtro = document.getElementById('filtroRutas').value;
-            document.querySelectorAll('.item-ruta').forEach(card => {
-                const estado = card.getAttribute('data-estado-cal');
-                card.classList.toggle('d-none', !(filtro === 'todas' || filtro === estado));
-            });
-        }
-
-        // Conecta todos los botones "Finalizar y Calificar Pasajero" con el modal único
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.btn-calificar-pasajero').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const nombre = this.dataset.nombre;
-                    const origen = this.dataset.origen;
-                    const destino = this.dataset.destino;
-
-                    document.getElementById('inOrigenTipo').value = this.dataset.origenTipo;
-                    document.getElementById('inIdRegistro').value = this.dataset.idRegistro;
-                    document.getElementById('inIdUsuario').value = this.dataset.idUsuario;
-                    document.getElementById('inNombrePasajero').value = nombre;
-                    document.getElementById('inMatricula').value = this.dataset.matricula;
-                    document.getElementById('inOrigen').value = origen;
-                    document.getElementById('inDestino').value = destino;
-
-                    document.getElementById('lblNombrePasajero').textContent = nombre;
-                    document.getElementById('subtituloModalPasajero').textContent = `${origen} → ${destino}`;
-                    fijarEstrellas(5);
-
-                    if (!modalPasajeroInstancia) {
-                        modalPasajeroInstancia = new bootstrap.Modal(document.getElementById('modalCalificarPasajero'));
-                    }
-                    modalPasajeroInstancia.show();
-                });
-            });
-        });
     </script>
 </body>
 </html>

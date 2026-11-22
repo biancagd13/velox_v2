@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
-            background-color: #E8F5E9 !important;
+            background-color: #FFFFFF !important;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -21,12 +21,31 @@
             border: none;
             transition: background-color 0.2s ease-in-out;
         }
-        .boton-verde:hover { background-color: #005200 !important; color: #ffffff !important; }
+        .boton-verde:hover {
+            background-color: #005200 !important;
+            color: #ffffff !important;
+        }
+        .swal2-confirm.btn-verde-modal {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            padding: 8px 24px !important;
+            font-weight: bold !important;
+            box-shadow: none !important;
+        }
+        .swal2-confirm.btn-verde-modal:hover {
+            background-color: #005200 !important;
+        }
+        .enlace-institucional {
+            color: #005200;
+        }
+        .enlace-institucional:hover {
+            color: #018701;
+        }
         .login-card {
             max-width: 450px;
             width: 100%;
             border-radius: 1rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
         .logo-login {
             max-height: 115px;
@@ -40,7 +59,7 @@
 <body>
 
     <div class="container px-3 py-4">
-        <div class="card border-0 bg-white p-4 p-sm-5 login-card mx-auto">
+        <div class="card border shadow-sm bg-white p-4 p-sm-5 login-card mx-auto">
             <div class="text-center mb-4">
                 <img src="/static/img/logo_velox.png"
                      alt="Logotipo Velox UTVT"
@@ -60,7 +79,7 @@
                 <div class="mb-4">
                     <label class="form-label fw-semibold text-secondary small d-flex justify-content-between">
                         Contraseña
-                        <a href="#" id="linkRecuperar" class="text-decoration-none text-success small">¿Olvidaste tu contraseña?</a>
+                        <a href="#" id="linkRecuperar" class="text-decoration-none enlace-institucional small">¿Olvidaste tu contraseña?</a>
                     </label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
@@ -72,9 +91,9 @@
                     Iniciar Sesión
                 </button>
 
-                <div class="alert alert-secondary py-2 px-3 text-center border-0 rounded-3 mb-0 mt-3" role="alert" style="font-size: 0.75rem;">
+                <div class="bg-light py-2 px-3 text-center border rounded-3 mb-0 mt-3 text-secondary" style="font-size: 0.75rem;">
                     <strong>Acceso Institucional:</strong><br>
-                    Usa tu correo <span class="font-monospace">@utvtol.edu.mx</span> registrado en el sistema.
+                    Usa tu correo <span class="font-monospace text-muted">@utvtol.edu.mx</span> registrado en el sistema.
                 </div>
             </form>
         </div>
@@ -87,7 +106,12 @@
                 title: 'Recuperación de acceso',
                 text: 'Comunícate con el administrador del sistema o con soporte institucional @utvtol.edu.mx.',
                 icon: 'info',
-                confirmButtonColor: '#018701'
+                iconColor: '#7097a8',
+                confirmButtonText: 'Aceptar',
+                customClass: {
+                    popup: 'rounded-4 p-4 bg-white',
+                    confirmButton: 'btn-verde-modal'
+                }
             });
         });
 
@@ -102,7 +126,12 @@
                     title: 'Correo no válido',
                     text: 'Debes utilizar un correo institucional @utvtol.edu.mx.',
                     icon: 'warning',
-                    confirmButtonColor: '#018701'
+                    iconColor: '#7097a8',
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        popup: 'rounded-4 p-4 bg-white',
+                        confirmButton: 'btn-verde-modal'
+                    }
                 });
                 return;
             }
@@ -111,8 +140,12 @@
                 title: 'Autenticando...',
                 text: 'Verificando credenciales en la base de datos',
                 icon: 'info',
+                iconColor: '#7097a8',
                 showConfirmButton: false,
                 allowOutsideClick: false,
+                customClass: {
+                    popup: 'rounded-4 p-4 bg-white'
+                },
                 didOpen: () => Swal.showLoading()
             });
 
@@ -130,7 +163,12 @@
                         title: 'Acceso denegado',
                         text: data.mensaje || 'Correo institucional o contraseña incorrectos.',
                         icon: 'error',
-                        confirmButtonColor: '#018701'
+                        iconColor: '#005200',
+                        confirmButtonText: 'Aceptar',
+                        customClass: {
+                            popup: 'rounded-4 p-4 bg-white',
+                            confirmButton: 'btn-verde-modal'
+                        }
                     });
                     return;
                 }
@@ -171,7 +209,12 @@
                     title: 'Error de conexión',
                     text: 'No se pudo comunicar con el servidor.',
                     icon: 'error',
-                    confirmButtonColor: '#018701'
+                    iconColor: '#005200',
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        popup: 'rounded-4 p-4 bg-white',
+                        confirmButton: 'btn-verde-modal'
+                    }
                 });
             }
         }

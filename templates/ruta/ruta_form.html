@@ -84,6 +84,10 @@
                 <!-- Formulario dinámico: Selecciona la ruta de guardado o actualización según el contexto -->
                 <form id="formularioRuta" action="{{ '/ruta/actualizar' if ruta else '/ruta/guardar' }}" method="POST">
                     
+                    <!-- Campo oculto del usuario en sesión detectado desde el login -->
+                    <input type="hidden" id="idUsuario" name="id_usuario" value="{{ ruta.id_usuario if ruta and ruta.id_usuario else '' }}">
+                    <input type="hidden" id="nombreUsuario" name="nombre_usuario" value="{{ ruta.nombre_usuario if ruta and ruta.nombre_usuario else '' }}">
+
                     <!-- Campo oculto y solo lectura del ID (Visible solo en Edición) -->
                     {% if ruta %}
                     <input type="hidden" name="id_ruta" value="{{ ruta.id_ruta }}">
@@ -106,27 +110,14 @@
                     </div>
 
                     <!-- Input de tipo Hora -->
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label class="form-label fw-semibold text-secondary small">Hora de Salida</label>
                         <input type="time" id="horaSalida" name="hora_salida" class="form-control py-2" value="{{ ruta.hora_salida if ruta else '' }}" required>
                     </div>
 
-                    <!-- Lista desplegable para seleccionar al usuario creador -->
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold text-secondary small">Usuario Creador</label>
-                        <select id="idUsuario" name="id_usuario" class="form-select py-2" required>
-                            <option value="" disabled selected>Selecciona un usuario...</option>
-                            {% for usuario in usuarios %}
-                            <option value="{{ usuario.id_usuario }}" {% if ruta and ruta.id_usuario == usuario.id_usuario %}selected{% endif %}>
-                                {{ usuario.nombre }} {{ usuario.apellido_paterno }} ({{ usuario.correo_institucional }})
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
                     <!-- Grupo de botones (Responsivos en celular) -->
                     <div class="grupo-botones d-flex justify-content-end gap-2">
-                        <a href="/ruta" class="btn btn-outline-secondary px-4 fw-semibold rounded-pill">Cancelar</a>
+                        <a href="{{ '/ruta?rol=admin' if es_admin else '/ruta' }}" class="btn btn-outline-secondary px-4 fw-semibold rounded-pill">Cancelar</a>
                         <button type="button" onclick="confirmarGuardado()" class="btn boton-verde px-5 fw-bold shadow-sm rounded-pill">
                             {{ "Guardar Cambios" if ruta else "Registrar Ruta" }}
                         </button>
@@ -140,19 +131,59 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        function obtenerCookie(nombre) {
+            const match = document.cookie.match(new RegExp('(^| )' + nombre + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const params = new URLSearchParams(window.location.search);
+            const idQuery = (params.get('id_usuario') || '').trim();
+            const idCookie = (obtenerCookie('velox_usuario_id') || '').trim();
+            const idStorage = (localStorage.getItem('velox_usuario_id') || '').trim();
+
+            const nombreCookie = (obtenerCookie('velox_usuario_nombre') || '').trim();
+            const nombreStorage = (localStorage.getItem('velox_usuario_nombre') || '').trim();
+
+            const inputId = document.getElementById('idUsuario');
+            const inputNombre = document.getElementById('nombreUsuario');
+
+            const idDetectado = idQuery || idStorage || idCookie || inputId.value.trim();
+            const nombreDetectado = nombreStorage || nombreCookie || inputNombre.value.trim();
+
+            if (idDetectado) {
+                inputId.value = idDetectado;
+            }
+            if (nombreDetectado) {
+                inputNombre.value = nombreDetectado;
+            }
+        });
+
         /**
          * Función JS para validar los datos e invocar las alertas modales interactivas (SweetAlert2).
          */
         function confirmarGuardado() {
-            // Extracción de datos del formulario eliminando espacios extra
             const origen = document.getElementById('origenRuta').value.trim();
             const destino = document.getElementById('destinoRuta').value.trim();
             const hora = document.getElementById('horaSalida').value.trim();
-            const usuario = document.getElementById('idUsuario').value;
-            
-            // Validación nativa si faltan campos
-            if(!origen || !destino || !hora || !usuario) {
+            const usuario = document.getElementById('idUsuario').value.trim();
+
+            if (!origen || !destino || !hora) {
                 document.getElementById('formularioRuta').reportValidity();
+                return;
+            }
+
+            if (!usuario) {
+                Swal.fire({
+                    title: 'Sesión no detectada',
+                    text: 'No se pudo identificar al usuario activo. Inicia sesión nuevamente.',
+                    icon: 'warning',
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        popup: 'rounded-4 p-4',
+                        confirmButton: 'btn-verde-modal'
+                    }
+                });
                 return;
             }
 
@@ -172,7 +203,6 @@
                 }
             }).then((resultadoConfirmacion) => {
                 if (resultadoConfirmacion.isConfirmed) {
-                    
                     // Segunda Modal: Mensaje temporal de éxito
                     Swal.fire({
                         title: '¡Operación Exitosa!',

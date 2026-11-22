@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil de Conductor - Velox UTVT</title>
+    <title>Perfil de Usuario - Velox UTVT</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -23,7 +23,10 @@
             border: none;
             transition: all 0.2s ease-in-out;
         }
-        .boton-verde:hover { background-color: #005200 !important; color: #ffffff !important; }
+        .boton-verde:hover {
+            background-color: #005200 !important;
+            color: #ffffff !important;
+        }
 
         .avatar-circle {
             width: 120px;
@@ -73,9 +76,9 @@
             <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
                 <div>
                     <h2 class="fw-bold mb-1" style="color: #005200;">
-                        <i class="bi bi-person-vcard me-2"></i>Mi Perfil de Usuario
+                        <i class="bi bi-person-vcard me-2"></i>Mi Perfil
                     </h2>
-                    <p class="text-muted small mb-0">Gestiona tu información personal y los detalles de tu vehículo.</p>
+                    <p class="text-muted small mb-0">Consulta tu información personal, contraseña y tu rendimiento en Velox UTVT.</p>
                 </div>
                 <a href="/viaje/nuevo" class="btn boton-verde fw-bold shadow-sm rounded-pill px-4 py-2">
                     <i class="bi bi-car-front-fill me-2"></i>Publicar Nuevo Viaje
@@ -84,18 +87,18 @@
 
             <div class="row g-4">
 
-                <!-- COLUMNA IZQUIERDA -->
+                <!-- COLUMNA IZQUIERDA: RENDIMIENTO REAL SEGÚN RACHA, VIAJES Y GANANCIAS -->
                 <div class="col-lg-4">
                     <div class="card shadow-sm border-0 rounded-4 p-4 text-center bg-white h-100">
                         <div id="perfilAvatar" class="avatar-circle mb-3 fw-bold shadow-sm">
                             {{ (usuario.nombre | default('U'))[0] | upper }}
                         </div>
 
-                        <h4 id="perfilNombreCompleto" class="fw-bold text-dark mb-1">
-                            {{ usuario.nombre | default('Usuario') }} {{ usuario.apellido_paterno | default('') }}
+                        <h4 id="perfilNombreTarjeta" class="fw-bold text-dark mb-1">
+                            {{ usuario.nombre | default('') }} {{ usuario.apellido_paterno | default('') }} {{ usuario.apellido_materno | default('') }}
                         </h4>
                         <span id="perfilRolBadge" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill fw-bold mb-4">
-                            <i class="bi bi-person-badge me-1"></i><span id="perfilRolTexto">{{ usuario.rol | default('Usuario') }}</span> Activo
+                            <i class="bi bi-person-badge me-1"></i><span id="perfilRolTexto">{{ usuario.rol | default('Conductor') }}</span> Activo
                         </span>
 
                         <hr class="text-secondary opacity-25 my-2">
@@ -105,100 +108,108 @@
                         <div class="d-flex justify-content-between gap-2 mb-3">
                             <div class="stat-card flex-fill">
                                 <i class="bi bi-star-fill text-warning fs-4 mb-1 d-block"></i>
-                                <h5 id="perfilCalificacion" class="fw-bold mb-0 text-dark">{{ usuario.calificacion | default('5.0') }}</h5>
-                                <span class="text-muted" style="font-size: 0.7rem;">Estrellas</span>
+                                <h5 id="perfilCalificacion" class="fw-bold mb-0 text-dark">{{ usuario.calificacion | default(promedio_general | default('0.0')) }}</h5>
+                                <span class="text-muted" style="font-size: 0.7rem;">Racha / Estrellas</span>
                             </div>
                             <div class="stat-card flex-fill">
                                 <i class="bi bi-signpost-split-fill text-success fs-4 mb-1 d-block"></i>
-                                <h5 id="perfilViajes" class="fw-bold mb-0 text-dark">{{ usuario.viajes_completados | default('0') }}</h5>
+                                <h5 id="perfilViajes" class="fw-bold mb-0 text-dark">{{ usuario.viajes_completados | default(0) }}</h5>
                                 <span class="text-muted" style="font-size: 0.7rem;">Viajes</span>
                             </div>
                         </div>
 
                         <div class="stat-card w-100 text-center py-3">
-                            <h6 class="text-muted small mb-1">Aportación Generada</h6>
-                            <h4 class="fw-bold mb-0" style="color: #018701;">$<span id="perfilGanancias">{{ usuario.ganancias_estimadas | default('0') }}</span> <span class="fs-6 text-muted">MXN</span></h4>
+                            <h6 class="text-muted small mb-1">Ganancias / Aportación Generada</h6>
+                            <h4 class="fw-bold mb-0" style="color: #018701;">$<span id="perfilGanancias">{{ usuario.ganancias_estimadas | default(0) }}</span> <span class="fs-6 text-muted">MXN</span></h4>
                         </div>
                     </div>
                 </div>
 
-                <!-- COLUMNA DERECHA -->
+                <!-- COLUMNA DERECHA: INFORMACIÓN DEL USUARIO -->
                 <div class="col-lg-8">
-
-                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mb-4 border-start border-4" style="border-left-color: #018701 !important;">
-                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                            <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-shield-check me-2"></i>Vehículo Asignado</h5>
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1 small">
-                                <i class="bi bi-lock-fill me-1"></i>Datos bloqueados por seguridad
-                            </span>
-                        </div>
-
-                        <div class="row g-4 align-items-center">
-                            <div class="col-md-4 text-center">
-                                <div class="bg-light rounded-3 p-2 border d-flex align-items-center justify-content-center mb-2" style="height: 120px; overflow: hidden;">
-                                    <i class="bi bi-car-front text-secondary opacity-50" style="font-size: 4rem;"></i>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-secondary w-100 fw-semibold" onclick="verGaleria()">
-                                    <i class="bi bi-images me-1"></i>Ver fotos
-                                </button>
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100 border-start border-4" style="border-left-color: #018701 !important;">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                            <div>
+                                <h5 class="fw-bold mb-0" style="color: #005200;">
+                                    <i class="bi bi-info-circle-fill me-2"></i>Información del Usuario
+                                </h5>
+                                <small class="text-muted">Solo puedes modificar tu número de celular.</small>
                             </div>
-
-                            <div class="col-md-8">
-                                <div class="row g-2 mb-3">
-                                    <div class="col-6">
-                                        <span class="text-secondary fw-semibold small d-block mb-1">PLACA OFICIAL</span>
-                                        <div class="bg-light border rounded-3 px-3 py-2 text-center">
-                                            <span id="perfilPlacas" class="fw-bold text-dark font-monospace fs-6">{{ usuario.placas | default('SIN PLACA') }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <span class="text-secondary fw-semibold small d-block mb-1">COLOR</span>
-                                        <div class="bg-light border rounded-3 px-3 py-2">
-                                            <span id="perfilColorVehiculo" class="fw-bold text-dark fs-6">{{ usuario.color_vehiculo | default('No especificado') }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 mt-2">
-                                        <span class="text-secondary fw-semibold small d-block mb-1">MODELO Y MARCA</span>
-                                        <div class="bg-light border rounded-3 px-3 py-2">
-                                            <span id="perfilVehiculoPrincipal" class="fw-bold text-dark fs-6">{{ usuario.vehiculo_principal | default('Vehículo no registrado') }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="text-end mt-2">
-                                    <button type="button" class="btn btn-sm btn-danger px-3 py-2 fw-bold rounded-pill shadow-sm" onclick="confirmarBajaVehiculo()">
-                                        <i class="bi bi-x-circle-fill me-1"></i>Dar de baja vehículo
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="fw-bold mb-0" style="color: #005200;"><i class="bi bi-building me-2"></i>Información Institucional</h5>
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" onclick="mostrarAlertaProx()">
-                                <i class="bi bi-pencil-fill me-1"></i>Editar
+                            <button type="button" class="btn btn-sm boton-verde rounded-pill px-3 fw-semibold shadow-sm" onclick="abrirModalEditarContacto()">
+                                <i class="bi bi-pencil-square me-1"></i>Editar celular
                             </button>
                         </div>
 
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold text-secondary small mb-1">Matrícula Escolar</label>
+                            <!-- Nombre completo -->
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold text-secondary small mb-1">Nombre Completo</label>
                                 <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
-                                    <i class="bi bi-credit-card-2-front text-muted me-3 fs-5"></i>
-                                    <span id="perfilMatricula" class="fw-bold text-dark fs-6">{{ usuario.matricula | default('N/A') }}</span>
+                                    <i class="bi bi-person-fill text-muted me-3 fs-5"></i>
+                                    <span id="perfilNombreCompleto" class="fw-bold text-dark fs-6">
+                                        {{ usuario.nombre | default('') }} {{ usuario.apellido_paterno | default('') }} {{ usuario.apellido_materno | default('') }}
+                                    </span>
                                 </div>
                             </div>
+
+                            <!-- Matrícula -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small mb-1">Matrícula</label>
+                                <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
+                                    <i class="bi bi-credit-card-2-front text-muted me-3 fs-5"></i>
+                                    <span id="perfilMatricula" class="fw-bold text-dark fs-6">{{ usuario.matricula | default('') }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Celular (editable) -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small mb-1">Celular (Editable)</label>
+                                <div class="d-flex align-items-center justify-content-between bg-white p-3 rounded-3 border border-success border-opacity-50">
+                                    <div class="d-flex align-items-center overflow-hidden">
+                                        <i class="bi bi-phone-fill text-success me-3 fs-5"></i>
+                                        <span id="perfilTelefono" class="fw-bold text-dark fs-6 text-truncate">{{ usuario.telefono | default('') }}</span>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0 ms-2" onclick="abrirModalEditarContacto()" title="Cambiar celular">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Correo institucional (sin botón de editar) -->
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold text-secondary small mb-1">Correo Institucional</label>
                                 <div class="d-flex align-items-center bg-light p-3 rounded-3 border">
                                     <i class="bi bi-envelope-at text-muted me-3 fs-5"></i>
-                                    <span id="perfilCorreo" class="fw-bold text-dark fs-6 text-truncate" title="{{ usuario.correo_institucional }}">{{ usuario.correo_institucional | default('Sin correo') }}</span>
+                                    <span id="perfilCorreo" class="fw-bold text-dark fs-6 text-truncate" title="{{ usuario.correo_institucional | default('') }}">{{ usuario.correo_institucional | default('') }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Contraseña (visualizable y con botón cambiar contraseña) -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small mb-1">Contraseña</label>
+                                <div class="d-flex align-items-center justify-content-between bg-light p-3 rounded-3 border">
+                                    <div class="d-flex align-items-center overflow-hidden">
+                                        <i class="bi bi-key-fill text-muted me-3 fs-5"></i>
+                                        <input type="password"
+                                               id="perfilContrasenaInput"
+                                               class="form-control-plaintext fw-bold text-dark p-0 fs-6"
+                                               readonly
+                                               value="{{ usuario.contrasena | default('') }}">
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1 ms-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1" onclick="togglePassword()" title="Mostrar / Ocultar contraseña">
+                                            <i class="bi bi-eye" id="iconoPassword"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1" onclick="cambiarContrasena()">
+                                            Cambiar contraseña
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
 
         </div>
@@ -206,15 +217,30 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        let usuarioActualId = "{{ usuario.id_usuario | default('') }}";
+
+        function construirNombreCompleto(datos) {
+            if (!datos) return '';
+            const partes = [
+                (datos.nombre || '').trim(),
+                (datos.apellido_paterno || '').trim(),
+                (datos.apellido_materno || '').trim()
+            ].filter(Boolean);
+            return partes.join(' ');
+        }
+
         function aplicarDatosUsuario(datos) {
             if (!datos) return;
 
-            const nombre = (datos.nombre || '').trim();
-            const apellido = (datos.apellido_paterno || '').trim();
-            const nombreCompleto = `${nombre} ${apellido}`.trim();
+            if (datos.id_usuario !== undefined && datos.id_usuario !== null && String(datos.id_usuario).trim() !== '') {
+                usuarioActualId = String(datos.id_usuario).trim();
+            }
 
+            const nombreCompleto = construirNombreCompleto(datos);
             if (nombreCompleto) {
                 document.getElementById('perfilNombreCompleto').textContent = nombreCompleto;
+                const corto = [(datos.nombre || '').trim(), (datos.apellido_paterno || '').trim()].filter(Boolean).join(' ') || nombreCompleto;
+                document.getElementById('perfilNombreTarjeta').textContent = corto;
                 const inicial = (datos.inicial || nombreCompleto.charAt(0)).toUpperCase();
                 document.getElementById('perfilAvatar').textContent = inicial;
             }
@@ -235,27 +261,145 @@
                 document.getElementById('perfilGanancias').textContent = datos.ganancias_estimadas;
             }
 
-            if (datos.placas) {
-                document.getElementById('perfilPlacas').textContent = datos.placas;
-            }
-
-            if (datos.color_vehiculo) {
-                document.getElementById('perfilColorVehiculo').textContent = datos.color_vehiculo;
-            }
-
-            if (datos.vehiculo_principal) {
-                document.getElementById('perfilVehiculoPrincipal').textContent = datos.vehiculo_principal;
-            }
-
-            if (datos.matricula) {
+            if (datos.matricula !== undefined && datos.matricula !== null) {
                 document.getElementById('perfilMatricula').textContent = datos.matricula;
             }
 
-            if (datos.correo_institucional) {
-                const correoEl = document.getElementById('perfilCorreo');
-                correoEl.textContent = datos.correo_institucional;
-                correoEl.title = datos.correo_institucional;
+            if (datos.telefono !== undefined && datos.telefono !== null && String(datos.telefono).trim() !== '') {
+                document.getElementById('perfilTelefono').textContent = String(datos.telefono).trim();
             }
+
+            const correoValor = datos.correo_institucional || datos.correo;
+            if (correoValor !== undefined && correoValor !== null && String(correoValor).trim() !== '') {
+                const limpio = String(correoValor).trim();
+                const correoEl = document.getElementById('perfilCorreo');
+                correoEl.textContent = limpio;
+                correoEl.title = limpio;
+            }
+
+            if (datos.contrasena !== undefined && datos.contrasena !== null && String(datos.contrasena).trim() !== '') {
+                document.getElementById('perfilContrasenaInput').value = String(datos.contrasena).trim();
+            }
+        }
+
+        function togglePassword() {
+            const input = document.getElementById('perfilContrasenaInput');
+            const icono = document.getElementById('iconoPassword');
+            if (!input) return;
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icono) icono.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                if (icono) icono.className = 'bi bi-eye';
+            }
+        }
+
+        async function abrirModalEditarContacto() {
+            const telefonoActual = document.getElementById('perfilTelefono').textContent.trim();
+            const correoActual = document.getElementById('perfilCorreo').textContent.trim();
+
+            const { value: formValues } = await Swal.fire({
+                title: 'Editar celular',
+                html: `
+                    <div class="text-start">
+                        <label for="swalTelefono" class="form-label fw-semibold small text-secondary">Número de celular</label>
+                        <input id="swalTelefono" type="text" class="form-control" placeholder="Ej. 7220566153">
+                    </div>
+                `,
+                didOpen: () => {
+                    const inputTel = document.getElementById('swalTelefono');
+                    if (inputTel) inputTel.value = telefonoActual;
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Guardar cambios',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#018701',
+                customClass: { popup: 'rounded-4' },
+                preConfirm: () => {
+                    const tel = (document.getElementById('swalTelefono')?.value || '').trim();
+                    if (!tel) {
+                        Swal.showValidationMessage('Ingresa tu número de celular.');
+                        return false;
+                    }
+                    return { telefono: tel, correo_institucional: correoActual };
+                }
+            });
+
+            if (!formValues) return;
+
+            const idObjetivo = usuarioActualId || localStorage.getItem('velox_usuario_id') || '';
+            let guardadoEnApi = false;
+
+            if (idObjetivo) {
+                try {
+                    const resp = await fetch(`/usuario/api/${encodeURIComponent(idObjetivo)}/contacto`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formValues)
+                    });
+                    if (resp.ok) {
+                        guardadoEnApi = true;
+                    }
+                } catch (_) {
+                    guardadoEnApi = false;
+                }
+            }
+
+            aplicarDatosUsuario(formValues);
+
+            Swal.fire({
+                title: guardadoEnApi ? 'Actualizado' : 'Actualizado en el perfil',
+                text: guardadoEnApi
+                    ? 'Tu número de celular se guardó correctamente.'
+                    : 'Se reflejó tu número de celular en el perfil.',
+                icon: 'success',
+                confirmButtonColor: '#018701',
+                customClass: { popup: 'rounded-4' }
+            });
+        }
+
+        async function cambiarContrasena() {
+            const { value: nuevaPass } = await Swal.fire({
+                title: 'Cambiar contraseña',
+                input: 'password',
+                inputLabel: 'Ingresa tu nueva contraseña',
+                inputPlaceholder: 'Nueva contraseña',
+                showCancelButton: true,
+                confirmButtonText: 'Actualizar contraseña',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#018701',
+                customClass: { popup: 'rounded-4' },
+                inputValidator: (value) => {
+                    if (!value || value.trim().length < 4) {
+                        return 'La contraseña debe tener al menos 4 caracteres.';
+                    }
+                }
+            });
+
+            if (!nuevaPass) return;
+
+            const passLimpia = nuevaPass.trim();
+            const idObjetivo = usuarioActualId || localStorage.getItem('velox_usuario_id') || '';
+            try {
+                if (idObjetivo) {
+                    await fetch(`/usuario/api/${encodeURIComponent(idObjetivo)}/password`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contrasena: passLimpia })
+                    });
+                }
+            } catch (_) {}
+
+            document.getElementById('perfilContrasenaInput').value = passLimpia;
+            Swal.fire({
+                title: 'Contraseña actualizada',
+                text: 'Tu contraseña se actualizó correctamente.',
+                icon: 'success',
+                confirmButtonColor: '#018701',
+                customClass: { popup: 'rounded-4' }
+            });
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -263,13 +407,12 @@
             const rolSesion = (localStorage.getItem('velox_usuario_rol') || '').trim();
             const idSesion = (localStorage.getItem('velox_usuario_id') || '').trim();
 
-            // 1. Aplica primero lo guardado en sesión local para cualquier usuario autenticado
             aplicarDatosUsuario({
+                id_usuario: idSesion,
                 nombre: nombreSesion,
                 rol: rolSesion
             });
 
-            // 2. Si hay id_usuario en sesión, intenta traer sus datos reales desde el backend
             if (idSesion) {
                 try {
                     const resp = await fetch(`/usuario/api/${encodeURIComponent(idSesion)}`);
@@ -278,45 +421,17 @@
                         const datosPerfil = payload.usuario || payload;
                         aplicarDatosUsuario(datosPerfil);
                     }
-                } catch (_) {
-                    // Si el endpoint no existe aún, conserva los datos del servidor y localStorage
-                }
+                } catch (_) {}
+            }
+
+            const menuLateral = document.getElementById('menuLateral');
+            const btnAbrir = document.getElementById('btnAbrirMenu');
+            if (btnAbrir && menuLateral) {
+                btnAbrir.addEventListener('click', () => {
+                    menuLateral.style.transform = 'translateX(0)';
+                });
             }
         });
-
-        function mostrarAlertaProx() {
-            Swal.fire({
-                title: 'Próximamente',
-                text: 'La edición de datos se habilitará en la próxima fase de desarrollo.',
-                icon: 'info',
-                confirmButtonColor: '#018701',
-                customClass: { popup: 'rounded-4' }
-            });
-        }
-
-        function verGaleria() {
-            Swal.fire({
-                title: 'Galería del Vehículo',
-                text: 'Las fotografías laterales, frontales y traseras del vehículo se mostrarán aquí.',
-                icon: 'info',
-                confirmButtonColor: '#018701',
-                customClass: { popup: 'rounded-4' }
-            });
-        }
-
-        function confirmarBajaVehiculo() {
-            Swal.fire({
-                title: '¿Dar de baja este vehículo?',
-                text: 'No podrás publicar viajes hasta que registres uno nuevo y sea validado por la universidad.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ff0000',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, dar de baja',
-                cancelButtonText: 'Cancelar',
-                customClass: { popup: 'rounded-4' }
-            });
-        }
     </script>
 </body>
 </html>

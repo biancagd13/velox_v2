@@ -4,175 +4,330 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Vehículo - Velox UTVT</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
-        body { background-color: #F8F9FA !important; }
-        
+        body {
+            background-color: #FFFFFF !important;
+        }
+
         #contenidoPrincipal {
             margin-left: 280px;
             transition: margin-left 0.3s ease-in-out;
         }
-        
+
         .boton-verde {
             background-color: #018701 !important;
             color: #ffffff !important;
             border: none;
+            transition: background-color 0.2s ease-in-out;
         }
-        .boton-verde:hover { background-color: #005200 !important; color: #ffffff !important; }
-        
-        /* Contenedores de las fotografías */
+        .boton-verde:hover {
+            background-color: #005200 !important;
+            color: #ffffff !important;
+        }
+
+        .btn-outline-verde {
+            color: #005200 !important;
+            border-color: #018701 !important;
+            background-color: #ffffff !important;
+        }
+        .btn-outline-verde:hover {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+        }
+
+        .badge-estado-velox {
+            background-color: #ffffff !important;
+            color: #005200 !important;
+            border: 1px solid #018701 !important;
+        }
+
+        .aviso-info-velox {
+            background-color: #f8f9fa !important;
+            border: 1px solid #7097a8 !important;
+            color: #333333;
+        }
+
         .foto-principal {
-            height: 300px;
-            background-color: #e9ecef;
+            height: 290px;
+            background-color: #f8f9fa;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px dashed #ced4da;
+            border: 2px dashed #7097a8;
             overflow: hidden;
             position: relative;
         }
+
+        .foto-principal img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .etiqueta-foto-velox {
+            background-color: #005200;
+            color: #ffffff;
+        }
+
         .foto-miniatura {
             height: 80px;
-            background-color: #e9ecef;
-            border-radius: 8px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: transform 0.2s, border-color 0.2s;
-            border: 2px solid transparent;
+            border: 2px solid #dee2e6;
+            overflow: hidden;
+            position: relative;
         }
+
+        .foto-miniatura img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         .foto-miniatura:hover {
-            transform: scale(1.05);
+            transform: scale(1.03);
             border-color: #018701;
         }
-        
+
+        .foto-miniatura.activa-vista {
+            border-color: #005200 !important;
+        }
+
+        .camara-visor-velox {
+            width: 100%;
+            max-height: 340px;
+            background-color: #f8f9fa;
+            border: 1px solid #7097a8;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .camara-visor-velox video,
+        .camara-visor-velox img {
+            width: 100%;
+            max-height: 340px;
+            object-fit: cover;
+        }
+
+        .swal2-confirm.btn-verde-modal {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            padding: 8px 24px !important;
+            font-weight: bold !important;
+            box-shadow: none !important;
+        }
+        .swal2-confirm.btn-verde-modal:hover {
+            background-color: #005200 !important;
+        }
+
         @media (max-width: 768px) {
             #contenidoPrincipal {
                 margin-left: 0 !important;
                 padding: 15px !important;
             }
-            .foto-principal { height: 200px; }
+            .foto-principal {
+                height: 210px;
+            }
+            .acciones-header-vehiculo {
+                width: 100%;
+            }
+            .acciones-header-vehiculo a {
+                flex: 1 1 auto;
+                text-align: center;
+            }
         }
     </style>
 </head>
-<body>
+<body class="bg-white">
 
     {% include 'components/sidebar.html' %}
 
-    <div id="contenidoPrincipal" class="p-4">
-        
+    <div id="contenidoPrincipal" class="p-4 bg-white">
+
         <div class="d-flex align-items-center mb-3">
-            <button class="btn boton-verde p-1 px-2 me-3 shadow-sm rounded-3 d-block d-md-none" id="btnAbrirMenu">
+            <button type="button" class="btn boton-verde p-1 px-2 me-3 shadow-sm rounded-3 d-block d-md-none" id="btnAbrirMenu">
                 <i class="bi bi-list fs-4"></i>
             </button>
         </div>
 
         <div class="container-fluid px-0" style="max-width: 1000px;">
-            
+
             <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
                 <div>
                     <h2 class="fw-bold mb-1" style="color: #005200;">
                         <i class="bi bi-car-front-fill me-2"></i>Mi Vehículo
                     </h2>
-                    <p class="text-muted small mb-0">Expediente fotográfico y datos técnicos de tu automóvil autorizado.</p>
+                    <p class="text-muted small mb-0">Consulta tu automóvil registrado y captura fotos desde la cámara.</p>
                 </div>
-                <div class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill fw-bold">
-                    <i class="bi bi-check-circle-fill me-1"></i>Vehículo Validado
+
+                <div class="d-flex align-items-center gap-2 flex-wrap acciones-header-vehiculo">
+                    <div class="badge badge-estado-velox px-3 py-2 rounded-pill fw-bold" id="badgeVehiculo">
+                        <i class="bi bi-check-circle-fill me-1" style="color: #018701;"></i>{{ ('Vehículo #' ~ vehiculo.id_vehiculo) if vehiculo and vehiculo.id_vehiculo else 'Vehículo Registrado' }}
+                    </div>
+                    <a id="btnAccionVehiculo"
+                       href="{{ '/vehiculo/editar/' ~ vehiculo.id_vehiculo if vehiculo and vehiculo.id_vehiculo else '/vehiculo/nuevo' }}"
+                       class="btn boton-verde btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm">
+                        <i class="bi bi-pencil-square me-1"></i>{{ "Editar Datos" if vehiculo else "Registrar Vehículo" }}
+                    </a>
                 </div>
             </div>
 
             <div class="row g-4">
-                <!-- COLUMNA IZQUIERDA: Galería Fotográfica -->
+                <!-- COLUMNA IZQUIERDA: Galería con Cámara -->
                 <div class="col-lg-6">
-                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
-                        <h5 class="fw-bold mb-3" style="color: #005200;">Galería del Vehículo</h5>
-                        
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="fw-bold mb-0" style="color: #005200;">Galería del Vehículo</h5>
+                            <button type="button" class="btn btn-sm boton-verde rounded-pill px-3 fw-semibold" onclick="abrirCamaraVista(vistaActiva)">
+                                <i class="bi bi-camera-fill me-1"></i>Abrir Cámara
+                            </button>
+                        </div>
+
                         <!-- Foto Principal -->
-                        <div class="foto-principal mb-3 shadow-sm">
-                            <i class="bi bi-camera text-secondary opacity-50" style="font-size: 5rem;"></i>
-                            <div class="position-absolute bottom-0 start-0 w-100 bg-dark bg-opacity-50 text-white text-center py-1 small fw-bold">
+                        <div class="foto-principal mb-3 shadow-sm" id="contenedorFotoPrincipal">
+                            <div id="placeholderFotoPrincipal" class="text-center p-3">
+                                <i class="bi bi-camera text-secondary" style="font-size: 4.5rem;"></i>
+                                <div class="text-muted small mt-1">Sin fotografía capturada</div>
+                            </div>
+                            <img id="imgFotoPrincipal" src="" alt="Vista del vehículo" class="d-none">
+                            <div id="etiquetaVistaActual" class="position-absolute bottom-0 start-0 w-100 etiqueta-foto-velox text-center py-1 small fw-bold">
                                 Vista Frontal
                             </div>
                         </div>
 
                         <!-- Miniaturas -->
-                        <div class="row g-2">
+                        <div class="row g-2 mb-3">
                             <div class="col-4">
-                                <div class="foto-miniatura border-success">
-                                    <i class="bi bi-car-front text-secondary fs-3"></i>
+                                <div class="foto-miniatura activa-vista" id="miniatura-frente" onclick="seleccionarVista('frente')" title="Ver o tomar foto Frente">
+                                    <i class="bi bi-car-front text-secondary fs-3" id="icono-miniatura-frente"></i>
+                                    <img id="img-miniatura-frente" src="" alt="Frente" class="d-none">
                                 </div>
-                                <div class="text-center small mt-1 text-muted fw-semibold">Frente</div>
+                                <div class="d-flex justify-content-center align-items-center gap-1 mt-1">
+                                    <span class="small text-muted fw-semibold">Frente</span>
+                                    <button type="button" class="btn btn-link p-0 text-decoration-none" style="color: #005200;" onclick="abrirCamaraVista('frente')" title="Cámara Frente">
+                                        <i class="bi bi-camera" style="font-size: 0.85rem;"></i>
+                                    </button>
+                                </div>
                             </div>
+
                             <div class="col-4">
-                                <div class="foto-miniatura">
-                                    <i class="bi bi-car-front text-secondary fs-3" style="transform: rotate(90deg);"></i>
+                                <div class="foto-miniatura" id="miniatura-lateral" onclick="seleccionarVista('lateral')" title="Ver o tomar foto Lateral">
+                                    <i class="bi bi-car-front text-secondary fs-3" id="icono-miniatura-lateral" style="transform: rotate(90deg);"></i>
+                                    <img id="img-miniatura-lateral" src="" alt="Lateral" class="d-none">
                                 </div>
-                                <div class="text-center small mt-1 text-muted fw-semibold">Lateral</div>
+                                <div class="d-flex justify-content-center align-items-center gap-1 mt-1">
+                                    <span class="small text-muted fw-semibold">Lateral</span>
+                                    <button type="button" class="btn btn-link p-0 text-decoration-none" style="color: #005200;" onclick="abrirCamaraVista('lateral')" title="Cámara Lateral">
+                                        <i class="bi bi-camera" style="font-size: 0.85rem;"></i>
+                                    </button>
+                                </div>
                             </div>
+
                             <div class="col-4">
-                                <div class="foto-miniatura">
-                                    <i class="bi bi-truck-front text-secondary fs-3"></i>
+                                <div class="foto-miniatura" id="miniatura-trasera" onclick="seleccionarVista('trasera')" title="Ver o tomar foto Trasera">
+                                    <i class="bi bi-truck-front text-secondary fs-3" id="icono-miniatura-trasera"></i>
+                                    <img id="img-miniatura-trasera" src="" alt="Trasera" class="d-none">
                                 </div>
-                                <div class="text-center small mt-1 text-muted fw-semibold">Trasera</div>
+                                <div class="d-flex justify-content-center align-items-center gap-1 mt-1">
+                                    <span class="small text-muted fw-semibold">Trasera</span>
+                                    <button type="button" class="btn btn-link p-0 text-decoration-none" style="color: #005200;" onclick="abrirCamaraVista('trasera')" title="Cámara Trasera">
+                                        <i class="bi bi-camera" style="font-size: 0.85rem;"></i>
+                                    </button>
+                                </div>
                             </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top gap-2">
+                            <span class="text-muted small">
+                                <i class="bi bi-info-circle me-1" style="color: #7097a8;"></i>Toca una vista para inspeccionar o capturar.
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-verde rounded-pill px-3 fw-semibold" onclick="borrarFotoActual()">
+                                <i class="bi bi-trash3 me-1"></i>Quitar Foto
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- COLUMNA DERECHA: Datos Técnicos -->
+                <!-- COLUMNA DERECHA: Datos del Vehículo -->
                 <div class="col-lg-6">
-                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                    <div class="card shadow-sm border rounded-4 p-4 bg-white h-100">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h5 class="fw-bold mb-0" style="color: #005200;">Datos Técnicos</h5>
-                            <i class="bi bi-lock-fill text-secondary" title="Datos bloqueados por seguridad"></i>
+                            <h5 class="fw-bold mb-0" style="color: #005200;">Datos Registrados</h5>
+                            <i class="bi bi-car-front text-secondary"></i>
                         </div>
 
                         <ul class="list-group list-group-flush mb-4">
-                            <li class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between align-items-center">
+                            <li class="list-group-item bg-white px-0 py-3 d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
-                                    <div class="bg-light p-2 rounded-circle me-3"><i class="bi bi-123 text-muted"></i></div>
-                                    <span class="text-secondary fw-semibold">Placa Oficial</span>
+                                    <div class="bg-light border p-2 rounded-circle me-3"><i class="bi bi-123 text-muted"></i></div>
+                                    <span class="text-secondary fw-semibold">Placa</span>
                                 </div>
-                                <span class="fw-bold text-dark font-monospace fs-5">ABC-123-A</span>
-                            </li>
-                            
-                            <li class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-light p-2 rounded-circle me-3"><i class="bi bi-tags text-muted"></i></div>
-                                    <span class="text-secondary fw-semibold">Marca y Modelo</span>
-                                </div>
-                                <span class="fw-bold text-dark">Chevrolet Aveo 2023</span>
+                                <span class="fw-bold text-dark font-monospace fs-5" id="datoPlaca">{{ vehiculo.placa if vehiculo and vehiculo.placa else 'Sin placa' }}</span>
                             </li>
 
-                            <li class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between align-items-center">
+                            <li class="list-group-item bg-white px-0 py-3 d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
-                                    <div class="bg-light p-2 rounded-circle me-3"><i class="bi bi-palette text-muted"></i></div>
-                                    <span class="text-secondary fw-semibold">Color Registrado</span>
+                                    <div class="bg-light border p-2 rounded-circle me-3"><i class="bi bi-tags text-muted"></i></div>
+                                    <span class="text-secondary fw-semibold">Vehículo / Marca</span>
                                 </div>
-                                <span class="fw-bold text-dark">Blanco Platino</span>
+                                <span class="fw-bold text-dark" id="datoNombre">{{ vehiculo.nombre if vehiculo and vehiculo.nombre else 'Sin registro' }}</span>
                             </li>
 
-                            <li class="list-group-item bg-transparent px-0 py-3 d-flex justify-content-between align-items-center">
+                            <li class="list-group-item bg-white px-0 py-3 d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
-                                    <div class="bg-light p-2 rounded-circle me-3"><i class="bi bi-people text-muted"></i></div>
-                                    <span class="text-secondary fw-semibold">Capacidad de Asientos</span>
+                                    <div class="bg-light border p-2 rounded-circle me-3"><i class="bi bi-calendar3 text-muted"></i></div>
+                                    <span class="text-secondary fw-semibold">Modelo</span>
                                 </div>
-                                <span class="fw-bold text-dark">4 Pasajeros</span>
+                                <span class="fw-bold text-dark" id="datoModelo">{{ vehiculo.modelo if vehiculo and vehiculo.modelo else '---' }}</span>
+                            </li>
+
+                            <li class="list-group-item bg-white px-0 py-3 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light border p-2 rounded-circle me-3"><i class="bi bi-palette text-muted"></i></div>
+                                    <span class="text-secondary fw-semibold">Color</span>
+                                </div>
+                                <span class="fw-bold text-dark" id="datoColor">{{ vehiculo.color if vehiculo and vehiculo.color else '---' }}</span>
+                            </li>
+
+                            <li class="list-group-item bg-white px-0 py-3 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light border p-2 rounded-circle me-3"><i class="bi bi-people text-muted"></i></div>
+                                    <span class="text-secondary fw-semibold">Asientos</span>
+                                </div>
+                                <span class="fw-bold text-dark" id="datoCapacidad">{{ (vehiculo.capacidad_asientos ~ ' Asientos') if vehiculo and vehiculo.capacidad_asientos else '---' }}</span>
+                            </li>
+
+                            <li class="list-group-item bg-white px-0 py-3 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light border p-2 rounded-circle me-3"><i class="bi bi-person text-muted"></i></div>
+                                    <span class="text-secondary fw-semibold">Propietario</span>
+                                </div>
+                                <span class="fw-bold text-dark" id="datoPropietario">{{ vehiculo.nombre_propietario if vehiculo and vehiculo.nombre_propietario else '---' }}</span>
                             </li>
                         </ul>
 
-                        <div class="alert alert-warning border-warning border-opacity-25 bg-warning bg-opacity-10 d-flex align-items-start mb-0">
-                            <i class="bi bi-exclamation-triangle-fill text-warning me-2 mt-1"></i>
-                            <div class="small text-dark">
-                                <strong>Importante:</strong> Para garantizar la seguridad de los pasajeros, cualquier cambio en las características o placas del vehículo requiere una nueva validación presencial.
+                        <div class="aviso-info-velox rounded-3 p-3 d-flex align-items-start mb-0">
+                            <i class="bi bi-info-circle-fill me-2 mt-1" style="color: #7097a8;"></i>
+                            <div class="small text-secondary">
+                                <strong class="text-dark">Actualización de datos:</strong> Si necesitas modificar placa, vehículo, modelo, color o asientos, usa el botón <strong class="text-dark">Editar Datos</strong>.
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -180,6 +335,434 @@
         </div>
     </div>
 
+    <!-- Modal de Cámara -->
+    <div class="modal fade" id="modalCamaraVehiculo" tabindex="-1" aria-labelledby="tituloModalCamara" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border rounded-4 bg-white shadow">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold" id="tituloModalCamara" style="color: #005200;">
+                        <i class="bi bi-camera-video-fill me-2" style="color: #018701;"></i>Capturar Foto
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="camara-visor-velox mb-3">
+                        <video id="videoCamaraVehiculo" autoplay playsinline muted class="d-none"></video>
+                        <img id="previewCapturaVehiculo" src="" alt="Vista previa de captura" class="d-none">
+                        <div id="estadoCamaraPlaceholder" class="text-center p-4">
+                            <i class="bi bi-camera-video text-secondary fs-1"></i>
+                            <div class="text-muted small mt-2" id="textoEstadoCamara">Iniciando cámara...</div>
+                        </div>
+                    </div>
+
+                    <canvas id="canvasCapturaVehiculo" class="d-none"></canvas>
+                    <input type="file" id="inputArchivoCamara" accept="image/*" capture="environment" class="d-none" onchange="procesarArchivoCamara(event)">
+
+                    <div class="d-flex flex-wrap justify-content-between gap-2">
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-verde rounded-pill px-3 fw-semibold" onclick="alternarCamara()">
+                                <i class="bi bi-arrow-repeat me-1"></i>Cambiar Cámara
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" onclick="document.getElementById('inputArchivoCamara').click()">
+                                <i class="bi bi-phone me-1"></i>Cámara del Equipo
+                            </button>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm boton-verde rounded-pill px-4 fw-bold" id="btnTomarCaptura" onclick="tomarFotoCamara()">
+                                <i class="bi bi-record-circle me-1"></i>Capturar
+                            </button>
+                            <button type="button" class="btn btn-sm boton-verde rounded-pill px-4 fw-bold d-none" id="btnGuardarCaptura" onclick="guardarFotoCapturada()">
+                                <i class="bi bi-check-lg me-1"></i>Usar Foto
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold d-none" id="btnRepetirCaptura" onclick="iniciarStreamCamara()">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Repetir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const VISTAS_CONFIG = {
+            frente: { etiqueta: 'Vista Frontal', titulo: 'Capturar Vista Frontal' },
+            lateral: { etiqueta: 'Vista Lateral', titulo: 'Capturar Vista Lateral' },
+            trasera: { etiqueta: 'Vista Trasera', titulo: 'Capturar Vista Trasera' }
+        };
+
+        let vistaActiva = 'frente';
+        let vistaObjetivoCamara = 'frente';
+        let streamCamara = null;
+        let facingModeActual = 'environment';
+        let fotoTemporalBase64 = '';
+        let modalCamaraInstancia = null;
+
+        function obtenerClaveFotos() {
+            const idUsuario = (localStorage.getItem('velox_usuario_id') || 'general').trim();
+            const placa = (document.getElementById('datoPlaca')?.textContent || 'vehiculo').trim();
+            return `velox_vehiculo_fotos_${idUsuario}_${placa}`;
+        }
+
+        function cargarFotos() {
+            try {
+                const raw = localStorage.getItem(obtenerClaveFotos());
+                return raw ? JSON.parse(raw) : { frente: '', lateral: '', trasera: '' };
+            } catch (e) {
+                return { frente: '', lateral: '', trasera: '' };
+            }
+        }
+
+        function guardarFotos(fotos) {
+            try {
+                localStorage.setItem(obtenerClaveFotos(), JSON.stringify(fotos));
+            } catch (e) {
+                Swal.fire({
+                    title: 'Aviso de almacenamiento',
+                    text: 'No se pudo guardar la imagen en el navegador.',
+                    icon: 'info',
+                    iconColor: '#7097a8',
+                    confirmButtonText: 'Aceptar',
+                    customClass: {
+                        popup: 'rounded-4 p-4 bg-white',
+                        confirmButton: 'btn-verde-modal'
+                    }
+                });
+            }
+        }
+
+        function renderizarGaleria() {
+            const fotos = cargarFotos();
+            const config = VISTAS_CONFIG[vistaActiva] || VISTAS_CONFIG.frente;
+
+            ['frente', 'lateral', 'trasera'].forEach((vista) => {
+                const miniatura = document.getElementById(`miniatura-${vista}`);
+                const imgMini = document.getElementById(`img-miniatura-${vista}`);
+                const iconoMini = document.getElementById(`icono-miniatura-${vista}`);
+
+                if (miniatura) miniatura.classList.toggle('activa-vista', vista === vistaActiva);
+
+                if (fotos[vista] && imgMini && iconoMini) {
+                    imgMini.src = fotos[vista];
+                    imgMini.classList.remove('d-none');
+                    iconoMini.classList.add('d-none');
+                } else if (imgMini && iconoMini) {
+                    imgMini.src = '';
+                    imgMini.classList.add('d-none');
+                    iconoMini.classList.remove('d-none');
+                }
+            });
+
+            const imgPrincipal = document.getElementById('imgFotoPrincipal');
+            const placeholderPrincipal = document.getElementById('placeholderFotoPrincipal');
+            const etiquetaPrincipal = document.getElementById('etiquetaVistaActual');
+
+            if (etiquetaPrincipal) etiquetaPrincipal.textContent = config.etiqueta;
+
+            if (fotos[vistaActiva] && imgPrincipal && placeholderPrincipal) {
+                imgPrincipal.src = fotos[vistaActiva];
+                imgPrincipal.classList.remove('d-none');
+                placeholderPrincipal.classList.add('d-none');
+            } else if (imgPrincipal && placeholderPrincipal) {
+                imgPrincipal.src = '';
+                imgPrincipal.classList.add('d-none');
+                placeholderPrincipal.classList.remove('d-none');
+            }
+        }
+
+        function seleccionarVista(vista) {
+            if (!VISTAS_CONFIG[vista]) return;
+            vistaActiva = vista;
+            renderizarGaleria();
+        }
+
+        function borrarFotoActual() {
+            const fotos = cargarFotos();
+            if (!fotos[vistaActiva]) return;
+
+            Swal.fire({
+                title: '¿Quitar fotografía?',
+                text: `Se quitará la foto de ${VISTAS_CONFIG[vistaActiva].etiqueta.toLowerCase()}.`,
+                icon: 'question',
+                iconColor: '#7097a8',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, quitar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    popup: 'rounded-4 p-4 bg-white',
+                    confirmButton: 'btn-verde-modal',
+                    cancelButton: 'rounded-3 px-4 fw-bold'
+                }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    fotos[vistaActiva] = '';
+                    guardarFotos(fotos);
+                    renderizarGaleria();
+                }
+            });
+        }
+
+        function detenerCamara() {
+            if (streamCamara) {
+                streamCamara.getTracks().forEach((track) => track.stop());
+                streamCamara = null;
+            }
+            const video = document.getElementById('videoCamaraVehiculo');
+            if (video) video.srcObject = null;
+        }
+
+        function configurarBotonesCamara(modo) {
+            const btnTomar = document.getElementById('btnTomarCaptura');
+            const btnGuardar = document.getElementById('btnGuardarCaptura');
+            const btnRepetir = document.getElementById('btnRepetirCaptura');
+
+            if (modo === 'preview') {
+                btnTomar?.classList.add('d-none');
+                btnGuardar?.classList.remove('d-none');
+                btnRepetir?.classList.remove('d-none');
+            } else {
+                btnTomar?.classList.remove('d-none');
+                btnGuardar?.classList.add('d-none');
+                btnRepetir?.classList.add('d-none');
+            }
+        }
+
+        async function iniciarStreamCamara() {
+            fotoTemporalBase64 = '';
+            detenerCamara();
+            configurarBotonesCamara('vivo');
+
+            const video = document.getElementById('videoCamaraVehiculo');
+            const preview = document.getElementById('previewCapturaVehiculo');
+            const placeholder = document.getElementById('estadoCamaraPlaceholder');
+            const textoEstado = document.getElementById('textoEstadoCamara');
+
+            preview?.classList.add('d-none');
+            video?.classList.add('d-none');
+            placeholder?.classList.remove('d-none');
+
+            if (textoEstado) textoEstado.textContent = 'Activando cámara...';
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                if (textoEstado) textoEstado.textContent = 'Cámara en vivo no disponible aquí. Usa "Cámara del Equipo".';
+                return;
+            }
+
+            try {
+                streamCamara = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: facingModeActual },
+                    audio: false
+                });
+                if (video) {
+                    video.srcObject = streamCamara;
+                    await video.play();
+                    placeholder?.classList.add('d-none');
+                    video.classList.remove('d-none');
+                }
+            } catch (err) {
+                if (textoEstado) textoEstado.textContent = 'No se pudo abrir la cámara en vivo. Usa "Cámara del Equipo".';
+            }
+        }
+
+        function abrirCamaraVista(vista) {
+            vistaObjetivoCamara = VISTAS_CONFIG[vista] ? vista : 'frente';
+            vistaActiva = vistaObjetivoCamara;
+            renderizarGaleria();
+
+            const tituloModal = document.getElementById('tituloModalCamara');
+            if (tituloModal) {
+                tituloModal.innerHTML = `<i class="bi bi-camera-video-fill me-2" style="color: #018701;"></i>${VISTAS_CONFIG[vistaObjetivoCamara].titulo}`;
+            }
+
+            const modalEl = document.getElementById('modalCamaraVehiculo');
+            if (!modalCamaraInstancia && modalEl) {
+                modalCamaraInstancia = new bootstrap.Modal(modalEl);
+                modalEl.addEventListener('hidden.bs.modal', detenerCamara);
+            }
+
+            modalCamaraInstancia?.show();
+            iniciarStreamCamara();
+        }
+
+        function alternarCamara() {
+            facingModeActual = facingModeActual === 'environment' ? 'user' : 'environment';
+            iniciarStreamCamara();
+        }
+
+        function tomarFotoCamara() {
+            const video = document.getElementById('videoCamaraVehiculo');
+            const canvas = document.getElementById('canvasCapturaVehiculo');
+            const preview = document.getElementById('previewCapturaVehiculo');
+
+            if (!video || video.classList.contains('d-none') || !video.videoWidth) {
+                document.getElementById('inputArchivoCamara')?.click();
+                return;
+            }
+
+            const anchoMaximo = 900;
+            const escala = Math.min(1, anchoMaximo / video.videoWidth);
+            canvas.width = Math.round(video.videoWidth * escala);
+            canvas.height = Math.round(video.videoHeight * escala);
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            fotoTemporalBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            detenerCamara();
+
+            video.classList.add('d-none');
+            if (preview) {
+                preview.src = fotoTemporalBase64;
+                preview.classList.remove('d-none');
+            }
+            configurarBotonesCamara('preview');
+        }
+
+        function procesarArchivoCamara(event) {
+            const archivo = event.target.files?.[0];
+            if (!archivo) return;
+
+            const lector = new FileReader();
+            lector.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.getElementById('canvasCapturaVehiculo');
+                    const anchoMaximo = 900;
+                    const escala = Math.min(1, anchoMaximo / img.width);
+                    canvas.width = Math.round(img.width * escala);
+                    canvas.height = Math.round(img.height * escala);
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    fotoTemporalBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                    detenerCamara();
+
+                    document.getElementById('videoCamaraVehiculo')?.classList.add('d-none');
+                    document.getElementById('estadoCamaraPlaceholder')?.classList.add('d-none');
+
+                    const preview = document.getElementById('previewCapturaVehiculo');
+                    if (preview) {
+                        preview.src = fotoTemporalBase64;
+                        preview.classList.remove('d-none');
+                    }
+                    configurarBotonesCamara('preview');
+                };
+                img.src = e.target.result;
+            };
+            lector.readAsDataURL(archivo);
+            event.target.value = '';
+        }
+
+        function guardarFotoCapturada() {
+            if (!fotoTemporalBase64) return;
+            const fotos = cargarFotos();
+            fotos[vistaObjetivoCamara] = fotoTemporalBase64;
+            guardarFotos(fotos);
+
+            vistaActiva = vistaObjetivoCamara;
+            renderizarGaleria();
+            modalCamaraInstancia?.hide();
+        }
+
+        function pintarVehiculoEnVista(v) {
+            if (!v) return;
+
+            if (v.placa) document.getElementById('datoPlaca').textContent = v.placa;
+            if (v.nombre) document.getElementById('datoNombre').textContent = v.nombre;
+            if (v.modelo) document.getElementById('datoModelo').textContent = v.modelo;
+            if (v.color) document.getElementById('datoColor').textContent = v.color;
+            if (v.capacidad_asientos !== undefined && v.capacidad_asientos !== null && v.capacidad_asientos !== '') {
+                const textoCap = String(v.capacidad_asientos).toLowerCase().includes('asiento')
+                    ? v.capacidad_asientos
+                    : `${v.capacidad_asientos} Asientos`;
+                document.getElementById('datoCapacidad').textContent = textoCap;
+            }
+            if (v.nombre_propietario) {
+                document.getElementById('datoPropietario').textContent = v.nombre_propietario;
+            }
+
+            const idVeh = v.id_vehiculo;
+            if (idVeh) {
+                const badge = document.getElementById('badgeVehiculo');
+                if (badge) {
+                    badge.innerHTML = `<i class="bi bi-check-circle-fill me-1" style="color: #018701;"></i>Vehículo #${idVeh}`;
+                }
+                const btnAccion = document.getElementById('btnAccionVehiculo');
+                if (btnAccion) {
+                    btnAccion.href = `/vehiculo/editar/${idVeh}`;
+                    btnAccion.innerHTML = '<i class="bi bi-pencil-square me-1"></i>Editar Datos';
+                }
+            }
+        }
+
+        function extraerFilasDesdeHTML(htmlTexto) {
+            const doc = new DOMParser().parseFromString(htmlTexto, 'text/html');
+            const filas = Array.from(doc.querySelectorAll('table tbody tr'));
+            const items = [];
+
+            for (const tr of filas) {
+                const celdas = Array.from(tr.querySelectorAll('td'));
+                if (celdas.length < 7) continue;
+
+                const idRaw = (celdas[0]?.textContent || '').replace('#', '').trim();
+                const placa = (celdas[1]?.textContent || '').trim();
+                const nombre = (celdas[2]?.textContent || '').trim();
+                const modelo = (celdas[3]?.textContent || '').trim();
+                const color = (celdas[4]?.textContent || '').trim();
+                const asientos = (celdas[5]?.textContent || '').trim();
+                const propietario = (celdas[6]?.textContent || '').trim();
+
+                if (!placa || placa.toLowerCase().includes('no existen')) continue;
+
+                items.push({
+                    id_vehiculo: idRaw,
+                    placa,
+                    nombre,
+                    modelo,
+                    color,
+                    capacidad_asientos: asientos,
+                    nombre_propietario: propietario
+                });
+            }
+            return items;
+        }
+
+        async function cargarVehiculoSiFalta() {
+            const placaEl = document.getElementById('datoPlaca');
+            if (!placaEl || (placaEl.textContent && placaEl.textContent.trim() !== 'Sin placa')) {
+                return;
+            }
+
+            const nombreUsuario = (localStorage.getItem('velox_usuario_nombre') || '').trim().toLowerCase();
+
+            try {
+                const resp = await fetch('/vehiculo/', { headers: { 'Accept': 'text/html' } });
+                if (!resp.ok) return;
+
+                const htmlTexto = await resp.text();
+                const lista = extraerFilasDesdeHTML(htmlTexto);
+
+                if (lista.length > 0) {
+                    const encontrado = lista.find((item) =>
+                        nombreUsuario && String(item.nombre_propietario || '').toLowerCase().includes(nombreUsuario)
+                    ) || lista[lista.length - 1];
+
+                    pintarVehiculoEnVista(encontrado);
+                    renderizarGaleria();
+                }
+            } catch (err) {
+                // Sin datos disponibles para mostrar
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            renderizarGaleria();
+            await cargarVehiculoSiFalta();
+        });
+    </script>
 </body>
 </html>

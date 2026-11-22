@@ -7,54 +7,129 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        body { background-color: #F8F9FA !important; }
-        
-        #contenidoPrincipal {
+        body {
+            background-color: #FFFFFF !important;
+        }
+        #mainContent {
             margin-left: 280px;
             transition: margin-left 0.3s ease-in-out;
         }
-        
-        .boton-verde {
+        .btn-verde-custom {
             background-color: #018701 !important;
             color: #ffffff !important;
             border: none;
             transition: all 0.2s ease-in-out;
         }
-        .boton-verde:hover { 
-            background-color: #005200 !important; 
+        .btn-verde-custom:hover {
+            background-color: #005200 !important;
             color: #ffffff !important;
             transform: translateY(-2px);
         }
-
+        .btn-danger-custom {
+            background-color: #ff0000 !important;
+            color: #ffffff !important;
+            border: none;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .btn-danger-custom:hover {
+            opacity: 0.85;
+            color: #ffffff !important;
+        }
+        .tarjeta-resumen {
+            border-radius: 0.9rem;
+            border: 1px solid #dee2e6;
+            background-color: #FFFFFF;
+        }
         .tarjeta-reserva {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-radius: 1rem;
+            border: 1px solid #dee2e6;
             border-left: 4px solid #018701;
+            background-color: #FFFFFF;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .tarjeta-reserva:hover {
             transform: translateY(-2px);
-            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.1)!important;
         }
-        .tarjeta-riesgo {
-            border-left: 4px solid #ffc107;
+        .tarjeta-reserva.estado-rechazada {
+            border-left-color: #ff0000;
+        }
+        .tarjeta-reserva.estado-pendiente {
+            border-left-color: #7097a8;
+        }
+        .badge-velox-aceptada {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+        }
+        .badge-velox-rechazada {
+            background-color: #ff0000 !important;
+            color: #ffffff !important;
+        }
+        .badge-velox-pendiente {
+            background-color: #FFFFFF !important;
+            color: #005200 !important;
+            border: 1px solid #7097a8 !important;
+        }
+        .badge-velox-confiable {
+            background-color: #FFFFFF !important;
+            color: #005200 !important;
+            border: 1px solid #018701 !important;
+        }
+        .badge-velox-riesgo {
+            background-color: #FFFFFF !important;
+            color: #005200 !important;
+            border: 1px solid #7097a8 !important;
+        }
+        .btn-filtro-velox {
+            background-color: #FFFFFF;
+            color: #005200;
+            border: 1px solid #7097a8;
+            font-weight: 600;
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-filtro-velox:hover {
+            background-color: #FFFFFF;
+            color: #005200;
+            border-color: #005200;
+        }
+        .btn-filtro-velox.active {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border-color: #018701 !important;
+        }
+        .swal2-confirm.btn-verde-modal {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            padding: 8px 24px !important;
+            font-weight: bold !important;
+            box-shadow: none !important;
+        }
+        .swal2-confirm.btn-verde-modal:hover {
+            background-color: #005200 !important;
         }
 
         @media (max-width: 768px) {
-            #contenidoPrincipal { margin-left: 0 !important; padding: 15px !important; }
+            #mainContent {
+                margin-left: 0 !important;
+                padding: 15px !important;
+            }
         }
     </style>
 </head>
-<body>
+<body class="bg-white">
 
     <!-- Menú Lateral -->
     {% include 'components/sidebar.html' %}
 
-    <div id="contenidoPrincipal" class="p-4 min-vh-100">
+    <div id="mainContent" class="p-4 min-vh-100 bg-white">
         
         <!-- Botón menú móvil -->
-        <div class="d-flex align-items-center mb-3">
-            <button class="btn boton-verde p-1 px-2 me-3 shadow-sm rounded-3 d-block d-md-none" id="btnAbrirMenu">
+        <div class="d-flex align-items-center mb-3 d-md-none">
+            <button class="btn btn-verde-custom p-1 px-2 me-3 shadow-sm rounded-3" id="btnAbrirMenu">
                 <i class="bi bi-list fs-4"></i>
             </button>
         </div>
@@ -62,116 +137,274 @@
         <div class="container-fluid px-0" style="max-width: 1000px;">
             
             <!-- Encabezado -->
-            <div class="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div>
-                    <h2 class="fw-bold mb-1" style="color: #005200;">
-                        <i class="bi bi-ui-checks-grid me-2"></i>Solicitudes de Viaje
-                    </h2>
-                    <p class="text-muted small mb-0">Evalúa a los pasajeros apoyado por el motor de Inteligencia Artificial.</p>
-                </div>
-                <a href="/pasajero/" class="btn btn-outline-success btn-sm rounded-3 fw-semibold">
-                    <i class="bi bi-person-walking me-1"></i>Ver Vista Pasajero
-                </a>
+            <div class="mb-4 pb-3 border-bottom">
+                <h2 class="fw-bold mb-1" style="color: #005200;">
+                    <i class="bi bi-ui-checks-grid me-2" style="color: #018701;"></i>Solicitudes de Viaje
+                </h2>
+                <p class="text-muted small mb-0">Revisa y gestiona las reservas registradas en el sistema.</p>
             </div>
 
-            <!-- Listado de Reservas -->
-            <div class="row g-3">
-                {% if reservas %}
+            {% if reservas %}
+                {% set ns = namespace(pendientes=0, aceptadas=0, rechazadas=0) %}
+                {% for r in reservas %}
+                    {% set est = (r.estado or 'pendiente') | lower %}
+                    {% if est in ['aceptada', 'confirmada', 'en_curso', 'finalizada'] %}
+                        {% set ns.aceptadas = ns.aceptadas + 1 %}
+                    {% elif est in ['rechazada', 'cancelada'] %}
+                        {% set ns.rechazadas = ns.rechazadas + 1 %}
+                    {% else %}
+                        {% set ns.pendientes = ns.pendientes + 1 %}
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Contadores reales -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="card tarjeta-resumen p-3 shadow-sm h-100">
+                            <span class="text-secondary small fw-semibold d-block">Total</span>
+                            <span class="fs-4 fw-bold" style="color: #005200;">{{ reservas | length }}</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card tarjeta-resumen p-3 shadow-sm h-100">
+                            <span class="text-secondary small fw-semibold d-block">Pendientes</span>
+                            <span class="fs-4 fw-bold text-dark">{{ ns.pendientes }}</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card tarjeta-resumen p-3 shadow-sm h-100">
+                            <span class="text-secondary small fw-semibold d-block">Aceptadas</span>
+                            <span class="fs-4 fw-bold" style="color: #018701;">{{ ns.aceptadas }}</span>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card tarjeta-resumen p-3 shadow-sm h-100">
+                            <span class="text-secondary small fw-semibold d-block">Rechazadas</span>
+                            <span class="fs-4 fw-bold" style="color: #ff0000;">{{ ns.rechazadas }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros rápidos por estado -->
+                <div class="d-flex flex-wrap gap-2 mb-4" role="group" aria-label="Filtrar solicitudes">
+                    <button type="button" class="btn btn-sm rounded-pill px-3 py-1 btn-filtro-velox active" data-filtro="todas" onclick="filtrarSolicitudes('todas', this)">
+                        Todas ({{ reservas | length }})
+                    </button>
+                    <button type="button" class="btn btn-sm rounded-pill px-3 py-1 btn-filtro-velox" data-filtro="pendiente" onclick="filtrarSolicitudes('pendiente', this)">
+                        Pendientes ({{ ns.pendientes }})
+                    </button>
+                    <button type="button" class="btn btn-sm rounded-pill px-3 py-1 btn-filtro-velox" data-filtro="aceptada" onclick="filtrarSolicitudes('aceptada', this)">
+                        Aceptadas ({{ ns.aceptadas }})
+                    </button>
+                    <button type="button" class="btn btn-sm rounded-pill px-3 py-1 btn-filtro-velox" data-filtro="rechazada" onclick="filtrarSolicitudes('rechazada', this)">
+                        Rechazadas ({{ ns.rechazadas }})
+                    </button>
+                </div>
+
+                <!-- Listado de Reservas -->
+                <div class="row g-3" id="contenedorSolicitudes">
                     {% for reserva in reservas %}
                         {% set estado_actual = (reserva.estado or 'pendiente') | lower %}
-                        <div class="col-12">
-                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white tarjeta-reserva {% if reserva.analisis_ia and reserva.analisis_ia.probabilidad < 80 %}tarjeta-riesgo{% endif %}">
-                                <div class="row align-items-center">
-                                    
-                                    <!-- Datos del Pasajero -->
-                                    <div class="col-md-7">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="bg-secondary bg-opacity-10 text-secondary rounded-circle d-flex justify-content-center align-items-center me-3 fw-bold" style="width: 55px; height: 55px;">
-                                                <i class="bi bi-person-fill fs-3"></i>
+                        {% if estado_actual in ['aceptada', 'confirmada', 'en_curso', 'finalizada'] %}
+                            {% set categoria_filtro = 'aceptada' %}
+                            {% set clase_tarjeta = '' %}
+                            {% set clase_badge = 'badge-velox-aceptada' %}
+                        {% elif estado_actual in ['rechazada', 'cancelada'] %}
+                            {% set categoria_filtro = 'rechazada' %}
+                            {% set clase_tarjeta = 'estado-rechazada' %}
+                            {% set clase_badge = 'badge-velox-rechazada' %}
+                        {% else %}
+                            {% set categoria_filtro = 'pendiente' %}
+                            {% set clase_tarjeta = 'estado-pendiente' %}
+                            {% set clase_badge = 'badge-velox-pendiente' %}
+                        {% endif %}
+
+                        {% set prob_valor = reserva.analisis_ia.probabilidad if reserva.analisis_ia and reserva.analisis_ia.probabilidad is defined and reserva.analisis_ia.probabilidad is not none else none %}
+
+                        <div class="col-12 item-solicitud" data-estado="{{ categoria_filtro }}">
+                            <div class="card shadow-sm border rounded-4 p-4 bg-white tarjeta-reserva {{ clase_tarjeta }}">
+                                
+                                <!-- Cabecera de tarjeta: IDs reales y estado -->
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-3 mb-3 border-bottom">
+                                    <div class="d-flex align-items-center flex-wrap gap-2">
+                                        <span class="fw-bold" style="color: #005200;">Reserva #{{ reserva.id_reserva }}</span>
+                                        {% if reserva.id_viaje %}
+                                            <span class="text-muted small">· Viaje #{{ reserva.id_viaje }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="badge {{ clase_badge }} px-3 py-1 rounded-pill fw-semibold">
+                                        {{ reserva.estado or 'pendiente' }}
+                                    </span>
+                                </div>
+
+                                <div class="row align-items-center g-3">
+                                    <!-- Información real del pasajero y del viaje -->
+                                    <div class="col-lg-7">
+                                        <div class="d-flex align-items-start">
+                                            <div class="bg-light rounded-circle d-flex justify-content-center align-items-center me-3 flex-shrink-0 border" style="width: 48px; height: 48px; color: #005200; border-color: #7097a8 !important;">
+                                                <i class="bi bi-person-fill fs-5"></i>
                                             </div>
                                             <div>
+                                                <div class="text-secondary small fw-semibold">Pasajero</div>
                                                 <h5 class="fw-bold text-dark mb-1">
                                                     {{ reserva.nombre_pasajero }}
-                                                    <span class="text-muted fw-normal fs-6">(ID #{{ reserva.id_usuario }})</span>
-                                                </h5>
-                                                <span class="text-muted small d-block">
-                                                    <i class="bi bi-signpost-split me-1"></i>
-                                                    Viaje #{{ reserva.id_viaje }}
-                                                    {% if reserva.origen and reserva.destino %}
-                                                        — {{ reserva.origen }} &rarr; {{ reserva.destino }}
+                                                    {% if reserva.id_usuario %}
+                                                        <span class="text-muted fw-normal fs-6">(ID #{{ reserva.id_usuario }})</span>
                                                     {% endif %}
-                                                </span>
+                                                </h5>
 
-                                                {% if estado_actual in ['aceptada', 'confirmada'] %}
-                                                    <span class="badge bg-success mt-2 px-3 py-1 rounded-pill">Estado: Aceptada</span>
-                                                {% elif estado_actual in ['rechazada', 'cancelada'] %}
-                                                    <span class="badge bg-danger mt-2 px-3 py-1 rounded-pill">Estado: Rechazada</span>
-                                                {% else %}
-                                                    <span class="badge bg-warning text-dark mt-2 px-3 py-1 rounded-pill">Estado: Pendiente</span>
+                                                {% if reserva.origen and reserva.destino %}
+                                                    <div class="text-dark small fw-semibold mt-1">
+                                                        <i class="bi bi-signpost-split me-1" style="color: #018701;"></i>
+                                                        {{ reserva.origen }} &rarr; {{ reserva.destino }}
+                                                    </div>
+                                                {% endif %}
+
+                                                {% if reserva.fecha_viaje or reserva.asientos_solicitados or reserva.punto_encuentro %}
+                                                    <div class="d-flex flex-wrap gap-3 text-muted small mt-2">
+                                                        {% if reserva.fecha_viaje %}
+                                                            <span><i class="bi bi-calendar3 me-1" style="color: #7097a8;"></i>{{ reserva.fecha_viaje }}</span>
+                                                        {% endif %}
+                                                        {% if reserva.asientos_solicitados %}
+                                                            <span><i class="bi bi-person-check me-1" style="color: #7097a8;"></i>{{ reserva.asientos_solicitados }} asiento(s)</span>
+                                                        {% endif %}
+                                                        {% if reserva.punto_encuentro %}
+                                                            <span><i class="bi bi-geo-alt me-1" style="color: #7097a8;"></i>{{ reserva.punto_encuentro }}</span>
+                                                        {% endif %}
+                                                    </div>
                                                 {% endif %}
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Análisis IA y Botones de Acción -->
-                                    <div class="col-md-5 text-md-end mt-4 mt-md-0 border-start-md border-start-0 ps-md-4">
-                                        
-                                        <!-- Etiqueta Inteligente -->
-                                        {% if reserva.analisis_ia %}
+                                    <!-- Confiabilidad registrada (si existe) y acciones -->
+                                    <div class="col-lg-5 text-lg-end">
+                                        {% if prob_valor is not none %}
                                             <div class="mb-3">
-                                                <span class="d-block text-muted small fw-bold mb-1 text-uppercase" style="font-size: 0.7rem;">Análisis Predictivo</span>
-                                                
-                                                {% if reserva.analisis_ia.probabilidad >= 80 %}
-                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle px-3 py-2 rounded-pill fs-6">
-                                                        <i class="bi bi-shield-check-fill me-1"></i> {{ reserva.analisis_ia.probabilidad }}% Confiable
+                                                <span class="d-block text-secondary small fw-semibold mb-1">Confiabilidad registrada</span>
+                                                {% if prob_valor >= 80 %}
+                                                    <span class="badge badge-velox-confiable px-3 py-2 rounded-pill fw-semibold">
+                                                        <i class="bi bi-shield-check-fill me-1" style="color: #018701;"></i>{{ prob_valor }}%
                                                     </span>
                                                 {% else %}
-                                                    <span class="badge bg-warning bg-opacity-10 text-warning text-dark border border-warning-subtle px-3 py-2 rounded-pill fs-6">
-                                                        <i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i> Riesgo de Inasistencia
+                                                    <span class="badge badge-velox-riesgo px-3 py-2 rounded-pill fw-semibold">
+                                                        <i class="bi bi-exclamation-triangle-fill me-1" style="color: #7097a8;"></i>{{ prob_valor }}%
                                                     </span>
                                                 {% endif %}
                                             </div>
                                         {% endif %}
 
-                                        <!-- Botones conectados a MongoDB -->
-                                        <div class="d-flex justify-content-md-end gap-2">
-                                            <form method="post" action="/reserva/estado/{{ reserva.id_reserva }}">
+                                        <div class="d-flex justify-content-lg-end gap-2">
+                                            <form method="post" action="/reserva/estado/{{ reserva.id_reserva }}" id="formAceptar-{{ reserva.id_reserva }}">
                                                 <input type="hidden" name="nuevo_estado" value="aceptada">
-                                                <button type="submit" class="btn btn-sm btn-success fw-bold rounded-pill px-4 py-2 shadow-sm" {% if estado_actual in ['aceptada', 'confirmada'] %}disabled{% endif %}>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-verde-custom fw-bold rounded-pill px-4 py-2 shadow-sm"
+                                                        {% if categoria_filtro == 'aceptada' %}disabled{% endif %}
+                                                        onclick="confirmarEstadoReserva('formAceptar-{{ reserva.id_reserva }}', 'aceptada', '{{ reserva.nombre_pasajero }}', '{{ reserva.id_reserva }}')">
                                                     <i class="bi bi-check-lg me-1"></i>Aceptar
                                                 </button>
                                             </form>
-                                            <form method="post" action="/reserva/estado/{{ reserva.id_reserva }}">
+                                            <form method="post" action="/reserva/estado/{{ reserva.id_reserva }}" id="formRechazar-{{ reserva.id_reserva }}">
                                                 <input type="hidden" name="nuevo_estado" value="rechazada">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-4 py-2" {% if estado_actual in ['rechazada', 'cancelada'] %}disabled{% endif %}>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-danger-custom fw-bold rounded-pill px-4 py-2 shadow-sm"
+                                                        {% if categoria_filtro == 'rechazada' %}disabled{% endif %}
+                                                        onclick="confirmarEstadoReserva('formRechazar-{{ reserva.id_reserva }}', 'rechazada', '{{ reserva.nombre_pasajero }}', '{{ reserva.id_reserva }}')">
                                                     <i class="bi bi-x-lg me-1"></i>Rechazar
                                                 </button>
                                             </form>
                                         </div>
-
                                     </div>
-
                                 </div>
+
                             </div>
                         </div>
                     {% endfor %}
-                {% else %}
-                    <!-- Estado Vacío -->
-                    <div class="col-12 text-center py-5 mt-4">
-                        <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3" style="width: 80px; height: 80px;">
-                            <i class="bi bi-inbox fs-1 text-muted"></i>
-                        </div>
-                        <h5 class="fw-bold text-dark">Sin solicitudes activas</h5>
-                        <p class="text-muted">No tienes pasajeros pendientes por evaluar.</p>
+                </div>
+
+                <!-- Mensaje cuando el filtro no tiene coincidencias -->
+                <div id="sinResultadosFiltro" class="card border shadow-sm rounded-4 p-4 text-center bg-white mt-3" style="display: none;">
+                    <p class="text-muted small mb-0">No hay solicitudes en este estado.</p>
+                </div>
+            {% else %}
+                <!-- Estado Vacío Real -->
+                <div class="card border shadow-sm rounded-4 p-5 text-center bg-white mt-2">
+                    <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3 border" style="width: 80px; height: 80px;">
+                        <i class="bi bi-inbox fs-1 text-muted"></i>
                     </div>
-                {% endif %}
-            </div>
+                    <h5 class="fw-bold text-dark">Sin solicitudes registradas</h5>
+                    <p class="text-muted small mb-0">No hay reservas almacenadas en la base de datos por el momento.</p>
+                </div>
+            {% endif %}
 
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function filtrarSolicitudes(estado, botonActivo) {
+            document.querySelectorAll('.btn-filtro-velox').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (botonActivo) {
+                botonActivo.classList.add('active');
+            }
+
+            const tarjetas = document.querySelectorAll('.item-solicitud');
+            let visibles = 0;
+
+            tarjetas.forEach(item => {
+                const coincide = estado === 'todas' || item.dataset.estado === estado;
+                item.style.display = coincide ? '' : 'none';
+                if (coincide) visibles++;
+            });
+
+            const avisoVacio = document.getElementById('sinResultadosFiltro');
+            if (avisoVacio) {
+                avisoVacio.style.display = visibles === 0 ? '' : 'none';
+            }
+        }
+
+        function confirmarEstadoReserva(formId, accion, nombrePasajero, idReserva) {
+            const esAceptar = accion === 'aceptada';
+            Swal.fire({
+                title: esAceptar ? '¿Aceptar solicitud?' : '¿Rechazar solicitud?',
+                text: esAceptar
+                    ? `Se marcará como aceptada la reserva #${idReserva} de ${nombrePasajero}.`
+                    : `Se marcará como rechazada la reserva #${idReserva} de ${nombrePasajero}.`,
+                icon: 'question',
+                iconColor: '#7097a8',
+                showCancelButton: true,
+                confirmButtonColor: esAceptar ? '#018701' : '#ff0000',
+                cancelButtonColor: '#555555',
+                confirmButtonText: esAceptar ? 'Sí, aceptar' : 'Sí, rechazar',
+                cancelButtonText: 'Cancelar',
+                customClass: {
+                    popup: 'rounded-4 p-4',
+                    confirmButton: 'rounded-3 px-4 fw-bold',
+                    cancelButton: 'rounded-3 px-4 fw-bold'
+                }
+            }).then((resultado) => {
+                if (resultado.isConfirmed) {
+                    Swal.fire({
+                        title: '¡Operación Exitosa!',
+                        text: esAceptar
+                            ? 'La reserva ha sido aceptada correctamente.'
+                            : 'La reserva ha sido rechazada correctamente.',
+                        icon: 'success',
+                        iconColor: '#018701',
+                        confirmButtonText: 'Aceptar',
+                        customClass: {
+                            popup: 'rounded-4 p-4',
+                            confirmButton: 'btn-verde-modal'
+                        }
+                    }).then(() => {
+                        document.getElementById(formId).submit();
+                    });
+                }
+            });
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
             const menuLateral = document.getElementById("menuLateral");
             const btnAbrir = document.getElementById("btnAbrirMenu");

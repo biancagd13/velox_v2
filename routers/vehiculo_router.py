@@ -36,10 +36,25 @@ def listar_vehiculos(solicitud: Request):
     es_admin = _es_admin(solicitud)
     plantilla = "admin/vehiculo_inicio_admin.html" if es_admin else "vehiculo/vehiculo_inicio.html"
 
+    id_usuario_query = (solicitud.query_params.get("id_usuario") or "").strip()
+    id_usuario_cookie = (solicitud.cookies.get("velox_usuario_id") or "").strip()
+    id_usuario_activo = id_usuario_query or id_usuario_cookie
+
+    vehiculo_actual = None
+    if lista_vehiculos:
+        if id_usuario_activo:
+            vehiculo_actual = next(
+                (v for v in lista_vehiculos if str(v.get("id_usuario", "")).strip() == id_usuario_activo),
+                None,
+            )
+        if vehiculo_actual is None:
+            vehiculo_actual = lista_vehiculos[0]
+
     return motor_plantillas.TemplateResponse(
         solicitud,
         plantilla,
         {
+            "vehiculo": vehiculo_actual,
             "vehiculos": lista_vehiculos,
             "es_admin": es_admin,
         },

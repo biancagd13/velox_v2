@@ -11,6 +11,8 @@ from services.ml_service import predecir_confiabilidad_pasajero
 router = APIRouter(prefix="/reserva", tags=["Reserva"])
 motor_plantillas = Jinja2Templates(directory="templates")
 
+ESTADOS_ACTIVOS_ASIENTO = {"aceptada", "confirmada"}
+
 
 def _es_admin(solicitud: Request) -> bool:
     """Detecta si la petición pertenece a una sesión de Administrador."""
@@ -32,6 +34,105 @@ def _resolver_ruta_viaje(viaje_doc: dict) -> tuple[str, str]:
             destino = destino or ruta_doc.get("destino") or ruta_doc.get("punto_llegada", "Destino")
 
     return origen or "Origen", destino or "Destino"
+
+
+def _enriquecer_usuarios_con_calificaciones(usuarios_raw: list[dict]) -> list[dict]:
+    """Agrega promedio_calificacion y total_calificaciones desde db['calificacion_pasajero'] o usuario."""
+    resenas_raw = list(db["calificacion_pasajero"].find({}, {"_id": 0}))
+    stats_por_id: dict[int, list[float]] = {}
+    stats_por_nombre: dict[str, list[float]] = {}
+
+    for r in resenas_raw:
+        estrellas = r.get("estrellas")
+        if estrellas is None:
+            continue
+        try:
+            valor = float(estrellas)
+        except (TypeError, ValueError):
+            continue
+
+        id_u = r.get("id_usuario")
+        if id_u is not None and str(id_u).strip().isdigit():
+            stats_por_id.setdefault(int(id_u), []).append(valor)
+
+        nombre_p = str(r.get("nombre_pasajero") or "").strip().lower()
+        if nombre_p:
+            stats_por_nombre.setdefault(nombre_p, []).append(valor)
+
+    usuarios_enriquecidos = []
+    for u in usuarios_raw:
+        u_dict = dict(u)
+        id_u = u_dict.get("id_usuario")
+        nombre_completo = " ".join(
+            p for p in [
+                str(u_dict.get("nombre") or "").strip(),
+                str(u_dict.get("apellido_paterno") or "").strip(),
+                str(u_dict.get("apellido_materno") or "").strip(),
+            ] if p
+        ).strip().lower()
+
+        valores = []
+        if id_u is not None and str(id_u).strip().isdigit():
+            valores.extend(stats_por_id.get(int(id_u), []))
+        if not valores and nombre_completo:
+            valores.extend(stats_por_nombre.get(nombre_completo, []))
+
+        if valores:
+            u_dict["promedio_calificacion"] = round(sum(valores) / len(valores), 1)
+            u_dict["total_calificaciones"] = len(valores)
+        elif u_dict.get("calificacion") is not None:
+            u_dict["promedio_calificacion"] = u_dict.get("calificacion")
+            u_dict["total_calificaciones"] = u_dict.get("total_calificaciones", 0)
+        else:
+            u_dict["promedio_calificacion"] = None
+            u_dict["total_calificaciones"] = 0
+
+        usuarios_enriquecidos.append(u_dict)
+
+    return usuarios_enriquecidos
+
+
+def _preparar_viajes_con_ruta() -> list[dict]:
+    """Obtiene viajes de db['viaje'] con origen, destino y asientos_disponibles consistentes."""
+    viajes_raw = list(db["viaje"].find({}, {"_id": 0}))
+    viajes = []
+    for v in viajes_raw:
+        v_dict = dict(v)
+        origen, destino = _resolver_ruta_viaje(v_dict)
+        v_dict["origen"] = origen
+        v_dict["destino"] = destino
+
+        asientos = v_dict.get("asientos_disponibles")
+        if asientos is None:
+            asientos = v_dict.get("capacidad_lugares") if v_dict.get("capacidad_lugares") is not None else v_dict.get("lugares")
+        v_dict["asientos_disponibles"] = asientos
+        viajes.append(v_dict)
+    return viajes
+
+
+def _ajustar_asientos_por_cambio_estado(id_viaje: int | None, estado_previo: str, estado_nuevo: str):
+    """Ajusta asientos_disponibles en db['viaje'] al confirmar/aceptar o cancelar/rechazar una reserva."""
+    if id_viaje is None:
+        return
+
+    prev_activo = estado_previo.strip().lower() in ESTADOS_ACTIVOS_ASIENTO
+    nuevo_activo = estado_nuevo.strip().lower() in ESTADOS_ACTIVOS_ASIENTO
+
+    if not prev_activo and nuevo_activo:
+        db["viaje"].update_one(
+            {"id_viaje": id_viaje, "asientos_disponibles": {"$gt": 0}},
+            {"$inc": {"asientos_disponibles": -1}},
+        )
+    elif prev_activo and not nuevo_activo:
+        viaje_doc = db["viaje"].find_one({"id_viaje": id_viaje}, {"_id": 0})
+        if viaje_doc and viaje_doc.get("asientos_disponibles") is not None:
+            actual = int(viaje_doc.get("asientos_disponibles") or 0)
+            capacidad = viaje_doc.get("capacidad_lugares") or viaje_doc.get("lugares")
+            if capacidad is None or actual < int(capacidad):
+                db["viaje"].update_one(
+                    {"id_viaje": id_viaje},
+                    {"$inc": {"asientos_disponibles": 1}},
+                )
 
 
 @router.get("/")
@@ -116,13 +217,11 @@ def cambiar_estado_reserva(
             {"$set": {"estado": estado_limpio}},
         )
 
-        if estado_limpio == "aceptada" and estado_previo != "aceptada":
-            id_viaje = reserva_actual.get("id_viaje")
-            if id_viaje is not None:
-                db["viaje"].update_one(
-                    {"id_viaje": id_viaje, "asientos_disponibles": {"$gt": 0}},
-                    {"$inc": {"asientos_disponibles": -1}},
-                )
+        _ajustar_asientos_por_cambio_estado(
+            id_viaje=reserva_actual.get("id_viaje"),
+            estado_previo=estado_previo,
+            estado_nuevo=estado_limpio,
+        )
 
     url_retorno = "/reserva/?rol=admin" if _es_admin(solicitud) else "/reserva/"
     return RedirectResponse(
@@ -133,15 +232,9 @@ def cambiar_estado_reserva(
 
 @router.get("/nuevo")
 def vista_crear_reserva(solicitud: Request):
-    """Carga el formulario para registrar una nueva reserva manualmente."""
-    usuarios = list(db["usuario"].find({}, {"_id": 0}))
-    viajes_raw = list(db["viaje"].find({}, {"_id": 0}))
-    viajes = []
-    for v in viajes_raw:
-        origen, destino = _resolver_ruta_viaje(v)
-        v["origen"] = origen
-        v["destino"] = destino
-        viajes.append(v)
+    """Carga el formulario para registrar una nueva reserva con datos relacionados de BD."""
+    usuarios = _enriquecer_usuarios_con_calificaciones(list(db["usuario"].find({}, {"_id": 0})))
+    viajes = _preparar_viajes_con_ruta()
 
     es_admin = _es_admin(solicitud)
     plantilla = "admin/reserva_form_admin.html" if es_admin else "reserva/reserva_form.html"
@@ -165,15 +258,21 @@ def guardar_reserva(
     id_usuario: int = Form(...),
     id_viaje: int = Form(...),
 ):
-    """Procesa el formulario de creación y almacena la nueva reserva."""
+    """Procesa el formulario de creación, almacena la nueva reserva y sincroniza asientos."""
+    estado_limpio = estado.strip().lower()
     nueva_reserva = ReservaModel(
-        estado=estado.lower(),
+        estado=estado_limpio,
         fecha_solicitud="",
         id_usuario=id_usuario,
         id_viaje=id_viaje,
     )
 
     ReservaController.crear_reserva(nueva_reserva)
+    _ajustar_asientos_por_cambio_estado(
+        id_viaje=id_viaje,
+        estado_previo="",
+        estado_nuevo=estado_limpio,
+    )
 
     url_retorno = "/reserva/?rol=admin" if _es_admin(solicitud) else "/reserva/"
     return RedirectResponse(
@@ -184,17 +283,10 @@ def guardar_reserva(
 
 @router.get("/editar/{id_reserva}")
 def vista_editar_reserva(solicitud: Request, id_reserva: int):
-    """Carga los datos de una reserva existente para edición."""
+    """Carga los datos de una reserva existente para edición con datos relacionados de BD."""
     reserva_encontrada = ReservaController.obtener_reserva_por_id(id_reserva)
-    usuarios = list(db["usuario"].find({}, {"_id": 0}))
-
-    viajes_raw = list(db["viaje"].find({}, {"_id": 0}))
-    viajes = []
-    for v in viajes_raw:
-        origen, destino = _resolver_ruta_viaje(v)
-        v["origen"] = origen
-        v["destino"] = destino
-        viajes.append(v)
+    usuarios = _enriquecer_usuarios_con_calificaciones(list(db["usuario"].find({}, {"_id": 0})))
+    viajes = _preparar_viajes_con_ruta()
 
     es_admin = _es_admin(solicitud)
     plantilla = "admin/reserva_form_admin.html" if es_admin else "reserva/reserva_form.html"
@@ -219,7 +311,14 @@ def actualizar_reserva(
     id_usuario: int = Form(None),
     id_viaje: int = Form(None),
 ):
-    """Procesa la actualización parcial de una reserva existente."""
+    """Procesa la actualización parcial de una reserva existente y sincroniza asientos."""
+    reserva_previa = db["reserva"].find_one({"id_reserva": id_reserva}, {"_id": 0}) or {}
+    estado_previo = str(reserva_previa.get("estado") or "").lower()
+    viaje_previo = reserva_previa.get("id_viaje")
+
+    estado_nuevo = estado.strip().lower() if estado else estado_previo
+    viaje_nuevo = id_viaje if id_viaje is not None else viaje_previo
+
     reserva_actualizacion = ReservaUpdateModel(
         estado=estado.lower() if estado else None,
         id_usuario=id_usuario,
@@ -227,6 +326,12 @@ def actualizar_reserva(
     )
 
     ReservaController.actualizar_reserva(id_reserva, reserva_actualizacion)
+
+    if viaje_previo == viaje_nuevo:
+        _ajustar_asientos_por_cambio_estado(viaje_nuevo, estado_previo, estado_nuevo)
+    else:
+        _ajustar_asientos_por_cambio_estado(viaje_previo, estado_previo, "cancelada")
+        _ajustar_asientos_por_cambio_estado(viaje_nuevo, "", estado_nuevo)
 
     url_retorno = "/reserva/?rol=admin" if _es_admin(solicitud) else "/reserva/"
     return RedirectResponse(
