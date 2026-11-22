@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Módulo de Calificaciones - Velox UTVT</title>
 
-    <!-- Bootstrap 5 y Bootstrap Icons -->
+    <!-- Bootstrap 5, Bootstrap Icons y SweetAlert2 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         body {
@@ -20,14 +21,16 @@
             transition: margin-left 0.3s ease-in-out;
         }
 
-        .btn-verde-custom {
+        .btn-verde-custom,
+        .swal2-confirm.btn-verde-modal {
             background-color: #018701 !important;
             color: #ffffff !important;
             border: none;
             transition: all 0.2s ease-in-out;
         }
 
-        .btn-verde-custom:hover {
+        .btn-verde-custom:hover,
+        .swal2-confirm.btn-verde-modal:hover {
             background-color: #005200 !important;
             color: #ffffff !important;
             transform: translateY(-2px);
@@ -39,6 +42,10 @@
             border-top: 4px solid #018701;
             background-color: #FFFFFF;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .tarjeta-resena.emitida {
+            border-top-color: #005200;
         }
 
         .tarjeta-resena:hover {
@@ -85,6 +92,28 @@
             color: #495057;
         }
 
+        .pestana-apartado {
+            border-radius: 999px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 0.45rem 1.1rem;
+            border: 1px solid #dee2e6;
+            background-color: #ffffff;
+            color: #495057;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .pestana-apartado:hover {
+            border-color: #018701;
+            color: #005200;
+        }
+
+        .pestana-apartado.active {
+            background-color: #005200 !important;
+            border-color: #005200 !important;
+            color: #ffffff !important;
+        }
+
         .filtro-btn {
             border-radius: 999px;
             font-size: 0.82rem;
@@ -120,6 +149,9 @@
     <!-- Inclusión del menú lateral compartido -->
     {% include 'components/sidebar.html' %}
 
+    {% set emitidas = calificaciones_emitidas if calificaciones_emitidas is defined else [] %}
+    {% set rol_pasajero = es_pasajero if es_pasajero is defined else false %}
+
     <!-- Contenedor principal de la vista -->
     <div id="contenidoPrincipal" class="p-4 min-vh-100 bg-white">
         <!-- Botón hamburguesa visible solo en dispositivos móviles -->
@@ -137,7 +169,7 @@
                         <i class="bi bi-star-fill me-2" style="color: #018701;"></i>Módulo de Calificaciones
                     </h2>
                     <p class="text-muted small mb-0">
-                        Historial de valoraciones y racha de desempeño de tus viajes en Velox UTVT.
+                        Consulta las valoraciones de tus viajes y administra las calificaciones que has emitido.
                     </p>
                 </div>
 
@@ -150,148 +182,252 @@
                         </div>
                     </div>
                     <div class="border-start ps-3">
-                        <div class="text-secondary fw-bold text-uppercase" style="font-size: 0.68rem;">Reseñas</div>
+                        <div class="text-secondary fw-bold text-uppercase" style="font-size: 0.68rem;">Recibidas</div>
                         <div class="fs-5 fw-bold text-dark">{{ total_resenas }}</div>
+                    </div>
+                    <div class="border-start ps-3">
+                        <div class="text-secondary fw-bold text-uppercase" style="font-size: 0.68rem;">Emitidas</div>
+                        <div class="fs-5 fw-bold" style="color: #018701;">{{ emitidas | length }}</div>
                     </div>
                 </div>
             </div>
 
-            {% if calificaciones %}
-                <!-- Barra intuitiva de filtros por valoración y búsqueda rápida -->
-                <div class="bg-light border rounded-4 p-3 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <div class="d-flex align-items-center flex-wrap gap-2" role="group" aria-label="Filtrar reseñas">
-                        <button type="button" class="filtro-btn active" data-filtro="todas">
-                            Todas <span class="ms-1 opacity-75">({{ total_resenas }})</span>
-                        </button>
-                        <button type="button" class="filtro-btn" data-filtro="excelente">
-                            <i class="bi bi-emoji-smile-fill text-success me-1"></i>Excelentes (4–5★)
-                        </button>
-                        <button type="button" class="filtro-btn" data-filtro="regular">
-                            <i class="bi bi-emoji-neutral-fill text-warning me-1"></i>Regulares (3★)
-                        </button>
-                        <button type="button" class="filtro-btn" data-filtro="mejora">
-                            <i class="bi bi-emoji-frown-fill text-danger me-1"></i>A mejorar (1–2★)
-                        </button>
-                    </div>
+            <!-- Selector de apartados: Recibidas vs Emitidas por mí -->
+            <div class="d-flex flex-wrap gap-2 mb-4" role="tablist" aria-label="Apartados de calificaciones">
+                <button type="button" class="pestana-apartado active" data-apartado="recibidas" onclick="cambiarApartado('recibidas', this)">
+                    <i class="bi bi-inbox-fill me-1"></i>{{ 'Reseñas que he recibido' if rol_pasajero else 'Reseñas de mis viajes' }} ({{ total_resenas }})
+                </button>
+                <button type="button" class="pestana-apartado" data-apartado="emitidas" onclick="cambiarApartado('emitidas', this)">
+                    <i class="bi bi-pencil-square me-1"></i>Calificaciones que he emitido ({{ emitidas | length }})
+                </button>
+            </div>
 
-                    <div class="input-group" style="max-width: 290px;">
-                        <span class="input-group-text bg-white border-end-0 rounded-start-pill">
-                            <i class="bi bi-search text-muted small"></i>
-                        </span>
-                        <input type="search"
-                               id="buscadorResenas"
-                               class="form-control border-start-0 rounded-end-pill small"
-                               placeholder="Buscar pasajero, ruta o comentario...">
-                    </div>
+            <!-- Barra intuitiva de filtros por valoración y búsqueda rápida -->
+            <div class="bg-light border rounded-4 p-3 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="d-flex align-items-center flex-wrap gap-2" role="group" aria-label="Filtrar reseñas">
+                    <button type="button" class="filtro-btn active" data-filtro="todas">
+                        Todas
+                    </button>
+                    <button type="button" class="filtro-btn" data-filtro="excelente">
+                        <i class="bi bi-emoji-smile-fill text-success me-1"></i>Excelentes (4–5★)
+                    </button>
+                    <button type="button" class="filtro-btn" data-filtro="regular">
+                        <i class="bi bi-emoji-neutral-fill text-warning me-1"></i>Regulares (3★)
+                    </button>
+                    <button type="button" class="filtro-btn" data-filtro="mejora">
+                        <i class="bi bi-emoji-frown-fill text-danger me-1"></i>A mejorar (1–2★)
+                    </button>
                 </div>
-            {% endif %}
 
-            <!-- Cuadrícula de tarjetas con las reseñas -->
-            <div class="row g-4" id="gridResenas">
-                {% if calificaciones %}
-                    {% for cal in calificaciones %}
-                        {% set estrellas_num = (cal.estrellas or 0) | int %}
-                        {% if estrellas_num >= 4 %}
-                            {% set categoria_filtro = 'excelente' %}
-                        {% elif estrellas_num == 3 %}
-                            {% set categoria_filtro = 'regular' %}
-                        {% else %}
-                            {% set categoria_filtro = 'mejora' %}
-                        {% endif %}
+                <div class="input-group" style="max-width: 290px;">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill">
+                        <i class="bi bi-search text-muted small"></i>
+                    </span>
+                    <input type="search"
+                           id="buscadorResenas"
+                           class="form-control border-start-0 rounded-end-pill small"
+                           placeholder="Buscar ruta, usuario o comentario...">
+                </div>
+            </div>
 
-                        {% set texto_busqueda = ((cal.nombre_pasajero or '') ~ ' ' ~ (cal.comentario or '') ~ ' ' ~ (cal.descripcion_viaje or cal.ruta or '') ~ ' #' ~ (cal.id_calificacion or '')) | lower %}
+            <!-- APARTADO 1: RESEÑAS RECIBIDAS / DE MIS VIAJES -->
+            <div id="apartadoRecibidas">
+                <div class="row g-4" id="gridResenas">
+                    {% if calificaciones %}
+                        {% for cal in calificaciones %}
+                            {% set estrellas_num = (cal.estrellas or 0) | int %}
+                            {% if estrellas_num >= 4 %}
+                                {% set categoria_filtro = 'excelente' %}
+                            {% elif estrellas_num == 3 %}
+                                {% set categoria_filtro = 'regular' %}
+                            {% else %}
+                                {% set categoria_filtro = 'mejora' %}
+                            {% endif %}
 
-                        <div class="col-md-6 col-xl-4 item-resena"
-                             data-categoria="{{ categoria_filtro }}"
-                             data-busqueda="{{ texto_busqueda }}">
-                            <div class="card bg-white shadow-sm p-4 h-100 tarjeta-resena d-flex flex-column">
-                                <!-- Cabecera de tarjeta: Avatar, nombre real del pasajero y estrellas -->
-                                <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                                    <div class="d-flex align-items-center gap-3 overflow-hidden">
-                                        <div class="avatar-pasajero">{{ cal.inicial }}</div>
-                                        <div class="overflow-hidden">
-                                            <h6 class="fw-bold text-dark mb-0 text-truncate">{{ cal.nombre_pasajero }}</h6>
-                                            <span class="small fw-semibold" style="color: #018701;">
-                                                Reseña #{{ cal.id_calificacion }}
-                                            </span>
+                            {% set nombre_persona = cal.nombre_pasajero or cal.nombre_usuario or ('Compañero de viaje' if rol_pasajero else 'Pasajero') %}
+                            {% set texto_ruta = cal.ruta or cal.descripcion_viaje or '' %}
+                            {% set texto_busqueda = (nombre_persona ~ ' ' ~ (cal.comentario or '') ~ ' ' ~ texto_ruta) | lower %}
+
+                            <div class="col-md-6 col-xl-4 item-resena"
+                                 data-categoria="{{ categoria_filtro }}"
+                                 data-busqueda="{{ texto_busqueda }}">
+                                <div class="card bg-white shadow-sm p-4 h-100 tarjeta-resena d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                                        <div class="d-flex align-items-center gap-3 overflow-hidden">
+                                            <div class="avatar-pasajero">{{ nombre_persona[0] | upper }}</div>
+                                            <div class="overflow-hidden">
+                                                <h6 class="fw-bold text-dark mb-0 text-truncate">{{ nombre_persona }}</h6>
+                                                {% if cal.rol_emisor %}
+                                                    <span class="small fw-semibold" style="color: #018701;">{{ cal.rol_emisor }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="estrellas-pill" title="{{ estrellas_num }} de 5 estrellas">
+                                            {% for i in range(1, 6) %}
+                                                {% if i <= estrellas_num %}
+                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star text-secondary opacity-25"></i>
+                                                {% endif %}
+                                            {% endfor %}
                                         </div>
                                     </div>
 
-                                    <!-- Renderizado dinámico de 1 a 5 estrellas -->
-                                    <div class="estrellas-pill" title="{{ estrellas_num }} de 5 estrellas">
-                                        {% for i in range(1, 6) %}
-                                            {% if i <= estrellas_num %}
-                                                <i class="bi bi-star-fill text-warning"></i>
-                                            {% else %}
-                                                <i class="bi bi-star text-secondary opacity-25"></i>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                </div>
-
-                                {% if cal.descripcion_viaje or cal.ruta %}
-                                    <div class="viaje-chip mb-3 d-flex align-items-center gap-2 text-truncate">
-                                        <i class="bi bi-geo-alt-fill flex-shrink-0" style="color: #018701;"></i>
-                                        <span class="text-truncate">{{ cal.descripcion_viaje or cal.ruta }}</span>
-                                    </div>
-                                {% endif %}
-
-                                <!-- Comentario textual registrado -->
-                                <div class="mb-3 flex-grow-1">
-                                    {% if cal.comentario %}
-                                        <p class="text-secondary fst-italic mb-0">
-                                            <i class="bi bi-quote fs-4 me-1" style="color: #018701;"></i>"{{ cal.comentario }}"
-                                        </p>
-                                    {% else %}
-                                        <p class="text-muted small mb-0">Sin comentario registrado.</p>
+                                    {% if texto_ruta %}
+                                        <div class="viaje-chip mb-3 d-flex align-items-center gap-2 text-truncate">
+                                            <i class="bi bi-geo-alt-fill flex-shrink-0" style="color: #018701;"></i>
+                                            <span class="text-truncate">{{ texto_ruta }}</span>
+                                        </div>
                                     {% endif %}
-                                </div>
 
-                                <!-- Pie de tarjeta: Etiqueta de valoración y fecha -->
-                                <div class="pt-3 border-top d-flex justify-content-between align-items-center gap-2">
-                                    {% if cal.etiqueta %}
-                                        <span class="badge rounded-pill px-3 py-2 fw-semibold {{ cal.clase_badge if cal.clase_badge else 'badge-velox-resena' }}">
-                                            {% if cal.icono %}<i class="bi {{ cal.icono }} me-1"></i>{% endif %}{{ cal.etiqueta }}
-                                        </span>
-                                    {% else %}
+                                    <div class="mb-3 flex-grow-1">
+                                        {% if cal.comentario %}
+                                            <p class="text-secondary fst-italic mb-0">
+                                                <i class="bi bi-quote fs-4 me-1" style="color: #018701;"></i>"{{ cal.comentario }}"
+                                            </p>
+                                        {% else %}
+                                            <p class="text-muted small mb-0">Sin comentario registrado.</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="pt-3 border-top d-flex justify-content-between align-items-center gap-2">
+                                        {% if cal.etiqueta %}
+                                            <span class="badge rounded-pill px-3 py-2 fw-semibold {{ cal.clase_badge if cal.clase_badge else 'badge-velox-resena' }}">
+                                                {% if cal.icono %}<i class="bi {{ cal.icono }} me-1"></i>{% endif %}{{ cal.etiqueta }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-velox-resena rounded-pill px-3 py-2 fw-semibold">
+                                                <i class="bi bi-star-fill me-1" style="color: #018701;"></i>{{ estrellas_num }}/5
+                                            </span>
+                                        {% endif %}
+
+                                        {% if cal.fecha or cal.fecha_registro %}
+                                            <span class="text-muted" style="font-size: 0.72rem;">
+                                                <i class="bi bi-calendar3 me-1"></i>{{ cal.fecha or cal.fecha_registro }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12">
+                            <div class="card border shadow-sm rounded-4 p-5 text-center bg-white">
+                                <i class="bi bi-star fs-1 text-muted mb-2"></i>
+                                <h5 class="fw-bold text-dark">Sin reseñas registradas</h5>
+                                <p class="text-muted small mb-0">Aún no tienes calificaciones asociadas a tus viajes en Velox UTVT.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- APARTADO 2: CALIFICACIONES EMITIDAS POR MÍ (CON EDITAR Y ELIMINAR) -->
+            <div id="apartadoEmitidas" class="d-none">
+                <div class="row g-4" id="gridEmitidas">
+                    {% if emitidas %}
+                        {% for cal in emitidas %}
+                            {% set estrellas_num = (cal.estrellas or 0) | int %}
+                            {% if estrellas_num >= 4 %}
+                                {% set categoria_filtro = 'excelente' %}
+                            {% elif estrellas_num == 3 %}
+                                {% set categoria_filtro = 'regular' %}
+                            {% else %}
+                                {% set categoria_filtro = 'mejora' %}
+                            {% endif %}
+
+                            {% set nombre_fallback = 'Conductor del viaje' if rol_pasajero else 'Pasajero del viaje' %}
+                            {% set nombre_calificado = cal.nombre_pasajero or cal.nombre_usuario or nombre_fallback %}
+                            {% set texto_ruta = cal.ruta or cal.descripcion_viaje or '' %}
+                            {% set texto_busqueda = (nombre_calificado ~ ' ' ~ (cal.comentario or '') ~ ' ' ~ texto_ruta) | lower %}
+
+                            <div class="col-md-6 col-xl-4 item-resena"
+                                 data-categoria="{{ categoria_filtro }}"
+                                 data-busqueda="{{ texto_busqueda }}">
+                                <div class="card bg-white shadow-sm p-4 h-100 tarjeta-resena emitida d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                                        <div class="d-flex align-items-center gap-3 overflow-hidden">
+                                            <div class="avatar-pasajero">{{ nombre_calificado[0] | upper }}</div>
+                                            <div class="overflow-hidden">
+                                                <h6 class="fw-bold text-dark mb-0 text-truncate">{{ nombre_calificado }}</h6>
+                                                {% if texto_ruta %}
+                                                    <span class="small fw-semibold d-block text-truncate" style="color: #018701;">
+                                                        <i class="bi bi-geo-alt-fill me-1"></i>{{ texto_ruta }}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="estrellas-pill" title="{{ estrellas_num }} de 5 estrellas">
+                                            {% for i in range(1, 6) %}
+                                                {% if i <= estrellas_num %}
+                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star text-secondary opacity-25"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3 flex-grow-1">
+                                        {% if cal.comentario %}
+                                            <p class="text-secondary fst-italic mb-0">
+                                                <i class="bi bi-quote fs-4 me-1" style="color: #018701;"></i>"{{ cal.comentario }}"
+                                            </p>
+                                        {% else %}
+                                            <p class="text-muted small mb-0">Sin comentario registrado.</p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Acciones para editar o borrar la calificación emitida -->
+                                    <div class="pt-3 border-top d-flex justify-content-between align-items-center gap-2 flex-wrap">
                                         <span class="badge badge-velox-resena rounded-pill px-3 py-2 fw-semibold">
                                             <i class="bi bi-star-fill me-1" style="color: #018701;"></i>{{ estrellas_num }}/5
                                         </span>
-                                    {% endif %}
 
-                                    {% if cal.fecha or cal.fecha_registro %}
-                                        <span class="text-muted" style="font-size: 0.72rem;">
-                                            <i class="bi bi-calendar3 me-1"></i>{{ cal.fecha or cal.fecha_registro }}
-                                        </span>
-                                    {% endif %}
+                                        <div class="d-flex gap-2">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold"
+                                                    onclick="editarCalificacionEmitida({{ cal.id_calificacion }}, {{ estrellas_num }}, {{ (cal.comentario or '') | tojson }}, {{ cal.id_viaje or 0 }})">
+                                                <i class="bi bi-pencil me-1"></i>Editar
+                                            </button>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-semibold"
+                                                    onclick="eliminarCalificacionEmitida({{ cal.id_calificacion }})">
+                                                <i class="bi bi-trash me-1"></i>Borrar
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    {% endfor %}
-
-                    <!-- Mensaje cuando ningún filtro o búsqueda coincide -->
-                    <div class="col-12 d-none" id="sinCoincidenciasFiltro">
-                        <div class="card border shadow-sm rounded-4 p-5 text-center bg-white">
-                            <i class="bi bi-funnel fs-1 text-muted mb-2"></i>
-                            <h6 class="fw-bold text-dark">No se encontraron reseñas con ese filtro</h6>
-                            <p class="text-muted small mb-3">Prueba cambiando la categoría de estrellas o limpiando el buscador.</p>
-                            <div>
-                                <button type="button" class="btn btn-sm btn-verde-custom rounded-pill px-3" id="btnLimpiarFiltros">
-                                    Mostrar todas las reseñas
-                                </button>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12">
+                            <div class="card border shadow-sm rounded-4 p-5 text-center bg-white">
+                                <i class="bi bi-pencil-square fs-1 text-muted mb-2"></i>
+                                <h5 class="fw-bold text-dark">Aún no has emitido calificaciones</h5>
+                                <p class="text-muted small mb-3">Cuando finalice un viaje desde tu historial, podrás calificarlo aquí.</p>
                             </div>
                         </div>
-                    </div>
-                {% else %}
-                    <!-- Estado vacío cuando todavía no hay reseñas en MongoDB -->
-                    <div class="col-12">
-                        <div class="card border shadow-sm rounded-4 p-5 text-center bg-white">
-                            <i class="bi bi-star fs-1 text-muted mb-2"></i>
-                            <h5 class="fw-bold text-dark">Sin reseñas registradas</h5>
-                            <p class="text-muted small mb-0">Aún no tienes calificaciones asociadas a tus viajes en Velox UTVT.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mensaje cuando ningún filtro o búsqueda coincide -->
+            <div class="row g-4 d-none mt-1" id="sinCoincidenciasFiltro">
+                <div class="col-12">
+                    <div class="card border shadow-sm rounded-4 p-5 text-center bg-white">
+                        <i class="bi bi-funnel fs-1 text-muted mb-2"></i>
+                        <h6 class="fw-bold text-dark">No se encontraron calificaciones con ese filtro</h6>
+                        <p class="text-muted small mb-3">Prueba cambiando la categoría de estrellas o limpiando el buscador.</p>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-verde-custom rounded-pill px-3" id="btnLimpiarFiltros">
+                                Mostrar todas
+                            </button>
                         </div>
                     </div>
-                {% endif %}
+                </div>
             </div>
         </div>
     </div>
@@ -299,7 +435,236 @@
     <!-- Script de Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const esAdminVista = {{ 'true' if es_admin else 'false' }};
+        let apartadoActivo = "recibidas";
+        let categoriaActiva = "todas";
+
+        function obtenerCookie(nombre) {
+            const match = document.cookie.match(new RegExp('(^| )' + nombre + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+
+        function obtenerIdUsuarioActivo() {
+            const params = new URLSearchParams(window.location.search);
+            const idQuery = (params.get("id_usuario") || "").trim();
+            const idStorage = (localStorage.getItem("velox_usuario_id") || "").trim();
+            const idCookie = (obtenerCookie("velox_usuario_id") || "").trim();
+            const idEfectivo = idQuery || idStorage || idCookie || "";
+            if (idQuery) {
+                localStorage.setItem("velox_usuario_id", idQuery);
+            }
+            return idEfectivo;
+        }
+
+        function construirUrlCalificacion(idUsuario) {
+            if (esAdminVista) {
+                return "/calificacion/?rol=admin";
+            }
+            if (idUsuario) {
+                return `/calificacion/?id_usuario=${encodeURIComponent(idUsuario)}`;
+            }
+            return "/calificacion/";
+        }
+
+        function cambiarApartado(apartado, boton) {
+            apartadoActivo = apartado;
+            document.querySelectorAll(".pestana-apartado").forEach(btn => btn.classList.remove("active"));
+            if (boton) boton.classList.add("active");
+
+            const secRecibidas = document.getElementById("apartadoRecibidas");
+            const secEmitidas = document.getElementById("apartadoEmitidas");
+            if (secRecibidas) secRecibidas.classList.toggle("d-none", apartado !== "recibidas");
+            if (secEmitidas) secEmitidas.classList.toggle("d-none", apartado !== "emitidas");
+
+            aplicarFiltros();
+        }
+
+        function aplicarFiltros() {
+            const inputBuscador = document.getElementById("buscadorResenas");
+            const avisoSinCoincidencias = document.getElementById("sinCoincidenciasFiltro");
+            const termino = (inputBuscador ? inputBuscador.value : "").trim().toLowerCase();
+
+            const contenedorActivo = apartadoActivo === "emitidas"
+                ? document.getElementById("gridEmitidas")
+                : document.getElementById("gridResenas");
+
+            const tarjetas = contenedorActivo ? contenedorActivo.querySelectorAll(".item-resena") : [];
+            let visibles = 0;
+
+            tarjetas.forEach((tarjeta) => {
+                const cat = tarjeta.getAttribute("data-categoria") || "";
+                const texto = tarjeta.getAttribute("data-busqueda") || "";
+
+                const coincideCat = (categoriaActiva === "todas") || (cat === categoriaActiva);
+                const coincideTexto = !termino || texto.includes(termino);
+
+                if (coincideCat && coincideTexto) {
+                    tarjeta.classList.remove("d-none");
+                    visibles++;
+                } else {
+                    tarjeta.classList.add("d-none");
+                }
+            });
+
+            if (avisoSinCoincidencias) {
+                avisoSinCoincidencias.classList.toggle("d-none", visibles > 0 || tarjetas.length === 0);
+            }
+        }
+
+        async function editarCalificacionEmitida(idCalificacion, estrellasActuales, comentarioActual, idViaje) {
+            let puntuacionElegida = Math.max(1, Math.min(5, Number(estrellasActuales) || 5));
+
+            const { value: datos } = await Swal.fire({
+                title: "Editar calificación",
+                html: `
+                    <div class="text-start mt-2">
+                        <label class="form-label small fw-semibold text-secondary d-block mb-2">
+                            Puntuación
+                        </label>
+                        <div id="editEstrellasBox" class="d-flex align-items-center gap-2 mb-3 fs-3" role="radiogroup" aria-label="Puntuación de 1 a 5 estrellas">
+                            ${[1, 2, 3, 4, 5].map(num => `
+                                <button type="button"
+                                        class="btn p-0 border-0 bg-transparent edit-estrella-btn"
+                                        data-valor="${num}"
+                                        aria-label="${num} estrellas"
+                                        style="line-height: 1; transition: transform 0.15s ease;">
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                </button>
+                            `).join("")}
+                            <span id="editTextoEstrellas" class="ms-2 small fw-semibold" style="color: #005200;">
+                                ${puntuacionElegida}/5
+                            </span>
+                        </div>
+                        <label for="editComentario" class="form-label small fw-semibold text-secondary mb-1">
+                            Comentario
+                        </label>
+                        <textarea id="editComentario" class="form-control" rows="3">${(comentarioActual || "").replace(/</g, "&lt;")}</textarea>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: "Guardar cambios",
+                cancelButtonText: "Cancelar",
+                focusConfirm: false,
+                customClass: {
+                    popup: "rounded-4",
+                    confirmButton: "btn btn-verde-modal rounded-pill px-4 fw-semibold",
+                    cancelButton: "btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+                },
+                buttonsStyling: false,
+                didOpen: () => {
+                    const botones = Swal.getPopup().querySelectorAll(".edit-estrella-btn");
+                    const textoLabel = Swal.getPopup().querySelector("#editTextoEstrellas");
+
+                    const pintar = (valor) => {
+                        botones.forEach(btn => {
+                            const v = Number(btn.getAttribute("data-valor") || 0);
+                            const icono = btn.querySelector("i");
+                            if (v <= valor) {
+                                icono.className = "bi bi-star-fill text-warning";
+                            } else {
+                                icono.className = "bi bi-star text-secondary opacity-25";
+                            }
+                        });
+                        if (textoLabel) {
+                            textoLabel.textContent = `${valor}/5`;
+                        }
+                    };
+
+                    pintar(puntuacionElegida);
+
+                    botones.forEach(btn => {
+                        const v = Number(btn.getAttribute("data-valor") || 5);
+                        btn.addEventListener("mouseenter", () => pintar(v));
+                        btn.addEventListener("mouseleave", () => pintar(puntuacionElegida));
+                        btn.addEventListener("click", () => {
+                            puntuacionElegida = v;
+                            pintar(puntuacionElegida);
+                        });
+                    });
+                },
+                preConfirm: () => {
+                    const comentario = (document.getElementById("editComentario").value || "").trim() || "Sin comentario adicional.";
+                    return { puntuacion: puntuacionElegida, comentario };
+                }
+            });
+
+            if (!datos) return;
+
+            const idUsuario = obtenerIdUsuarioActivo();
+            const body = new URLSearchParams();
+            body.append("id_calificacion", String(idCalificacion));
+            body.append("puntuacion", String(datos.puntuacion));
+            body.append("estrellas", String(datos.puntuacion));
+            body.append("comentario", datos.comentario);
+            if (idUsuario) body.append("id_usuario", idUsuario);
+            if (idViaje) body.append("id_viaje", String(idViaje));
+
+            const query = idUsuario ? `?id_usuario=${encodeURIComponent(idUsuario)}` : "";
+            const resp = await fetch(`/calificacion/actualizar${query}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: body.toString()
+            });
+
+            if (resp.ok || resp.redirected) {
+                await Swal.fire({
+                    title: "¡Actualizada!",
+                    text: "Tu calificación fue actualizada.",
+                    icon: "success",
+                    iconColor: "#018701",
+                    customClass: {
+                        popup: "rounded-4",
+                        confirmButton: "btn btn-verde-modal rounded-pill px-4 fw-semibold"
+                    },
+                    buttonsStyling: false
+                });
+                window.location.href = construirUrlCalificacion(idUsuario);
+            }
+        }
+
+        async function eliminarCalificacionEmitida(idCalificacion) {
+            const confirmacion = await Swal.fire({
+                title: "¿Borrar calificación?",
+                text: "Se eliminará esta reseña de forma permanente.",
+                icon: "warning",
+                iconColor: "#7097a8",
+                showCancelButton: true,
+                confirmButtonText: "Sí, borrar",
+                cancelButtonText: "Cancelar",
+                customClass: {
+                    popup: "rounded-4",
+                    confirmButton: "btn btn-danger rounded-pill px-4 fw-semibold",
+                    cancelButton: "btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+                },
+                buttonsStyling: false
+            });
+
+            if (!confirmacion.isConfirmed) return;
+
+            const idUsuario = obtenerIdUsuarioActivo();
+            const query = idUsuario ? `?id_usuario=${encodeURIComponent(idUsuario)}` : "";
+            const resp = await fetch(`/calificacion/eliminar/${idCalificacion}${query}`, {
+                method: "GET"
+            });
+
+            if (resp.ok || resp.redirected) {
+                await Swal.fire({
+                    title: "Eliminada",
+                    text: "La calificación fue eliminada.",
+                    icon: "success",
+                    iconColor: "#018701",
+                    customClass: {
+                        popup: "rounded-4",
+                        confirmButton: "btn btn-verde-modal rounded-pill px-4 fw-semibold"
+                    },
+                    buttonsStyling: false
+                });
+                window.location.href = construirUrlCalificacion(idUsuario);
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
+            obtenerIdUsuarioActivo();
             const menuLateral = document.getElementById("menuLateral");
             const btnAbrir = document.getElementById("btnAbrirMenu");
 
@@ -309,59 +674,28 @@
                 });
             }
 
-            // Lógica intuitiva de filtrado por categoría y búsqueda
-            const botonesFiltro = document.querySelectorAll(".filtro-btn");
-            const inputBuscador = document.getElementById("buscadorResenas");
-            const tarjetas = document.querySelectorAll(".item-resena");
-            const avisoSinCoincidencias = document.getElementById("sinCoincidenciasFiltro");
-            const btnLimpiar = document.getElementById("btnLimpiarFiltros");
-
-            let categoriaActiva = "todas";
-
-            function aplicarFiltros() {
-                const termino = (inputBuscador ? inputBuscador.value : "").trim().toLowerCase();
-                let visibles = 0;
-
-                tarjetas.forEach((tarjeta) => {
-                    const cat = tarjeta.getAttribute("data-categoria") || "";
-                    const texto = tarjeta.getAttribute("data-busqueda") || "";
-
-                    const coincideCat = (categoriaActiva === "todas") || (cat === categoriaActiva);
-                    const coincideTexto = !termino || texto.includes(termino);
-
-                    if (coincideCat && coincideTexto) {
-                        tarjeta.classList.remove("d-none");
-                        visibles++;
-                    } else {
-                        tarjeta.classList.add("d-none");
-                    }
-                });
-
-                if (avisoSinCoincidencias) {
-                    avisoSinCoincidencias.classList.toggle("d-none", visibles > 0 || tarjetas.length === 0);
-                }
-            }
-
-            botonesFiltro.forEach((btn) => {
+            document.querySelectorAll(".filtro-btn").forEach((btn) => {
                 btn.addEventListener("click", function () {
-                    botonesFiltro.forEach((b) => b.classList.remove("active"));
+                    document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
                     this.classList.add("active");
                     categoriaActiva = this.getAttribute("data-filtro") || "todas";
                     aplicarFiltros();
                 });
             });
 
-            if (inputBuscador) {
-                inputBuscador.addEventListener("input", aplicarFiltros);
+            const buscador = document.getElementById("buscadorResenas");
+            if (buscador) {
+                buscador.addEventListener("input", aplicarFiltros);
             }
 
+            const btnLimpiar = document.getElementById("btnLimpiarFiltros");
             if (btnLimpiar) {
                 btnLimpiar.addEventListener("click", function () {
                     categoriaActiva = "todas";
-                    if (inputBuscador) inputBuscador.value = "";
-                    botonesFiltro.forEach((b) => {
+                    document.querySelectorAll(".filtro-btn").forEach(b => {
                         b.classList.toggle("active", b.getAttribute("data-filtro") === "todas");
                     });
+                    if (buscador) buscador.value = "";
                     aplicarFiltros();
                 });
             }

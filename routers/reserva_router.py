@@ -24,6 +24,81 @@ def _es_admin(solicitud: Request) -> bool:
     return "admin" in rol_query or "admin" in rol_header or "admin" in rol_cookie
 
 
+def _to_int_or_none(valor) -> int | None:
+    """Convierte a entero si es válido; de lo contrario devuelve None."""
+    if valor is None:
+        return None
+    texto = str(valor).strip()
+    if texto.isdigit():
+        return int(texto)
+    return None
+
+
+def _extraer_id_usuario(solicitud: Request, payload: dict | None = None) -> int | None:
+    raw = (
+        (payload.get("id_usuario") if payload else None)
+        or solicitud.query_params.get("id_usuario")
+        or solicitud.cookies.get("velox_usuario_id")
+        or solicitud.headers.get("x-velox-usuario-id")
+    )
+    return _to_int_or_none(raw)
+
+
+def _obtener_id_conductor_efectivo(solicitud: Request) -> int | None:
+    """Obtiene el ID del conductor activo o un usuario no-admin por defecto si no viene en la petición."""
+    id_sesion = _extraer_id_usuario(solicitud)
+    if id_sesion is not None and id_sesion > 0:
+        return id_sesion
+
+    usuario_no_admin = db["usuario"].find_one(
+        {"rol": {"$not": {"$regex": "admin", "$options": "i"}}},
+        {"_id": 0, "id_usuario": 1},
+    )
+    if usuario_no_admin:
+        return _to_int_or_none(usuario_no_admin.get("id_usuario"))
+
+    return None
+
+
+def _obtener_ids_viaje_conductor(id_conductor: int | None) -> set[int]:
+    """Obtiene los id_viaje que pertenecen al conductor activo."""
+    if not id_conductor or id_conductor <= 0:
+        return set()
+
+    rutas_cond = list(
+        db["ruta"].find(
+            {
+                "$or": [
+                    {"id_usuario": id_conductor},
+                    {"id_conductor": id_conductor},
+                    {"usuario_id": id_conductor},
+                    {"conductor_id": id_conductor},
+                ]
+            },
+            {"_id": 0, "id_ruta": 1},
+        )
+    )
+    ids_ruta = [
+        val for r in rutas_cond if (val := _to_int_or_none(r.get("id_ruta"))) is not None
+    ]
+
+    condiciones = [
+        {"id_usuario": id_conductor},
+        {"id_conductor": id_conductor},
+        {"usuario_id": id_conductor},
+        {"conductor_id": id_conductor},
+    ]
+    if ids_ruta:
+        condiciones.append({"id_ruta": {"$in": ids_ruta}})
+
+    viajes_cond = list(
+        db["viaje"].find({"$or": condiciones}, {"_id": 0, "id_viaje": 1})
+    )
+    return {
+        val for v in viajes_cond if (val := _to_int_or_none(v.get("id_viaje"))) is not None
+    }
+
+
 def _resolver_ruta_viaje(viaje_doc: dict) -> tuple[str, str]:
     """Obtiene origen y destino de un viaje, buscando en 'ruta' si solo tiene id_ruta."""
     origen = viaje_doc.get("origen") or viaje_doc.get("punto_partida")
@@ -53,9 +128,9 @@ def _enriquecer_usuarios_con_calificaciones(usuarios_raw: list[dict]) -> list[di
         except (TypeError, ValueError):
             continue
 
-        id_u = r.get("id_usuario")
-        if id_u is not None and str(id_u).strip().isdigit():
-            stats_por_id.setdefault(int(id_u), []).append(valor)
+        id_u = _to_int_or_none(r.get("id_usuario"))
+        if id_u is not None:
+            stats_por_id.setdefault(id_u, []).append(valor)
 
         nombre_p = str(r.get("nombre_pasajero") or "").strip().lower()
         if nombre_p:
@@ -64,7 +139,7 @@ def _enriquecer_usuarios_con_calificaciones(usuarios_raw: list[dict]) -> list[di
     usuarios_enriquecidos = []
     for u in usuarios_raw:
         u_dict = dict(u)
-        id_u = u_dict.get("id_usuario")
+        id_u = _to_int_or_none(u_dict.get("id_usuario"))
         nombre_completo = " ".join(
             p for p in [
                 str(u_dict.get("nombre") or "").strip(),
@@ -74,8 +149,8 @@ def _enriquecer_usuarios_con_calificaciones(usuarios_raw: list[dict]) -> list[di
         ).strip().lower()
 
         valores = []
-        if id_u is not None and str(id_u).strip().isdigit():
-            valores.extend(stats_por_id.get(int(id_u), []))
+        if id_u is not None:
+            valores.extend(stats_por_id.get(id_u, []))
         if not valores and nombre_completo:
             valores.extend(stats_por_nombre.get(nombre_completo, []))
 
@@ -137,18 +212,6 @@ def _ajustar_asientos_por_cambio_estado(id_viaje: int | None, estado_previo: str
                 )
 
 
-def _extraer_id_usuario(solicitud: Request, payload: dict | None = None) -> int | None:
-    raw = (
-        (payload.get("id_usuario") if payload else None)
-        or solicitud.query_params.get("id_usuario")
-        or solicitud.cookies.get("velox_usuario_id")
-        or solicitud.headers.get("x-velox-usuario-id")
-    )
-    if raw is not None and str(raw).strip().isdigit():
-        return int(str(raw).strip())
-    return None
-
-
 @router.get("/api/historial")
 def api_historial_viajes(solicitud: Request):
     """Devuelve el historial de reservas y viajes del usuario enriquecido con ruta, horario y conductor."""
@@ -181,13 +244,12 @@ def api_historial_viajes(solicitud: Request):
 
     historial = []
     for res in reservas_raw:
-        id_viaje = int(res["id_viaje"]) if str(res.get("id_viaje") or "").strip().isdigit() else None
+        id_viaje = _to_int_or_none(res.get("id_viaje"))
         viaje_doc = viajes_map.get(id_viaje, {}) if id_viaje is not None else {}
 
         id_ruta = (
-            int(viaje_doc["id_ruta"])
-            if str(viaje_doc.get("id_ruta") or "").strip().isdigit()
-            else (int(res["id_ruta"]) if str(res.get("id_ruta") or "").strip().isdigit() else None)
+            _to_int_or_none(viaje_doc.get("id_ruta"))
+            or _to_int_or_none(res.get("id_ruta"))
         )
         ruta_doc = rutas_map.get(id_ruta, {}) if id_ruta is not None else {}
 
@@ -218,7 +280,7 @@ def api_historial_viajes(solicitud: Request):
             or viaje_doc.get("usuario_id")
             or ruta_doc.get("id_usuario")
         )
-        id_cond = int(id_cond_raw) if id_cond_raw is not None and str(id_cond_raw).strip().isdigit() else None
+        id_cond = _to_int_or_none(id_cond_raw)
         doc_cond = usuarios_map.get(id_cond, {}) if id_cond is not None else {}
         nombre_conductor = (
             " ".join(
@@ -431,7 +493,11 @@ def crear_reserva_api(solicitud: Request, payload: dict = Body(...)):
 
 @router.get("/")
 def listar_reservas(solicitud: Request):
-    """Muestra el listado de reservas enriquecidas con nombre, ruta y predicción IA."""
+    """Muestra el listado de reservas enriquecidas con nombre, ruta y predicción IA según rol."""
+    es_admin = _es_admin(solicitud)
+    id_conductor_activo = None if es_admin else _obtener_id_conductor_efectivo(solicitud)
+    ids_viaje_conductor = set() if es_admin else _obtener_ids_viaje_conductor(id_conductor_activo)
+
     try:
         lista_reservas_raw = ReservaController.obtener_todas_las_reservas()
     except Exception:
@@ -441,6 +507,11 @@ def listar_reservas(solicitud: Request):
 
     for reserva in lista_reservas_raw:
         reserva_dict = reserva if isinstance(reserva, dict) else reserva.model_dump()
+        id_viaje_res = _to_int_or_none(reserva_dict.get("id_viaje"))
+
+        if not es_admin:
+            if id_viaje_res is None or id_viaje_res not in ids_viaje_conductor:
+                continue
 
         # 1. Datos históricos y nombre del pasajero
         usuario = db["usuario"].find_one({"id_usuario": reserva_dict.get("id_usuario")}, {"_id": 0})
@@ -455,7 +526,7 @@ def listar_reservas(solicitud: Request):
 
         # 2. Datos de origen y destino del viaje
         if not reserva_dict.get("origen") or not reserva_dict.get("destino"):
-            viaje_doc = db["viaje"].find_one({"id_viaje": reserva_dict.get("id_viaje")}, {"_id": 0})
+            viaje_doc = db["viaje"].find_one({"id_viaje": id_viaje_res}, {"_id": 0})
             if viaje_doc:
                 origen, destino = _resolver_ruta_viaje(viaje_doc)
                 reserva_dict["origen"] = reserva_dict.get("origen") or origen
@@ -476,7 +547,6 @@ def listar_reservas(solicitud: Request):
 
     reservas_enriquecidas.sort(key=lambda r: r.get("id_reserva", 0), reverse=True)
 
-    es_admin = _es_admin(solicitud)
     plantilla = "admin/reserva_inicio_admin.html" if es_admin else "reserva/reserva_inicio.html"
 
     return motor_plantillas.TemplateResponse(

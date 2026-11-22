@@ -212,6 +212,11 @@
     <script>
         const esAdminVista = {{ 'true' if es_admin else 'false' }};
 
+        function obtenerCookie(nombre) {
+            const match = document.cookie.match(new RegExp('(^| )' + nombre + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+
         function confirmarEliminacion(id_registro, origen_tipo) {
             Swal.fire({
                 title: '¿Estás seguro?',
@@ -236,6 +241,31 @@
                 }
             });
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const menuLateral = document.getElementById("menuLateral");
+            const btnAbrir = document.getElementById("btnAbrirMenu");
+
+            if (btnAbrir && menuLateral) {
+                btnAbrir.addEventListener("click", function() {
+                    menuLateral.style.transform = "translateX(0)";
+                });
+            }
+
+            if (!esAdminVista) {
+                const params = new URLSearchParams(window.location.search);
+                const idQuery = (params.get("id_usuario") || "").trim();
+                const idStorage = (localStorage.getItem("velox_usuario_id") || "").trim();
+                const idCookie = (obtenerCookie("velox_usuario_id") || "").trim();
+                const idActivo = idQuery || idStorage || idCookie;
+
+                if (!idQuery && idActivo) {
+                    const nuevaUrl = new URL(window.location.href);
+                    nuevaUrl.searchParams.set("id_usuario", idActivo);
+                    window.location.replace(nuevaUrl.toString());
+                }
+            }
+        });
     </script>
 </body>
 </html>
