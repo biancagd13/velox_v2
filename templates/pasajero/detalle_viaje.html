@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de mi Viaje - Velox UTVT</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body, #mainContent, .card {
+            background-color: #FFFFFF !important;
+        }
+
+        body {
+            background-color: #FFFFFF !important;
+        }
+
+        #mainContent {
+            margin-left: 280px;
+            background-color: #FFFFFF;
+            transition: margin-left 0.28s ease-in-out;
+        }
+
+        .titulo-velox {
+            color: #005200;
+        }
+
+        .btn-verde-custom,
+        .swal2-confirm.btn-verde-modal {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border: none;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .btn-verde-custom:hover,
+        .swal2-confirm.btn-verde-modal:hover {
+            background-color: #005200 !important;
+            color: #ffffff !important;
+        }
+
+        .btn-amarillo-cancelar {
+            background-color: #ff0000 !important;
+            color: #ffffff !important;
+            border: none;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .btn-amarillo-cancelar:hover {
+            background-color: #bb0202 !important;
+            color: #ffffff !important;
+        }
+
+        .detalle-card {
+            border: 1px solid #e9ecef;
+            border-radius: 16px;
+            border-left: 4px solid #018701 !important;
+        }
+
+        .dato-box {
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+
+        @media (max-width: 768px) {
+            #mainContent {
+                margin-left: 0 !important;
+                padding: 15px !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-white">
+
+    {% include 'components/sidebar.html' %}
+
+    <div id="mainContent" class="p-4 bg-white">
+        <div class="container-fluid px-0" style="max-width: 1100px;">
+
+            <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+                <div>
+                    <h3 class="fw-bold mb-1 titulo-velox">
+                        <i class="bi bi-card-checklist me-2"></i>Detalle de mi Viaje
+                    </h3>
+                    <p class="text-muted small mb-0">Revisa el trayecto, tu solicitud activa, el conductor y los cupos.</p>
+                </div>
+
+                <a href="/pasajero/" class="btn btn-outline-secondary fw-semibold rounded-pill px-4 py-2">
+                    <i class="bi bi-arrow-left me-1"></i>Buscar Viajes
+                </a>
+            </div>
+
+            <div class="card shadow-sm rounded-4 p-3 bg-white mb-4">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-5">
+                        <label for="selectorViaje" class="form-label small fw-semibold text-secondary mb-1">
+                            Trayecto en consulta
+                        </label>
+                        <select id="selectorViaje" class="form-select bg-light">
+                            <option value="">Cargando trayectos...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-7 d-flex flex-wrap justify-content-md-end align-items-center gap-2 pt-md-4">
+                        <span id="badgeEstadoViaje" class="badge bg-light text-secondary border px-3 py-2 rounded-pill fw-semibold">
+                            <i class="bi bi-clock-history me-1"></i>Verificando estado
+                        </span>
+                        <span id="badgeCupoViaje" class="badge bg-light text-secondary border px-3 py-2 rounded-pill fw-semibold">
+                            <i class="bi bi-people-fill me-1 titulo-velox"></i>--
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="contenidoDetalle" class="row g-4">
+                <div class="col-12">
+                    <div class="card shadow-sm rounded-4 p-5 text-center bg-white">
+                        <div class="spinner-border mx-auto mb-2" style="color: #018701;" role="status"></div>
+                        <p class="text-muted small mb-0">Obteniendo información del trayecto...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let viajesCargados = [];
+        let reservasPorViaje = {};
+        let viajeSeleccionado = null;
+
+        function obtenerIdUsuarioActual() {
+            const raw = (localStorage.getItem("velox_usuario_id") || "").trim();
+            return /^\d+$/.test(raw) ? Number(raw) : null;
+        }
+
+        function normalizarViaje(v, idx) {
+            return {
+                id_viaje: Number(v.id_viaje ?? v.id ?? (idx + 1)),
+                conductor: v.conductor || v.nombre_conductor || "Conductor",
+                calificacion: v.calificacion ?? "0.0",
+                origen: v.origen || v.punto_partida || "Origen",
+                destino: v.destino || v.punto_llegada || "Destino",
+                fecha: v.fecha || "",
+                hora_salida: v.hora_salida || v.hora || "--:--",
+                vehiculo: v.vehiculo || v.modelo_vehiculo || "Vehículo",
+                asientos_disponibles: Number(v.asientos_disponibles ?? v.cupo_disponible ?? v.lugares_disponibles ?? 0),
+                aportacion: Number(v.aportacion ?? v.costo ?? v.precio ?? 0),
+                estado: String(v.estado || "pendiente").toLowerCase()
+            };
+        }
+
+        function formatearEstadoViaje(estadoRaw) {
+            const e = String(estadoRaw || "").trim().toLowerCase();
+            if (["en_curso", "iniciado", "comenzado"].includes(e)) {
+                return { texto: "En curso", icono: "bi-car-front-fill", estilo: "color: #005200;" };
+            }
+            if (["finalizado", "finalizada", "completado"].includes(e)) {
+                return { texto: "Concluido", icono: "bi-flag-checkered", estilo: "" };
+            }
+            return { texto: "Programado", icono: "bi-clock-history", estilo: "color: #018701;" };
+        }
+
+        function formatearEstadoReserva(reservaObj) {
+            if (!reservaObj) return null;
+            const e = String(reservaObj.estado || "").trim().toLowerCase();
+            if (["aceptada", "confirmada"].includes(e)) {
+                return { texto: "Asiento asignado", icono: "bi-check-circle-fill", estilo: "color: #018701;", cancelable: true };
+            }
+            if (e === "en_curso") {
+                return { texto: "A bordo / En marcha", icono: "bi-car-front-fill", estilo: "color: #005200;", cancelable: false };
+            }
+            if (["finalizada", "finalizado", "completada", "completado"].includes(e)) {
+                return { texto: "Trayecto completado", icono: "bi-flag-checkered", estilo: "", cancelable: false };
+            }
+            return { texto: "En revisión con el conductor", icono: "bi-hourglass-split", estilo: "color: #d97706;", cancelable: true };
+        }
+
+        async function cargarReservasUsuario() {
+            reservasPorViaje = {};
+            const idUsuario = obtenerIdUsuarioActual();
+            const query = idUsuario ? `?id_usuario=${encodeURIComponent(idUsuario)}` : "";
+
+            try {
+                const resp = await fetch(`/reserva/api/mis-reservas${query}`);
+                if (!resp.ok) return;
+                const data = await resp.json();
+                const lista = Array.isArray(data.reservas) ? data.reservas : [];
+
+                for (const r of lista) {
+                    const idViaje = Number(r.id_viaje || 0);
+                    const estado = String(r.estado || "").trim().toLowerCase();
+                    if (!idViaje || ["cancelada", "cancelado", "rechazada", "rechazado"].includes(estado)) {
+                        continue;
+                    }
+                    if (!reservasPorViaje[idViaje]) {
+                        reservasPorViaje[idViaje] = {
+                            id_reserva: r.id_reserva ?? null,
+                            estado: estado
+                        };
+                    }
+                }
+            } catch (_) {}
+        }
+
+        function renderizarDetalle(viaje) {
+            viajeSeleccionado = viaje;
+            const contenedor = document.getElementById("contenidoDetalle");
+            const badgeEstado = document.getElementById("badgeEstadoViaje");
+            const badgeCupo = document.getElementById("badgeCupoViaje");
+
+            if (!viaje) {
+                badgeEstado.innerHTML = '<i class="bi bi-info-circle me-1"></i>Sin trayecto activo';
+                badgeCupo.innerHTML = '<i class="bi bi-people-fill me-1 titulo-velox"></i>0 lugares';
+                contenedor.innerHTML = `
+                    <div class="col-12">
+                        <div class="card shadow-sm rounded-4 p-5 text-center bg-white">
+                            <i class="bi bi-info-circle text-muted fs-1 mb-2"></i>
+                            <h5 class="fw-bold titulo-velox">Aún no hay trayectos publicados</h5>
+                            <p class="text-muted small mb-3">Explora el listado general para ubicar una ruta compartida.</p>
+                            <div>
+                                <a href="/pasajero/" class="btn btn-verde-custom rounded-pill px-4 fw-semibold">
+                                    Ir a Buscar Viajes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const estadoInfo = formatearEstadoViaje(viaje.estado);
+            badgeEstado.innerHTML = `<i class="bi ${estadoInfo.icono} me-1" style="${estadoInfo.estilo}"></i><span style="${estadoInfo.estilo}">${estadoInfo.texto}</span>`;
+
+            const sinCupo = viaje.asientos_disponibles <= 0;
+            badgeCupo.innerHTML = sinCupo
+                ? '<i class="bi bi-people-fill me-1 text-secondary"></i>Cupo agotado'
+                : `<i class="bi bi-people-fill me-1 titulo-velox"></i>${viaje.asientos_disponibles} ${viaje.asientos_disponibles === 1 ? "lugar libre" : "lugares libres"}`;
+
+            const reservaActual = reservasPorViaje[Number(viaje.id_viaje)] || null;
+            const estadoReservaInfo = formatearEstadoReserva(reservaActual);
+            const yaSolicitado = Boolean(reservaActual);
+            const viajeNoSolicitable = ["finalizado", "finalizada", "completado"].includes(String(viaje.estado || "").toLowerCase());
+
+            const horarioTexto = viaje.fecha
+                ? `${viaje.fecha} · ${viaje.hora_salida} hrs`
+                : `${viaje.hora_salida} hrs`;
+
+            let panelAccionHtml = "";
+            if (yaSolicitado) {
+                const puedeCancelar = Boolean(reservaActual.id_reserva) && estadoReservaInfo?.cancelable;
+                panelAccionHtml = `
+                    <div class="dato-box bg-light mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold text-secondary mb-0">Tu solicitud</label>
+                            ${reservaActual.id_reserva ? `<span class="badge bg-white text-secondary border">Folio #${reservaActual.id_reserva}</span>` : ""}
+                        </div>
+                        <div class="small fw-bold" style="${estadoReservaInfo ? estadoReservaInfo.estilo : ""}">
+                            <i class="bi ${estadoReservaInfo ? estadoReservaInfo.icono : "bi-hourglass-split"} me-1"></i>
+                            ${estadoReservaInfo ? estadoReservaInfo.texto : "Registrada"}
+                        </div>
+                    </div>
+                    ${puedeCancelar ? `
+                        <button type="button"
+                                class="btn btn-amarillo-cancelar w-100 rounded-pill py-2 fw-bold shadow-sm"
+                                onclick="cancelarSolicitudActual(${reservaActual.id_reserva})">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar solicitud
+                        </button>
+                    ` : `
+                        <button type="button" class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold" disabled>
+                            <i class="bi ${estadoReservaInfo ? estadoReservaInfo.icono : "bi-check-circle"} me-2"></i>${estadoReservaInfo ? estadoReservaInfo.texto : "Activa"}
+                        </button>
+                    `}
+                `;
+            } else if (viajeNoSolicitable) {
+                panelAccionHtml = `
+                    <button type="button" class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold" disabled>
+                        <i class="bi bi-flag-checkered me-2"></i>Trayecto concluido
+                    </button>
+                `;
+            } else if (sinCupo) {
+                panelAccionHtml = `
+                    <button type="button" class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold" disabled>
+                        <i class="bi bi-people-fill me-2"></i>Sin lugares libres
+                    </button>
+                `;
+            } else {
+                panelAccionHtml = `
+                    <button type="button"
+                            class="btn btn-verde-custom w-100 rounded-pill py-2 fw-bold shadow-sm"
+                            onclick="solicitarLugarActual()">
+                        <i class="bi bi-ticket-perforated me-2"></i>Solicitar lugar
+                    </button>
+                `;
+            }
+
+            contenedor.innerHTML = `
+                <div class="col-lg-8">
+                    <div class="card detalle-card shadow-sm bg-white p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h5 class="fw-bold mb-0 titulo-velox">
+                                <i class="bi bi-signpost-split-fill me-2"></i>Datos del Trayecto
+                            </h5>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-light border px-3 py-2 rounded-pill fw-semibold" style="${estadoInfo.estilo}">
+                                    <i class="bi ${estadoInfo.icono} me-1"></i>${estadoInfo.texto}
+                                </span>
+                                <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill">
+                                    Viaje #${viaje.id_viaje}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="dato-box bg-light h-100">
+                                    <label class="form-label small fw-semibold text-secondary d-block mb-1">Salida desde</label>
+                                    <div class="fw-bold titulo-velox fs-6">
+                                        <i class="bi bi-geo-alt-fill me-2" style="color: #018701;"></i>${viaje.origen}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="dato-box bg-light h-100">
+                                    <label class="form-label small fw-semibold text-secondary d-block mb-1">Llegada hacia</label>
+                                    <div class="fw-bold titulo-velox fs-6">
+                                        <i class="bi bi-flag-fill me-2" style="color: #018701;"></i>${viaje.destino}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="dato-box bg-light">
+                                    <label class="form-label small fw-semibold text-secondary d-block mb-1">Programación</label>
+                                    <div class="fw-semibold text-secondary">
+                                        <i class="bi bi-clock-fill me-2" style="color: #018701;"></i>${horarioTexto}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="dato-box bg-light">
+                                    <label class="form-label small fw-semibold text-secondary d-block mb-1">Disponibilidad</label>
+                                    <div class="fw-semibold text-secondary">
+                                        <i class="bi bi-people-fill me-2 titulo-velox"></i>${viaje.asientos_disponibles} ${viaje.asientos_disponibles === 1 ? "asiento" : "asientos"}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${estadoReservaInfo ? `
+                            <div class="alert bg-light border mt-4 mb-0 rounded-3 d-flex align-items-center justify-content-between">
+                                <span class="small fw-semibold" style="${estadoReservaInfo.estilo}">
+                                    <i class="bi ${estadoReservaInfo.icono} me-2"></i>Seguimiento: ${estadoReservaInfo.texto}
+                                </span>
+                                ${reservaActual.id_reserva ? `<small class="text-muted">Folio #${reservaActual.id_reserva}</small>` : ""}
+                            </div>
+                        ` : ""}
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card shadow-sm rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <h5 class="fw-bold mb-3 titulo-velox">
+                                <i class="bi bi-person-badge me-2"></i>Conductor y Cuota
+                            </h5>
+
+                            <div class="dato-box bg-light mb-3">
+                                <label class="form-label small fw-semibold text-secondary d-block mb-1">Operador</label>
+                                <div class="fw-bold titulo-velox">${viaje.conductor}</div>
+                                <div class="small text-secondary fw-semibold mt-1">
+                                    <i class="bi bi-star-fill" style="color: #f59e0b;"></i> ${viaje.calificacion}
+                                </div>
+                            </div>
+
+                            <div class="dato-box bg-light mb-3">
+                                <label class="form-label small fw-semibold text-secondary d-block mb-1">Unidad</label>
+                                <div class="fw-semibold text-secondary">
+                                    <i class="bi bi-car-front-fill me-2" style="color: #018701;"></i>${viaje.vehiculo}
+                                </div>
+                            </div>
+
+                            <div class="dato-box bg-light text-center mb-4">
+                                <label class="form-label small fw-semibold text-secondary d-block mb-1">Cuota sugerida</label>
+                                <div class="fw-bold fs-3" style="color: #018701;">
+                                    $${viaje.aportacion} <span class="fs-6 text-muted fw-normal">MXN</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            ${panelAccionHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function cancelarSolicitudActual(idReserva) {
+            if (!idReserva || !viajeSeleccionado) return;
+
+            const confirmacion = await Swal.fire({
+                title: "¿Liberar este lugar?",
+                html: `
+                    <div class="text-start small text-secondary">
+                        <p class="mb-1"><strong>Folio:</strong> #${idReserva}</p>
+                        <p class="mb-0"><strong>Trayecto:</strong> ${viajeSeleccionado.origen} → ${viajeSeleccionado.destino}</p>
+                    </div>
+                `,
+                icon: "question",
+                iconColor: "#7097a8",
+                showCancelButton: true,
+                confirmButtonText: "Sí, cancelar",
+                cancelButtonText: "Volver",
+                customClass: {
+                    popup: "rounded-4",
+                    confirmButton: "btn btn-amarillo-cancelar rounded-pill px-4 fw-semibold",
+                    cancelButton: "btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+                },
+                buttonsStyling: false
+            });
+
+            if (!confirmacion.isConfirmed) return;
+
+            try {
+                const resp = await fetch(`/reserva/api/cancelar/${idReserva}`, {
+                    method: "POST"
+                });
+                const data = await resp.json().catch(() => ({}));
+
+                if (resp.ok && data.ok !== false) {
+                    await cargarViajesDetalle(viajeSeleccionado.id_viaje);
+                    Swal.fire({
+                        title: "Solicitud cancelada",
+                        text: data.mensaje || "El lugar quedó libre nuevamente.",
+                        icon: "success",
+                        iconColor: "#018701",
+                        customClass: {
+                            popup: "rounded-4",
+                            confirmButton: "btn btn-verde-modal rounded-pill px-4 fw-semibold"
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: "Acción no completada",
+                    text: data.mensaje || "No fue posible cancelar la solicitud.",
+                    icon: "warning",
+                    iconColor: "#7097a8",
+                    customClass: {
+                        popup: "rounded-4",
+                        confirmButton: "btn btn-verde-modal rounded-pill px-4 fw-semibold"
+                    },
+                    buttonsStyling: false
+                });
+            } catch (_) {
+                Swal.fire({
+                    title: "Sin conexión",
+                    text: "Hubo un problema al comunicarse con el servidor.",
+                    icon: "error",
+                    iconColor: "#7097a8",
+                    customClass: {
+                        popup: "rounded-4",
+                        confirmButton: "btn btn-verde-modal rounded-pill px-4 fw-semibold"
+                    },
+                    buttonsStyling: false
+                });
+            }
+        }
+
+        async function solicitarLugarActual() {
+            if (!viajeSeleccionado) return;
+
+            if (reservasPorViaje[Number(viajeSeleccionado.id_viaje)]) {
+                Swal.fire({
+                    title: "Ya participas en este viaje",
+                    text: "Ya cuentas con una solicitud activa para este trayecto.",
+                    icon: "info",
+                    iconColor: "#7097a8",
+                    customClass: {
+                        popup: "rounded-4",
+                        confirmButton: "btn btn-verde-modal rounded-pill px-4 fw-semibold"
+                    },
+                    buttonsStyling: false
+                });
+                return;
+            }
+
+            const confirmacion = await Swal.fire({
+                title: "Confirmar apartado de lugar",
+                html: `
+                    <div class="text-start small text-secondary">
+                        <p class="mb-1"><strong>Ruta:</strong> ${viajeSeleccionado.origen} → ${viajeSeleccionado.destino}</p>
+                        <p class="mb-1"><strong>Salida:</strong> ${viajeSeleccionado.hora_salida} hrs</p>
+                        <p class="mb-0"><strong>Cuota:</strong> $${viajeSeleccionado.aportacion} MXN</p>
+                    </div>
+                `,
+                icon: "question",
+                iconColor: "#7097a8",
+                showCancelButton: true,
+                confirmButtonText: "Solicitar lugar",
+                cancelButtonText: "Cancelar",
+                customClass: {
+                    popup: "rounded-4",
+                    confirmButton: "btn btn-verde-modal rounded-pill px-4 fw-semibold",
+                    cancelButton: "btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+                },
+                buttonsStyling: false
+            });
+
+            if (!confirmacion.isConfirmed) return;
+
+            const idUsuario = obtenerIdUsuarioActual();
+
+            try {
+                const resp = await fetch("/reserva/api", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        id_viaje: viajeSeleccionado.id_viaje,
+                        id_usuario: idUsuario
+                    })
+                });
+                const data = await resp.json().catch(() => ({}));
+
+                if (resp.ok && data.ok !== false) {
+                    await cargarViajesDetalle(viajeSeleccionado.id_viaje);
+                    Swal.fire({
+                        title: "¡Solicitud enviada!",
+                        text: data.mensaje || "Tu petición fue registrada con éxito.",
+                        icon: "success",
+                        iconColor: "#018701",
+                        customClass: {
+                            popup: "rounded-4",
+                            confirmButton: "btn btn-verde-modal rounded-pill px-4 fw-semibold"
+                        },
+                        buttonsStyling: false
+                    });
+                    return;
+                }
+
+                if (resp.status === 400 && (data.mensaje || "").toLowerCase().includes("solicitud")) {
+                    await cargarViajesDetalle(viajeSeleccionado.id_viaje);
+                }
+
+                Swal.fire({
+                    title: "No se pudo apartar",
+                    text: data.mensaje || "Revisa la disponibilidad e intenta de nuevo.",
+                    icon: "warning",
+                    iconColor: "#7097a8",
+                    customClass: {
+                        popup: "rounded-4",
+                        confirmButton: "btn btn-verde-modal rounded-pill px-4 fw-semibold"
+                    },
+                    buttonsStyling: false
+                });
+            } catch (_) {
+                Swal.fire({
+                    title: "Sin conexión",
+                    text: "No fue posible enviar la solicitud al servidor.",
+                    icon: "error",
+                    iconColor: "#7097a8",
+                    customClass: {
+                        popup: "rounded-4",
+                        confirmButton: "btn btn-verde-modal rounded-pill px-4 fw-semibold"
+                    },
+                    buttonsStyling: false
+                });
+            }
+        }
+
+        async function cargarViajesDetalle(idPreferido = null) {
+            await cargarReservasUsuario();
+            const params = new URLSearchParams(window.location.search);
+            const idQuery = idPreferido ?? params.get("id_viaje");
+            const select = document.getElementById("selectorViaje");
+
+            try {
+                const resp = await fetch("/viaje/api/disponibles");
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const listaRaw = Array.isArray(data) ? data : (data.viajes || data.data || []);
+                    viajesCargados = listaRaw.map(normalizarViaje);
+                }
+            } catch (_) {
+                viajesCargados = [];
+            }
+
+            if (!viajesCargados.length) {
+                select.innerHTML = `<option value="">Sin trayectos disponibles</option>`;
+                renderizarDetalle(null);
+                return;
+            }
+
+            select.innerHTML = viajesCargados.map(v =>
+                `<option value="${v.id_viaje}">#${v.id_viaje} · ${v.origen} → ${v.destino} (${v.hora_salida} hrs)</option>`
+            ).join("");
+
+            const encontrado = idQuery
+                ? viajesCargados.find(v => String(v.id_viaje) === String(idQuery))
+                : viajesCargados[0];
+
+            const elegido = encontrado || viajesCargados[0];
+            select.value = String(elegido.id_viaje);
+            renderizarDetalle(elegido);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarViajesDetalle();
+
+            document.getElementById("selectorViaje").addEventListener("change", (e) => {
+                const seleccionado = viajesCargados.find(v => String(v.id_viaje) === String(e.target.value));
+                renderizarDetalle(seleccionado || null);
+            });
+        });
+    </script>
+</body>
+</html>

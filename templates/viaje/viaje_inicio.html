@@ -146,25 +146,28 @@
             {% if viajes %}
                 {% for viaje in viajes %}
                 {% set asientos_valor = viaje.asientos_disponibles if viaje.asientos_disponibles is defined and viaje.asientos_disponibles is not none else viaje.capacidad_lugares %}
+                {% set estado_raw = (viaje.estado or viaje.estado_texto or '') | lower | trim %}
+                {% set es_finalizado = estado_raw in ['finalizado', 'finalizada', 'completado', 'completada', 'concluido'] %}
+                {% set puede_cambiar_estado = (not es_finalizado) and (viaje.siguiente_estado is defined and viaje.siguiente_estado) and (viaje.siguiente_estado | lower | trim not in ['', 'pendiente', 'reiniciar']) %}
                 <div class="card shadow-sm border tarjeta-viaje bg-white mb-4">
                     <div class="p-4">
                         
-                        <!-- Cabecera de horario/fecha e íconos Editar / Eliminar -->
+                        <!-- Cabecera de horario/fecha e íconos Editar / Eliminar (ocultos si está finalizado) -->
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4 pb-3 border-bottom">
                             <div class="d-flex align-items-center flex-wrap gap-2">
                                 <span class="badge badge-velox-horario rounded-pill px-3 py-2 fw-semibold">
                                     <i class="bi bi-clock me-1" style="color: #018701;"></i>{{ viaje.horario_texto }}
                                 </span>
+                                {% if es_finalizado %}
+                                <span class="badge bg-light text-secondary border rounded-pill px-3 py-2 fw-semibold">
+                                    <i class="bi bi-lock-fill me-1"></i>Registro histórico
+                                </span>
+                                {% endif %}
                             </div>
 
                             <div class="d-flex align-items-center">
-                                {% if viaje.id_viaje %}
-                                <a href="/viaje/editar/{{ viaje.id_viaje }}{% if es_admin %}?rol=admin{% endif %}"
-                                   class="btn btn-sm btn-light border shadow-sm me-1"
-                                   style="color: #018701;"
-                                   title="Editar">
-                                    <i class="bi bi-pencil-fill"></i>
-                                </a>
+                                {% if viaje.id_viaje and not es_finalizado %}
+                            
                                 <button type="button"
                                         class="btn btn-sm btn-danger-custom shadow-sm"
                                         title="Eliminar"
@@ -239,7 +242,8 @@
                         </div>
                         {% endif %}
 
-                        <!-- Botón de acción principal -->
+                        <!-- Botón de acción principal (solo si no está finalizado y no reinicia) -->
+                        {% if puede_cambiar_estado %}
                         <form method="post" action="/viaje/estado" id="formEstadoViaje-{{ viaje.id_viaje }}">
                             <input type="hidden" name="id_viaje" value="{{ viaje.id_viaje }}">
                             <input type="hidden" name="id_ruta" value="{{ viaje.id_ruta }}">
@@ -250,6 +254,11 @@
                                 <i class="bi {{ viaje.icono_boton }} me-2"></i>{{ viaje.texto_boton }}
                             </button>
                         </form>
+                        {% elif es_finalizado %}
+                        <div class="p-3 border rounded-3 bg-light text-secondary small text-center fw-semibold">
+                            <i class="bi bi-shield-check me-1" style="color: #005200;"></i>Viaje finalizado: conservado como historial y no admite cambios ni reinicio.
+                        </div>
+                        {% endif %}
                         
                     </div>
                 </div>

@@ -1,8 +1,10 @@
+from datetime import datetime, timezone
+
 from controllers.reserva_controller import ReservaController
 from models.reserva_model import ReservaModel, ReservaUpdateModel
 from database import db
-from fastapi import APIRouter, Form, Request, status
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Body, Form, Request, status
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 # Importamos nuestro servicio de Machine Learning para Velox
@@ -135,6 +137,298 @@ def _ajustar_asientos_por_cambio_estado(id_viaje: int | None, estado_previo: str
                 )
 
 
+def _extraer_id_usuario(solicitud: Request, payload: dict | None = None) -> int | None:
+    raw = (
+        (payload.get("id_usuario") if payload else None)
+        or solicitud.query_params.get("id_usuario")
+        or solicitud.cookies.get("velox_usuario_id")
+        or solicitud.headers.get("x-velox-usuario-id")
+    )
+    if raw is not None and str(raw).strip().isdigit():
+        return int(str(raw).strip())
+    return None
+
+
+@router.get("/api/historial")
+def api_historial_viajes(solicitud: Request):
+    """Devuelve el historial de reservas y viajes del usuario enriquecido con ruta, horario y conductor."""
+    id_usuario_int = _extraer_id_usuario(solicitud)
+    filtro: dict = {}
+    if id_usuario_int is not None:
+        filtro["$or"] = [
+            {"id_usuario": id_usuario_int},
+            {"id_pasajero": id_usuario_int},
+            {"usuario_id": id_usuario_int},
+        ]
+
+    reservas_raw = list(db["reserva"].find(filtro, {"_id": 0}).sort("id_reserva", -1))
+
+    viajes_map = {
+        int(v["id_viaje"]): v
+        for v in db["viaje"].find({}, {"_id": 0})
+        if v.get("id_viaje") is not None and str(v.get("id_viaje")).strip().isdigit()
+    }
+    rutas_map = {
+        int(r["id_ruta"]): r
+        for r in db["ruta"].find({}, {"_id": 0})
+        if r.get("id_ruta") is not None and str(r.get("id_ruta")).strip().isdigit()
+    }
+    usuarios_map = {
+        int(u["id_usuario"]): u
+        for u in db["usuario"].find({}, {"_id": 0})
+        if u.get("id_usuario") is not None and str(u.get("id_usuario")).strip().isdigit()
+    }
+
+    historial = []
+    for res in reservas_raw:
+        id_viaje = int(res["id_viaje"]) if str(res.get("id_viaje") or "").strip().isdigit() else None
+        viaje_doc = viajes_map.get(id_viaje, {}) if id_viaje is not None else {}
+
+        id_ruta = (
+            int(viaje_doc["id_ruta"])
+            if str(viaje_doc.get("id_ruta") or "").strip().isdigit()
+            else (int(res["id_ruta"]) if str(res.get("id_ruta") or "").strip().isdigit() else None)
+        )
+        ruta_doc = rutas_map.get(id_ruta, {}) if id_ruta is not None else {}
+
+        origen = (
+            res.get("origen")
+            or viaje_doc.get("origen")
+            or ruta_doc.get("origen")
+            or "Origen"
+        )
+        destino = (
+            res.get("destino")
+            or viaje_doc.get("destino")
+            or ruta_doc.get("destino")
+            or "Destino"
+        )
+        fecha = str(viaje_doc.get("fecha") or res.get("fecha_solicitud") or "")[:10]
+        hora_salida = str(viaje_doc.get("hora_salida") or ruta_doc.get("hora_salida") or "--:--").strip()
+        costo_raw = viaje_doc.get("costo") if viaje_doc.get("costo") is not None else ruta_doc.get("costo", 0)
+        try:
+            costo_num = float(costo_raw or 0)
+            aportacion = int(costo_num) if costo_num.is_integer() else costo_num
+        except (TypeError, ValueError):
+            aportacion = 0
+
+        id_cond_raw = (
+            viaje_doc.get("id_usuario")
+            or viaje_doc.get("id_conductor")
+            or viaje_doc.get("usuario_id")
+            or ruta_doc.get("id_usuario")
+        )
+        id_cond = int(id_cond_raw) if id_cond_raw is not None and str(id_cond_raw).strip().isdigit() else None
+        doc_cond = usuarios_map.get(id_cond, {}) if id_cond is not None else {}
+        nombre_conductor = (
+            " ".join(
+                p for p in [
+                    str(doc_cond.get("nombre") or "").strip(),
+                    str(doc_cond.get("apellido_paterno") or "").strip(),
+                ] if p
+            ).strip()
+            or str(doc_cond.get("nombre_completo") or "Conductor Velox").strip()
+        )
+        calificacion_cond = str(doc_cond.get("calificacion") or "5.0")
+
+        estado_reserva = str(res.get("estado") or "pendiente").strip().lower()
+        estado_viaje = str(viaje_doc.get("estado") or "pendiente").strip().lower()
+
+        historial.append(
+            {
+                "id_reserva": res.get("id_reserva"),
+                "id_viaje": id_viaje,
+                "origen": origen,
+                "destino": destino,
+                "fecha": fecha,
+                "hora_salida": hora_salida,
+                "aportacion": aportacion,
+                "conductor": nombre_conductor,
+                "calificacion": calificacion_cond,
+                "estado_reserva": estado_reserva,
+                "estado_viaje": estado_viaje,
+                "fecha_solicitud": res.get("fecha_solicitud") or "",
+            }
+        )
+
+    return JSONResponse(content={"ok": True, "historial": historial})
+
+
+@router.get("/api/mis-reservas")
+def api_mis_reservas(solicitud: Request):
+    """Devuelve las reservas activas/recientes del usuario en formato JSON."""
+    id_usuario_int = _extraer_id_usuario(solicitud)
+    filtro: dict = {
+        "estado": {"$nin": ["cancelada", "cancelado", "rechazada", "rechazado"]}
+    }
+    if id_usuario_int is not None:
+        filtro["$or"] = [
+            {"id_usuario": id_usuario_int},
+            {"id_pasajero": id_usuario_int},
+            {"usuario_id": id_usuario_int},
+        ]
+
+    reservas = list(db["reserva"].find(filtro, {"_id": 0}).sort("id_reserva", -1))
+    return JSONResponse(content={"ok": True, "reservas": reservas})
+
+
+@router.post("/api/cancelar/{id_reserva}")
+def cancelar_reserva_api(id_reserva: int):
+    """Cancela una solicitud o reserva del pasajero y libera el asiento si corresponde."""
+    reserva_doc = db["reserva"].find_one({"id_reserva": id_reserva})
+    if not reserva_doc:
+        return JSONResponse(
+            status_code=404,
+            content={"ok": False, "mensaje": "La solicitud o reserva no existe."},
+        )
+
+    estado_previo = str(reserva_doc.get("estado") or "").strip().lower()
+    if estado_previo in {"cancelada", "cancelado"}:
+        return JSONResponse(
+            status_code=400,
+            content={"ok": False, "mensaje": "Esta solicitud ya había sido cancelada."},
+        )
+    if estado_previo in {"finalizada", "finalizado", "completada", "completado"}:
+        return JSONResponse(
+            status_code=400,
+            content={"ok": False, "mensaje": "No puedes cancelar una reserva ya finalizada."},
+        )
+
+    db["reserva"].update_one(
+        {"id_reserva": id_reserva},
+        {
+            "$set": {
+                "estado": "cancelada",
+                "fecha_cancelacion": datetime.now(timezone.utc).isoformat(),
+            }
+        },
+    )
+
+    id_viaje = reserva_doc.get("id_viaje")
+    if id_viaje is not None:
+        try:
+            id_viaje_int = int(id_viaje)
+            viaje_doc = db["viaje"].find_one({"id_viaje": id_viaje_int}, {"_id": 0})
+            if viaje_doc and viaje_doc.get("asientos_disponibles") is not None:
+                actual = int(viaje_doc.get("asientos_disponibles") or 0)
+                capacidad = viaje_doc.get("capacidad_lugares") or viaje_doc.get("lugares")
+                if capacidad is None or actual < int(capacidad):
+                    db["viaje"].update_one(
+                        {"id_viaje": id_viaje_int},
+                        {"$inc": {"asientos_disponibles": 1}},
+                    )
+        except (TypeError, ValueError):
+            pass
+
+    return JSONResponse(
+        content={
+            "ok": True,
+            "id_reserva": id_reserva,
+            "mensaje": "Tu solicitud fue cancelada correctamente.",
+        }
+    )
+
+
+@router.post("/api")
+def crear_reserva_api(solicitud: Request, payload: dict = Body(...)):
+    """Registra una solicitud de reserva desde la vista del pasajero y actualiza cupo."""
+    id_viaje = payload.get("id_viaje")
+    try:
+        id_viaje_int = int(id_viaje)
+    except (TypeError, ValueError):
+        return JSONResponse(
+            status_code=400,
+            content={"ok": False, "mensaje": "ID de viaje no válido."},
+        )
+
+    id_usuario_int = _extraer_id_usuario(solicitud, payload)
+
+    viaje_doc = db["viaje"].find_one({"id_viaje": id_viaje_int})
+    if not viaje_doc:
+        return JSONResponse(
+            status_code=404,
+            content={"ok": False, "mensaje": "El viaje seleccionado no existe."},
+        )
+
+    if id_usuario_int is not None:
+        reserva_existente = db["reserva"].find_one(
+            {
+                "id_viaje": id_viaje_int,
+                "estado": {
+                    "$nin": ["cancelada", "cancelado", "rechazada", "rechazado"]
+                },
+                "$or": [
+                    {"id_usuario": id_usuario_int},
+                    {"id_pasajero": id_usuario_int},
+                    {"usuario_id": id_usuario_int},
+                ],
+            }
+        )
+        if reserva_existente:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "ok": False,
+                    "mensaje": "Ya enviaste una solicitud o ya tienes un lugar reservado en este viaje.",
+                },
+            )
+
+    asientos = int(viaje_doc.get("asientos_disponibles") or 0)
+    if asientos <= 0:
+        return JSONResponse(
+            status_code=400,
+            content={"ok": False, "mensaje": "Ya no hay lugares disponibles en este viaje."},
+        )
+
+    origen, destino = _resolver_ruta_viaje(viaje_doc)
+    ultima_reserva = db["reserva"].find_one({}, sort=[("id_reserva", -1)])
+    siguiente_id = (
+        int(ultima_reserva["id_reserva"]) + 1
+        if ultima_reserva and ultima_reserva.get("id_reserva") is not None
+        else 1
+    )
+
+    nombre_pasajero = ""
+    if id_usuario_int is not None:
+        doc_pas = db["usuario"].find_one({"id_usuario": id_usuario_int}, {"_id": 0})
+        if doc_pas:
+            nombre_pasajero = " ".join(
+                p for p in [
+                    str(doc_pas.get("nombre") or "").strip(),
+                    str(doc_pas.get("apellido_paterno") or "").strip(),
+                    str(doc_pas.get("apellido_materno") or "").strip(),
+                ] if p
+            ).strip()
+
+    nueva_reserva = {
+        "id_reserva": siguiente_id,
+        "id_viaje": id_viaje_int,
+        "id_ruta": viaje_doc.get("id_ruta"),
+        "id_usuario": id_usuario_int,
+        "id_pasajero": id_usuario_int,
+        "nombre_pasajero": nombre_pasajero,
+        "origen": origen,
+        "destino": destino,
+        "estado": "pendiente",
+        "fecha_solicitud": datetime.now(timezone.utc).isoformat(),
+    }
+
+    db["reserva"].insert_one(nueva_reserva)
+    db["viaje"].update_one(
+        {"id_viaje": id_viaje_int},
+        {"$inc": {"asientos_disponibles": -1}},
+    )
+
+    return JSONResponse(
+        status_code=201,
+        content={
+            "ok": True,
+            "id_reserva": siguiente_id,
+            "mensaje": "Tu solicitud de lugar quedó registrada en la base de datos.",
+        },
+    )
+
+
 @router.get("/")
 def listar_reservas(solicitud: Request):
     """Muestra el listado de reservas enriquecidas con nombre, ruta y predicción IA."""
@@ -190,7 +484,6 @@ def listar_reservas(solicitud: Request):
         plantilla,
         {
             "reservas": reservas_enriquecidas,
-            "usuario": {"nombre": "Brandon Rivera"},
             "es_admin": es_admin,
         },
     )

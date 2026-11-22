@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Viajes - Velox UTVT</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            background-color: #F8F9FA !important;
+        }
+
+        #mainContent {
+            margin-left: 280px;
+            transition: margin-left 0.28s ease-in-out;
+        }
+
+        .boton-verde {
+            background-color: #018701 !important;
+            color: #ffffff !important;
+            border: none;
+            transition: all 0.2s ease-in-out;
+        }
+        .boton-verde:hover {
+            background-color: #005200 !important;
+            color: #ffffff !important;
+        }
+
+        .viaje-card {
+            border: none;
+            border-radius: 16px;
+            border-left: 4px solid #018701 !important;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .viaje-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1.2rem rgba(0, 82, 0, 0.08) !important;
+        }
+
+        .badge-cupo {
+            background-color: #E8F5E9;
+            color: #005200;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            #mainContent {
+                margin-left: 0 !important;
+                padding: 15px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'components/sidebar.html' %}
+
+    <div id="mainContent" class="p-4">
+        <div class="container-fluid px-0" style="max-width: 1140px;">
+
+            <!-- Encabezado -->
+            <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+                <div>
+                    <h2 class="fw-bold mb-1" style="color: #005200;">
+                        <i class="bi bi-search me-2"></i>Buscar Viajes Disponibles
+                    </h2>
+                    <p class="text-muted small mb-0">Encuentra rutas compartidas de la comunidad Velox UTVT y solicita tu lugar.</p>
+                </div>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill fw-semibold">
+                    <i class="bi bi-shield-check me-1"></i>Comunidad UTVT
+                </span>
+            </div>
+
+            <!-- Barra de filtros -->
+            <div class="card shadow-sm border-0 rounded-4 p-3 p-md-4 bg-white mb-4">
+                <form id="formFiltrosViaje" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="filtroOrigen" class="form-label fw-semibold text-secondary small mb-1">Origen</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-geo-alt text-success"></i></span>
+                            <input type="text" id="filtroOrigen" class="form-control border-start-0" placeholder="Ej. Metepec, Toluca, Lerma...">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="filtroDestino" class="form-label fw-semibold text-secondary small mb-1">Destino</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-flag-fill text-success"></i></span>
+                            <input type="text" id="filtroDestino" class="form-control border-start-0" placeholder="Ej. UTVT, Santa María Atarasquillo...">
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label for="filtroHorario" class="form-label fw-semibold text-secondary small mb-1">Turno / Hora</label>
+                        <select id="filtroHorario" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="mañana">Mañana (06:00 - 11:59)</option>
+                            <option value="tarde">Tarde (12:00 - 17:59)</option>
+                            <option value="noche">Noche (18:00 - 23:00)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn boton-verde fw-bold rounded-3 w-100 py-2 shadow-sm">
+                            <i class="bi bi-funnel-fill me-1"></i>Filtrar
+                        </button>
+                        <button type="button" id="btnLimpiarFiltros" class="btn btn-outline-secondary rounded-3 py-2" title="Limpiar filtros">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Contador de resultados -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <small id="contadorViajes" class="text-muted fw-semibold">Cargando viajes...</small>
+            </div>
+
+            <!-- Contenedor de tarjetas de viajes -->
+            <div id="contenedorViajes" class="row g-4"></div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let todosLosViajes = [];
+        let reservasPorViaje = {};
+
+        function obtenerIdUsuarioActual() {
+            const raw = (localStorage.getItem("velox_usuario_id") || "").trim();
+            return /^\d+$/.test(raw) ? Number(raw) : null;
+        }
+
+        function obtenerFranjaHora(horaStr) {
+            if (!horaStr) return "";
+            const partes = String(horaStr).split(":");
+            const hora = parseInt(partes[0], 10);
+            if (Number.isNaN(hora)) return "";
+            if (hora < 12) return "mañana";
+            if (hora < 18) return "tarde";
+            return "noche";
+        }
+
+        function normalizarViaje(v, idx) {
+            return {
+                id_viaje: Number(v.id_viaje ?? v.id ?? (idx + 1)),
+                conductor: v.conductor || v.nombre_conductor || "Conductor",
+                calificacion: v.calificacion ?? "0.0",
+                origen: v.origen || v.punto_partida || "Origen",
+                destino: v.destino || v.punto_llegada || "Destino",
+                hora_salida: v.hora_salida || v.hora || "--:--",
+                vehiculo: v.vehiculo || v.modelo_vehiculo || "Vehículo",
+                asientos_disponibles: Number(v.asientos_disponibles ?? v.cupo_disponible ?? v.lugares_disponibles ?? 0),
+                aportacion: Number(v.aportacion ?? v.costo ?? v.precio ?? 0),
+                estado: String(v.estado || "pendiente").toLowerCase()
+            };
+        }
+
+        async function cargarReservasUsuario() {
+            reservasPorViaje = {};
+            const idUsuario = obtenerIdUsuarioActual();
+            if (!idUsuario) return;
+
+            try {
+                const resp = await fetch("/reserva/", { headers: { "Accept": "text/html" } });
+                if (!resp.ok) return;
+                const html = await resp.text();
+                const doc = new DOMParser().parseFromString(html, "text/html");
+
+                // Si la tabla o tarjetas exponen id_viaje y estado, lo mapeamos para el usuario actual
+                doc.querySelectorAll("[data-id-viaje]").forEach(el => {
+                    const idViaje = Number(el.getAttribute("data-id-viaje"));
+                    const idPas = Number(el.getAttribute("data-id-usuario") || el.getAttribute("data-id-pasajero") || 0);
+                    const estado = String(el.getAttribute("data-estado") || "").trim().toLowerCase();
+                    if (!idViaje || (idPas && idPas !== idUsuario)) return;
+                    if (estado && !["cancelada", "cancelado", "rechazada", "rechazado"].includes(estado)) {
+                        reservasPorViaje[idViaje] = estado;
+                    }
+                });
+            } catch (_) {}
+        }
+
+        function obtenerEstadoReservaUsuario(idViaje) {
+            return reservasPorViaje[Number(idViaje)] || null;
+        }
+
+        function renderizarViajes(lista) {
+            const contenedor = document.getElementById("contenedorViajes");
+            const contador = document.getElementById("contadorViajes");
+
+            if (!lista.length) {
+                contador.textContent = "0 viajes encontrados";
+                contenedor.innerHTML = `
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+                            <i class="bi bi-car-front text-muted fs-1 mb-2"></i>
+                            <h5 class="fw-bold text-dark">No hay viajes disponibles en este momento</h5>
+                            <p class="text-muted small mb-3">Intenta ajustar los filtros o consulta más tarde.</p>
+                            <div>
+                                <button type="button" class="btn boton-verde rounded-pill px-4 fw-semibold" onclick="limpiarFiltros()">
+                                    Actualizar búsqueda
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            contador.textContent = `${lista.length} ${lista.length === 1 ? "viaje disponible" : "viajes disponibles"}`;
+
+            contenedor.innerHTML = lista.map(viaje => {
+                const estadoReserva = obtenerEstadoReservaUsuario(viaje.id_viaje);
+                const yaSolicitado = Boolean(estadoReserva);
+                const sinCupo = viaje.asientos_disponibles <= 0 && !yaSolicitado;
+                const deshabilitarBoton = sinCupo || yaSolicitado;
+
+                let textoBoton = "Solicitar lugar";
+                let iconoBoton = "bi-ticket-perforated";
+                let claseBoton = "boton-verde";
+
+                if (yaSolicitado) {
+                    if (["aceptada", "confirmada"].includes(estadoReserva)) {
+                        textoBoton = "Lugar aceptado";
+                        iconoBoton = "bi-check-circle-fill";
+                        claseBoton = "btn-success";
+                    } else if (estadoReserva === "en_curso") {
+                        textoBoton = "En curso";
+                        iconoBoton = "bi-car-front-fill";
+                        claseBoton = "btn-primary";
+                    } else if (estadoReserva === "finalizada") {
+                        textoBoton = "Finalizada";
+                        iconoBoton = "bi-flag-checkered";
+                        claseBoton = "btn-secondary";
+                    } else {
+                        textoBoton = "Solicitud enviada";
+                        iconoBoton = "bi-hourglass-split";
+                        claseBoton = "btn-secondary";
+                    }
+                } else if (sinCupo) {
+                    textoBoton = "Sin cupo";
+                    iconoBoton = "bi-slash-circle";
+                    claseBoton = "btn-secondary";
+                }
+
+                return `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card viaje-card shadow-sm bg-white h-100 p-3 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge badge-cupo px-3 py-2 rounded-pill small">
+                                        <i class="bi bi-clock me-1"></i>${viaje.hora_salida} hrs
+                                    </span>
+                                    <span class="badge ${sinCupo ? "bg-secondary" : "bg-success"} bg-opacity-10 ${sinCupo ? "text-secondary" : "text-success"} px-2 py-1 rounded-pill small fw-semibold">
+                                        ${sinCupo ? "Sin cupo" : `${viaje.asientos_disponibles} ${viaje.asientos_disponibles === 1 ? "lugar" : "lugares"}`}
+                                    </span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="fw-bold text-dark">
+                                        <i class="bi bi-geo-alt-fill text-success me-1"></i>${viaje.origen}
+                                    </div>
+                                    <div class="text-muted small my-1 ps-1">
+                                        <i class="bi bi-arrow-down-short me-1"></i>hacia
+                                    </div>
+                                    <div class="fw-bold" style="color: #005200;">
+                                        <i class="bi bi-flag-fill me-1"></i>${viaje.destino}
+                                    </div>
+                                </div>
+
+                                <hr class="text-secondary opacity-25 my-2">
+
+                                <div class="small text-muted mb-1">
+                                    <i class="bi bi-person-circle me-1 text-dark"></i>
+                                    <strong class="text-dark">${viaje.conductor}</strong>
+                                    <span class="ms-2 text-warning fw-semibold"><i class="bi bi-star-fill"></i> ${viaje.calificacion}</span>
+                                </div>
+                                <div class="small text-muted mb-3">
+                                    <i class="bi bi-car-front me-1"></i>${viaje.vehiculo}
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <div>
+                                    <span class="text-muted d-block" style="font-size: 0.72rem;">Aportación</span>
+                                    <strong class="fs-5" style="color: #018701;">$${viaje.aportacion} <small class="text-muted fw-normal fs-6">MXN</small></strong>
+                                </div>
+                                <button type="button"
+                                        class="btn ${claseBoton} rounded-pill px-3 py-2 fw-semibold shadow-sm"
+                                        ${deshabilitarBoton ? "disabled" : ""}
+                                        onclick="solicitarReserva(${viaje.id_viaje}, '${String(viaje.origen).replace(/'/g, "\\'")}', '${String(viaje.destino).replace(/'/g, "\\'")}', ${viaje.aportacion})">
+                                    <i class="bi ${iconoBoton} me-1"></i>${textoBoton}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        function aplicarFiltros() {
+            const origenBuscado = (document.getElementById("filtroOrigen").value || "").trim().toLowerCase();
+            const destinoBuscado = (document.getElementById("filtroDestino").value || "").trim().toLowerCase();
+            const horarioBuscado = (document.getElementById("filtroHorario").value || "").trim().toLowerCase();
+
+            const filtrados = todosLosViajes.filter(v => {
+                const matchOrigen = !origenBuscado || v.origen.toLowerCase().includes(origenBuscado);
+                const matchDestino = !destinoBuscado || v.destino.toLowerCase().includes(destinoBuscado);
+                const matchHorario = !horarioBuscado || obtenerFranjaHora(v.hora_salida) === horarioBuscado;
+                return matchOrigen && matchDestino && matchHorario;
+            });
+
+            renderizarViajes(filtrados);
+        }
+
+        function limpiarFiltros() {
+            document.getElementById("filtroOrigen").value = "";
+            document.getElementById("filtroDestino").value = "";
+            document.getElementById("filtroHorario").value = "";
+            cargarViajes();
+        }
+
+        async function solicitarReserva(idViaje, origen, destino, aportacion) {
+            if (obtenerEstadoReservaUsuario(idViaje)) {
+                Swal.fire({
+                    title: "Solicitud ya registrada",
+                    text: "Ya enviaste una solicitud o ya tienes un lugar asignado en este viaje.",
+                    icon: "info",
+                    confirmButtonColor: "#018701",
+                    customClass: { popup: "rounded-4" }
+                });
+                return;
+            }
+
+            const confirmacion = await Swal.fire({
+                title: "Solicitar lugar en el viaje",
+                html: `
+                    <div class="text-start small">
+                        <p class="mb-1"><strong>Ruta:</strong> ${origen} → ${destino}</p>
+                        <p class="mb-0"><strong>Aportación estimada:</strong> $${aportacion} MXN</p>
+                    </div>
+                `,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Confirmar solicitud",
+                cancelButtonText: "Cancelar",
+                confirmButtonColor: "#018701",
+                customClass: { popup: "rounded-4" }
+            });
+
+            if (!confirmacion.isConfirmed) return;
+
+            const idUsuario = obtenerIdUsuarioActual();
+
+            try {
+                const resp = await fetch("/reserva/api", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        id_viaje: idViaje,
+                        id_usuario: idUsuario
+                    })
+                });
+
+                const data = await resp.json().catch(() => ({}));
+
+                if (resp.ok && data.ok !== false) {
+                    reservasPorViaje[Number(idViaje)] = "pendiente";
+                    await cargarViajes();
+                    Swal.fire({
+                        title: "¡Solicitud enviada!",
+                        text: data.mensaje || "Tu solicitud de lugar quedó registrada.",
+                        icon: "success",
+                        confirmButtonColor: "#018701",
+                        customClass: { popup: "rounded-4" }
+                    });
+                    return;
+                }
+
+                if (resp.status === 400 && (data.mensaje || "").toLowerCase().includes("solicitud")) {
+                    reservasPorViaje[Number(idViaje)] = "pendiente";
+                    renderizarViajes(todosLosViajes);
+                }
+
+                Swal.fire({
+                    title: "No se pudo solicitar",
+                    text: data.mensaje || "Verifica la disponibilidad del viaje.",
+                    icon: "warning",
+                    confirmButtonColor: "#018701",
+                    customClass: { popup: "rounded-4" }
+                });
+            } catch (_) {
+                Swal.fire({
+                    title: "Error de conexión",
+                    text: "No se pudo comunicar con el servidor para registrar la reserva.",
+                    icon: "error",
+                    confirmButtonColor: "#018701",
+                    customClass: { popup: "rounded-4" }
+                });
+            }
+        }
+
+        async function cargarViajes() {
+            await cargarReservasUsuario();
+            try {
+                const resp = await fetch("/viaje/api/disponibles");
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const listaRaw = Array.isArray(data) ? data : (data.viajes || data.data || []);
+                    todosLosViajes = listaRaw.map(normalizarViaje);
+                    renderizarViajes(todosLosViajes);
+                    return;
+                }
+            } catch (_) {}
+
+            todosLosViajes = [];
+            renderizarViajes(todosLosViajes);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarViajes();
+
+            document.getElementById("formFiltrosViaje").addEventListener("submit", (e) => {
+                e.preventDefault();
+                aplicarFiltros();
+            });
+
+            document.getElementById("btnLimpiarFiltros").addEventListener("click", limpiarFiltros);
+        });
+    </script>
+</body>
+</html>

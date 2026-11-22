@@ -82,7 +82,9 @@
         }
     </style>
 </head>
-<body>
+<body data-server-admin="{{ 'true' if es_admin else 'false' }}"
+      data-server-usuario-id="{{ usuario.id_usuario if usuario and usuario.id_usuario is defined else '' }}"
+      data-server-rol="{{ usuario.rol if usuario and usuario.rol is defined else '' }}">
 
     <!-- Inclusión modular del componente de navegación lateral flotante institucional -->
     {% include 'components/sidebar.html' %}
@@ -100,30 +102,46 @@
         <!-- Contenedor fluido principal para estructurar las tarjetas y tablas -->
         <div class="container-fluid">
             
-            <!-- Encabezado superior de la vista con título, descripción y botón de alta -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- Encabezado superior de la vista con título, usuario/rol activo y botón de alta -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                 <div>
                     <!-- Título principal con ícono institucional en color verde -->
                     <h2 class="fw-bold mb-1" style="color: #005200;">
                         <i class="bi bi-star-fill me-2" style="color: #005200;"></i>Módulo de Calificaciones
                     </h2>
                     <!-- Descripción breve orientada al usuario del sistema de carpooling -->
-                    <p class="text-muted small mb-0">Administra las valoraciones y reseñas emitidas dentro de la plataforma Velox UTVT.</p>
+                    <p class="text-muted small mb-1">Administra las valoraciones y reseñas emitidas dentro de la plataforma Velox UTVT.</p>
+                    <div id="barraSesionCalif" class="small text-secondary fw-semibold">
+                        <i class="bi bi-person-badge me-1" style="color: #018701;"></i>
+                        <span id="textoUsuarioActivo">
+                            {% if usuario and (usuario.nombre or usuario.id_usuario) %}
+                                {{ usuario.nombre or ('Usuario #' ~ usuario.id_usuario) }}
+                            {% else %}
+                                Usuario invitado
+                            {% endif %}
+                        </span>
+                        <span id="badgeRolActivo" class="badge bg-light text-secondary border ms-1">
+                            {{ usuario.rol if usuario and usuario.rol else 'Sin rol definido' }}
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Botón de acción institucional para redirigir al formulario de creación de un nuevo registro -->
-                <a href="/calificacion/nuevo" class="btn fw-bold px-4 py-2 shadow-sm rounded-pill btn-verde-custom">
+                <a id="btnNuevaCalificacion" href="/calificacion/nuevo" class="btn fw-bold px-4 py-2 shadow-sm rounded-pill btn-verde-custom">
                     <i class="bi bi-plus-lg me-2"></i>Nueva calificación
                 </a>
             </div>
 
             <!-- Tarjeta contenedora principal de la tabla de registros con bordes redondeados y sombra suave -->
             <div class="card shadow-sm border rounded-4 p-4 bg-white">
-                <h5 class="fw-bold mb-3" style="color: #005200;">Calificaciones Registradas en el Sistema</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h5 class="fw-bold mb-0" style="color: #005200;">Calificaciones Registradas en el Sistema</h5>
+                    <small id="avisoPrivilegios" class="text-muted"></small>
+                </div>
                 
                 <!-- Contenedor responsivo para asegurar desplazamiento horizontal fluido en pantallas pequeñas -->
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
+                    <table class="table table-hover align-middle" id="tablaCalificaciones">
                         
                         <!-- Cabecera de la tabla con etiquetas claras en mayúsculas -->
                         <thead class="text-uppercase fs-7 text-secondary bg-light">
@@ -140,7 +158,8 @@
                         <!-- Cuerpo de la tabla alimentado dinámicamente mediante la iteración de Jinja2 -->
                         <tbody>
                             {% for calificacion in calificaciones %}
-                            <tr>
+                            {% set emisor_id = calificacion.id_usuario if calificacion.id_usuario is defined else '' %}
+                            <tr data-id-usuario="{{ emisor_id }}">
                                 <!-- Columna que muestra el ID único de la calificación -->
                                 <td class="text-center fw-bold" style="color: #018701;">#{{ calificacion.id_calificacion }}</td>
 
@@ -165,16 +184,22 @@
                                 </td>
 
                                 <!-- Columna de acciones que agrupa los botones de edición y eliminación -->
-                                <td class="text-center">
-                                    <!-- Botón interactivo para redirigir a la vista de edición del registro actual -->
-                                    <a href="/calificacion/editar/{{ calificacion.id_calificacion }}" class="btn btn-sm btn-light border shadow-sm me-1" style="color: #018701;" title="Editar Registro">
+                                <td class="text-center celda-acciones">
+                                    <a href="/calificacion/editar/{{ calificacion.id_calificacion }}"
+                                       class="btn btn-sm btn-light border shadow-sm me-1 accion-editar"
+                                       style="color: #018701;"
+                                       title="Editar Registro">
                                         <i class="bi bi-pencil-fill"></i>
                                     </a>
 
-                                    <!-- Botón interactivo que dispara la función JavaScript de confirmación para eliminar el registro -->
-                                    <button class="btn btn-sm btn-rojo-custom shadow-sm" onclick="confirmarEliminacion('{{ calificacion.id_calificacion }}')" title="Eliminar Registro">
+                                    <button type="button"
+                                            class="btn btn-sm btn-rojo-custom shadow-sm accion-eliminar"
+                                            onclick="confirmarEliminacion('{{ calificacion.id_calificacion }}')"
+                                            title="Eliminar Registro">
                                         <i class="bi bi-trash-fill"></i>
                                     </button>
+
+                                    <span class="badge bg-light text-secondary border sin-permiso d-none">Solo lectura</span>
                                 </td>
                             </tr>
                             {% else %}
@@ -195,6 +220,64 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        function obtenerLeerCookie(nombre) {
+            const match = document.cookie.match(new RegExp("(^| )" + nombre + "=([^;]+)"));
+            return match ? decodeURIComponent(match[2]) : "";
+        }
+
+        function resolverContextoUsuario() {
+            const body = document.body;
+            const idLocal = (localStorage.getItem("velox_usuario_id") || "").trim();
+            const nombreLocal = (localStorage.getItem("velox_usuario_nombre") || "").trim();
+            const rolLocal = (localStorage.getItem("velox_usuario_rol") || obtenerLeerCookie("velox_usuario_rol") || "").trim();
+
+            const idServer = (body.getAttribute("data-server-usuario-id") || "").trim();
+            const rolServer = (body.getAttribute("data-server-rol") || "").trim();
+            const esAdminServer = body.getAttribute("data-server-admin") === "true";
+
+            const idUsuario = idLocal || idServer;
+            const rolEfectivo = (rolLocal || rolServer || "").toLowerCase();
+            const esAdmin = esAdminServer || rolEfectivo.includes("admin");
+
+            const textoUsuarioEl = document.getElementById("textoUsuarioActivo");
+            const badgeRolEl = document.getElementById("badgeRolActivo");
+            const avisoEl = document.getElementById("avisoPrivilegios");
+
+            if (nombreLocal) {
+                textoUsuarioEl.textContent = nombreLocal + (idUsuario ? ` (ID #${idUsuario})` : "");
+            } else if (idUsuario) {
+                textoUsuarioEl.textContent = `Usuario #${idUsuario}`;
+            }
+
+            if (rolLocal || rolServer) {
+                badgeRolEl.textContent = rolLocal || rolServer;
+            }
+
+            document.querySelectorAll("#tablaCalificaciones tbody tr[data-id-usuario]").forEach(fila => {
+                const emisorId = (fila.getAttribute("data-id-usuario") || "").trim();
+                const esPropio = Boolean(idUsuario && emisorId && idUsuario === emisorId);
+                const puedeGestionar = esAdmin || esPropio;
+
+                const btnEditar = fila.querySelector(".accion-editar");
+                const btnEliminar = fila.querySelector(".accion-eliminar");
+                const badgeSoloLectura = fila.querySelector(".sin-permiso");
+
+                if (btnEditar) btnEditar.classList.toggle("d-none", !puedeGestionar);
+                if (btnEliminar) btnEliminar.classList.toggle("d-none", !puedeGestionar);
+                if (badgeSoloLectura) badgeSoloLectura.classList.toggle("d-none", puedeGestionar);
+            });
+
+            if (esAdmin) {
+                avisoEl.textContent = "Privilegios de administrador: control total de registros.";
+            } else if (idUsuario) {
+                avisoEl.textContent = "Privilegios de usuario: puedes editar o eliminar tus propias calificaciones.";
+            } else {
+                avisoEl.textContent = "Modo consulta: inicia sesión con tu usuario para gestionar tus reseñas.";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", resolverContextoUsuario);
+
         /**
          * Función JavaScript encargada de gestionar el flujo de eliminación mediante una ventana modal interactiva (SweetAlert2).
          * @param {number|string} id_registro - Identificador único correspondiente a la calificación que se desea eliminar.

@@ -327,14 +327,16 @@
                 <i class="bi bi-star-fill me-2" style="color: #005200;"></i> Calificaciones
             </a>
         </li>
-        <li class="nav-item">
-            <a href="/simulador-ia" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/simulador-ia') else '' }} py-2 px-3 fw-semibold">
-                <i class="bi bi-diagram-3-fill me-2" style="color: #005200;"></i> Simulador Rutas
-            </a>
-        </li>
+
         <li class="nav-item">
             <a href="/asistente" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/asistente') else '' }} py-2 px-3 fw-semibold">
                 <i class="bi bi-robot me-2" style="color: #005200;"></i> Asistente IA
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="/simulador-ia" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/simulador-ia') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-diagram-3-fill me-2" style="color: #005200;"></i> Simulador Rutas
             </a>
         </li>
     </ul>
@@ -405,10 +407,17 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="/pasajero/#mis-solicitudes" class="nav-link enlace-navegacion py-2 px-3 fw-semibold" data-ruta="/pasajero/#mis-solicitudes">
-                <i class="bi bi-ticket-perforated me-2" style="color: #005200;"></i> Mis Reservas
+            <a href="/calificacion" class="nav-link enlace-navegacion py-2 px-3 fw-semibold" data-ruta="/calificacion">
+                <i class="bi bi-star-fill me-2" style="color: #005200;"></i> Calificaciones
             </a>
         </li>
+
+        <li class="nav-item">
+            <a href="/asistente" class="nav-link enlace-navegacion {{ 'activo-personalizado shadow-sm' if request.url.path.startswith('/asistente') else '' }} py-2 px-3 fw-semibold">
+                <i class="bi bi-robot me-2" style="color: #005200;"></i> Asistente IA
+            </a>
+        </li>
+
         <li class="nav-item">
             <a href="/pasajero/simulador-ia" class="nav-link enlace-navegacion py-2 px-3 fw-semibold" data-ruta="/pasajero/simulador-ia">
                 <i class="bi bi-cpu-fill me-2" style="color: #005200;"></i> Simulador de Rutas IA

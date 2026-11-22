@@ -4,7 +4,7 @@ from controllers.calificacion_controller import CalificacionController
 # Importamos los modelos de Pydantic necesarios para validar los datos de la calificación
 from models.calificacion_model import CalificacionModel, CalificacionUpdateModel
 
-# Importamos la base de datos para poder consultar los usuarios, viajes y rutas registrados
+# Importamos la base de datos para poder consultar los usuarios, viajes, reservas y rutas registrados
 from database import db
 
 # Importamos las herramientas de FastAPI: APIRouter para rutas, Form para datos de formularios y Request para solicitudes HTTP
@@ -52,21 +52,63 @@ def _to_int_or_none(valor) -> int | None:
     return None
 
 
-def _obtener_id_conductor_actual(solicitud: Request) -> int | None:
-    """Obtiene el id_usuario del conductor activo en sesión o desde MongoDB."""
+def _obtener_usuario_activo(solicitud: Request, es_admin: bool) -> dict:
+    """Obtiene el documento del usuario activo en sesión o por defecto según privilegios."""
     id_sesion = _obtener_id_usuario_sesion(solicitud)
     if id_sesion and id_sesion > 0:
-        return id_sesion
+        doc = db["usuario"].find_one({"id_usuario": id_sesion}, {"_id": 0})
+        if doc:
+            return doc
+
+    rol_param = (
+        solicitud.query_params.get("rol")
+        or solicitud.headers.get("x-velox-rol")
+        or solicitud.cookies.get("velox_usuario_rol")
+        or ""
+    ).strip()
+
+    if es_admin:
+        doc_admin = db["usuario"].find_one({"rol": {"$regex": "admin", "$options": "i"}}, {"_id": 0})
+        if doc_admin:
+            return doc_admin
+        return {"nombre": "Administrador", "rol": rol_param or "Administrador"}
+
+    if rol_param:
+        doc_rol = db["usuario"].find_one({"rol": {"$regex": rol_param, "$options": "i"}}, {"_id": 0})
+        if doc_rol:
+            return doc_rol
 
     conductor = db["usuario"].find_one(
         {"$or": [{"id_usuario": 5}, {"correo_institucional": "al222050411@utvtol.edu.mx"}]},
-        {"_id": 0, "id_usuario": 1},
+        {"_id": 0},
     )
-    if conductor and conductor.get("id_usuario") is not None:
-        id_cond = _to_int_or_none(conductor.get("id_usuario"))
-        if id_cond:
-            return id_cond
+    if conductor:
+        return conductor
 
+    return {"nombre": "Usuario", "rol": rol_param or "Conductor"}
+
+
+def _es_rol_pasajero(solicitud: Request, usuario_activo: dict) -> bool:
+    """Determina si el usuario activo actúa como pasajero."""
+    rol_texto = " ".join(
+        [
+            str(solicitud.query_params.get("rol") or ""),
+            str(solicitud.headers.get("x-velox-rol") or ""),
+            str(solicitud.cookies.get("velox_usuario_rol") or ""),
+            str(usuario_activo.get("rol") or ""),
+        ]
+    ).lower()
+    return "pasajero" in rol_texto and "conductor" not in rol_texto
+
+
+def _obtener_id_usuario_efectivo(solicitud: Request, usuario_activo: dict) -> int | None:
+    """Resuelve el id_usuario numérico del usuario activo."""
+    id_sesion = _obtener_id_usuario_sesion(solicitud)
+    if id_sesion and id_sesion > 0:
+        return id_sesion
+    id_doc = _to_int_or_none(usuario_activo.get("id_usuario"))
+    if id_doc and id_doc > 0:
+        return id_doc
     return None
 
 
@@ -115,6 +157,43 @@ def _obtener_ids_viaje_y_ruta_conductor(id_conductor: int | None) -> tuple[set[i
     return ids_viaje, ids_ruta
 
 
+def _obtener_viajes_pasajero(id_pasajero: int | None) -> set[int]:
+    """Obtiene los id_viaje donde participó el pasajero según db['reserva']."""
+    if not id_pasajero or id_pasajero <= 0:
+        return set()
+
+    reservas = list(
+        db["reserva"].find(
+            {
+                "$or": [
+                    {"id_usuario": id_pasajero},
+                    {"id_pasajero": id_pasajero},
+                    {"usuario_id": id_pasajero},
+                ]
+            },
+            {"_id": 0, "id_viaje": 1},
+        )
+    )
+    ids_viaje = set()
+    for r in reservas:
+        id_v = _to_int_or_none(r.get("id_viaje"))
+        if id_v is not None:
+            ids_viaje.add(id_v)
+    return ids_viaje
+
+
+def _obtener_conductor_de_viaje(id_viaje: int | None, viajes_map: dict[int, dict]) -> int | None:
+    """Devuelve el id_usuario del conductor asignado a un viaje."""
+    if id_viaje is None or id_viaje not in viajes_map:
+        return None
+    viaje_doc = viajes_map[id_viaje]
+    for campo in ("id_conductor", "conductor_id", "id_usuario", "usuario_id"):
+        val = _to_int_or_none(viaje_doc.get(campo))
+        if val is not None:
+            return val
+    return None
+
+
 def _pertenece_a_conductor(
     doc: dict,
     id_conductor: int | None,
@@ -123,6 +202,10 @@ def _pertenece_a_conductor(
 ) -> bool:
     """Determina si una reseña está relacionada con el conductor activo."""
     if not id_conductor or id_conductor <= 0:
+        return False
+
+    emisor_id = _to_int_or_none(doc.get("id_usuario"))
+    if emisor_id is not None and emisor_id == id_conductor:
         return False
 
     for campo in ("id_conductor", "id_conductor_viaje", "id_usuario_conductor", "conductor_id"):
@@ -141,8 +224,54 @@ def _pertenece_a_conductor(
     return False
 
 
+def _pertenece_a_pasajero(
+    doc: dict,
+    id_pasajero: int | None,
+    ids_viaje_pasajero: set[int],
+) -> bool:
+    """
+    Determina si una reseña aplica al pasajero activo:
+    - Emitida en un viaje donde el pasajero viajó por alguien distinto a él mismo
+      (conductor del viaje o compañero de viaje), o
+    - Dirigida explícitamente al pasajero en campos opcionales si existieran.
+    """
+    if not id_pasajero or id_pasajero <= 0:
+        return False
+
+    emisor_id = _to_int_or_none(doc.get("id_usuario"))
+    if emisor_id is not None and emisor_id == id_pasajero:
+        return False
+
+    for campo in ("id_pasajero", "id_usuario_calificado", "id_calificado", "pasajero_id"):
+        val_id = _to_int_or_none(doc.get(campo))
+        if val_id is not None and val_id == id_pasajero:
+            return True
+
+    id_v = _to_int_or_none(doc.get("id_viaje"))
+    if id_v is not None and id_v in ids_viaje_pasajero:
+        return True
+
+    return False
+
+
+def _describir_emisor_para_pasajero(
+    doc: dict,
+    emisor_id: int | None,
+    id_conductor_viaje: int | None,
+) -> str:
+    """Identifica si quien calificó al pasajero fue el conductor o un compañero de viaje."""
+    tipo = str(doc.get("tipo") or "").strip().lower()
+    if "conductor" in tipo:
+        return "Conductor del viaje"
+    if "pasajero" in tipo or "companero" in tipo or "compañero" in tipo:
+        return "Compañero de viaje"
+    if emisor_id is not None and id_conductor_viaje is not None and emisor_id == id_conductor_viaje:
+        return "Conductor del viaje"
+    return "Compañero de viaje"
+
+
 def _resolver_nombre_pasajero(doc: dict, usuarios_map: dict[int, dict]) -> str:
-    """Obtiene el nombre real del pasajero desde la reseña o desde db['usuario']."""
+    """Obtiene el nombre real del emisor o usuario desde la reseña o desde db['usuario']."""
     nombre_guardado = str(doc.get("nombre_pasajero") or doc.get("pasajero") or "").strip()
     if nombre_guardado and not nombre_guardado.lower().startswith("usuario"):
         return nombre_guardado
@@ -166,7 +295,7 @@ def _resolver_nombre_pasajero(doc: dict, usuarios_map: dict[int, dict]) -> str:
 
     if id_u is not None:
         return f"Usuario #{id_u}"
-    return "Pasajero"
+    return "Usuario"
 
 
 def _extraer_estrellas(doc: dict) -> int:
@@ -214,6 +343,7 @@ def listar_calificaciones(solicitud: Request):
     """Ruta HTTP GET para mostrar la vista principal de calificaciones."""
     lista_raw = CalificacionController.obtener_todas_las_calificaciones()
     es_admin = _es_admin(solicitud)
+    usuario_activo = _obtener_usuario_activo(solicitud, es_admin)
 
     if es_admin:
         calificaciones_admin = [
@@ -230,16 +360,28 @@ def listar_calificaciones(solicitud: Request):
                 "calificaciones": calificaciones_admin,
                 "total_resenas": len(calificaciones_admin),
                 "es_admin": True,
+                "usuario": usuario_activo,
             },
         )
 
-    id_conductor = _obtener_id_conductor_actual(solicitud)
-    ids_viaje, ids_ruta = _obtener_ids_viaje_y_ruta_conductor(id_conductor)
+    id_usuario = _obtener_id_usuario_efectivo(solicitud, usuario_activo)
+    es_pasajero = _es_rol_pasajero(solicitud, usuario_activo)
+
+    viajes_map = {
+        int(v["id_viaje"]): v
+        for v in db["viaje"].find({}, {"_id": 0})
+        if v.get("id_viaje") is not None and str(v.get("id_viaje")).strip().isdigit()
+    }
     usuarios_map = {
         int(u["id_usuario"]): u
         for u in db["usuario"].find({}, {"_id": 0})
         if u.get("id_usuario") is not None and str(u.get("id_usuario")).strip().isdigit()
     }
+
+    if es_pasajero:
+        ids_viaje_pasajero = _obtener_viajes_pasajero(id_usuario)
+    else:
+        ids_viaje_cond, ids_ruta_cond = _obtener_ids_viaje_y_ruta_conductor(id_usuario)
 
     lista_calificaciones = []
     suma_estrellas = 0
@@ -251,16 +393,27 @@ def listar_calificaciones(solicitud: Request):
             else (item.dict() if hasattr(item, "dict") else dict(item))
         )
 
-        if doc.get("tipo") == "conductor_a_pasajero":
-            continue
-
-        if not _pertenece_a_conductor(doc, id_conductor, ids_viaje, ids_ruta):
-            continue
+        if es_pasajero:
+            if not _pertenece_a_pasajero(doc, id_usuario, ids_viaje_pasajero):
+                continue
+        else:
+            if doc.get("tipo") == "conductor_a_pasajero":
+                continue
+            if not _pertenece_a_conductor(doc, id_usuario, ids_viaje_cond, ids_ruta_cond):
+                continue
 
         estrellas = _extraer_estrellas(doc)
         suma_estrellas += estrellas
-        nombre_pasajero = _resolver_nombre_pasajero(doc, usuarios_map)
+        nombre_emisor = _resolver_nombre_pasajero(doc, usuarios_map)
         id_cal = doc.get("id_calificacion", idx + 1)
+        id_viaje_doc = _to_int_or_none(doc.get("id_viaje"))
+        id_conductor_viaje = _obtener_conductor_de_viaje(id_viaje_doc, viajes_map)
+        emisor_id = _to_int_or_none(doc.get("id_usuario"))
+        origen_resena = (
+            _describir_emisor_para_pasajero(doc, emisor_id, id_conductor_viaje)
+            if es_pasajero
+            else "Pasajero"
+        )
 
         if estrellas >= 4:
             etiqueta, clase_badge, icono = (
@@ -284,8 +437,10 @@ def listar_calificaciones(solicitud: Request):
         lista_calificaciones.append(
             {
                 "id_calificacion": id_cal,
-                "nombre_pasajero": nombre_pasajero,
-                "inicial": nombre_pasajero[0].upper() if nombre_pasajero else "P",
+                "nombre_pasajero": nombre_emisor,
+                "rol_emisor": origen_resena,
+                "id_viaje": id_viaje_doc,
+                "inicial": nombre_emisor[0].upper() if nombre_emisor else "U",
                 "estrellas": estrellas,
                 "comentario": doc.get("comentario") or "Sin comentario adicional.",
                 "fecha": doc.get("fecha") or "",
@@ -306,6 +461,8 @@ def listar_calificaciones(solicitud: Request):
             "promedio_general": f"{promedio:.1f}",
             "total_resenas": len(lista_calificaciones),
             "es_admin": False,
+            "es_pasajero": es_pasajero,
+            "usuario": usuario_activo,
         },
     )
 
@@ -320,6 +477,7 @@ def vista_crear_calificacion(solicitud: Request):
     if _es_admin(solicitud):
         usuarios = list(db["usuario"].find({}, {"_id": 0}))
         viajes = _enriquecer_viajes_con_ruta()
+        usuario_activo = _obtener_usuario_activo(solicitud, True)
 
         return motor_plantillas.TemplateResponse(
             solicitud,
@@ -329,6 +487,7 @@ def vista_crear_calificacion(solicitud: Request):
                 "usuarios": usuarios,
                 "viajes": viajes,
                 "es_admin": True,
+                "usuario": usuario_activo,
             },
         )
 
@@ -406,6 +565,7 @@ def vista_editar_calificacion(solicitud: Request, id_calificacion: int):
     viajes = _enriquecer_viajes_con_ruta()
 
     es_admin = _es_admin(solicitud)
+    usuario_activo = _obtener_usuario_activo(solicitud, es_admin)
     plantilla = "admin/calificacion_form_admin.html" if es_admin else "calificacion/calificacion_form.html"
 
     return motor_plantillas.TemplateResponse(
@@ -416,6 +576,7 @@ def vista_editar_calificacion(solicitud: Request, id_calificacion: int):
             "usuarios": usuarios,
             "viajes": viajes,
             "es_admin": es_admin,
+            "usuario": usuario_activo,
         },
     )
 

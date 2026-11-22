@@ -15,8 +15,8 @@ from database import db
 # Importamos las herramientas de FastAPI para definir rutas, formularios y peticiones HTTP
 from fastapi import APIRouter, Form, Request, status
 
-# Importamos RedirectResponse para redirecciones seguras y Jinja2Templates para renderizar vistas HTML
-from fastapi.responses import RedirectResponse
+# Importamos respuestas HTTP y Jinja2Templates para renderizar vistas HTML
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 # Inicializamos el enrutador del módulo de Viajes con prefijo y etiqueta en español
@@ -160,6 +160,88 @@ def _to_int_or_none(valor) -> int | None:
     if texto.isdigit():
         return int(texto)
     return None
+
+
+@router.get("/api/disponibles")
+def api_viajes_disponibles():
+    """Devuelve los viajes disponibles enriquecidos con ruta, conductor y vehículo desde MongoDB."""
+    viajes_raw = ViajeController.obtener_todos_los_viajes() or []
+
+    rutas_map = {
+        int(r["id_ruta"]): r
+        for r in db["ruta"].find({}, {"_id": 0})
+        if r.get("id_ruta") is not None
+    }
+    usuarios_map = {
+        int(u["id_usuario"]): u
+        for u in db["usuario"].find({}, {"_id": 0})
+        if u.get("id_usuario") is not None
+    }
+    vehiculos_por_usuario = {}
+    for veh in db["vehiculo"].find({}, {"_id": 0}):
+        id_u = _to_int_or_none(veh.get("id_usuario") or veh.get("usuario_id") or veh.get("id_conductor"))
+        if id_u is not None and id_u not in vehiculos_por_usuario:
+            marca = str(veh.get("marca") or "").strip()
+            modelo = str(veh.get("modelo") or "").strip()
+            color = str(veh.get("color") or "").strip()
+            vehiculos_por_usuario[id_u] = " ".join(p for p in [marca, modelo, color] if p) or "Vehículo UTVT"
+
+    viajes_limpios = []
+    for idx, v in enumerate(viajes_raw):
+        estado_raw = str(v.get("estado") or "").strip().lower()
+        if estado_raw in {"finalizado", "finalizada", "cancelado", "cancelada", "completado"}:
+            continue
+
+        id_viaje = int(v.get("id_viaje") or (idx + 1))
+        id_ruta = int(v.get("id_ruta") or 0)
+        ruta_doc = rutas_map.get(id_ruta, {})
+
+        id_cond = _to_int_or_none(
+            v.get("id_usuario")
+            or v.get("id_conductor")
+            or v.get("usuario_id")
+            or ruta_doc.get("id_usuario")
+        )
+        doc_cond = usuarios_map.get(id_cond, {}) if id_cond is not None else {}
+
+        nombre_cond = " ".join(
+            p for p in [
+                str(doc_cond.get("nombre") or "").strip(),
+                str(doc_cond.get("apellido_paterno") or "").strip(),
+            ] if p
+        ) or str(doc_cond.get("nombre_completo") or "Conductor Velox").strip()
+
+        origen = str(v.get("origen") or ruta_doc.get("origen") or "Origen").strip()
+        destino = str(v.get("destino") or ruta_doc.get("destino") or "Destino").strip()
+        hora_salida = str(v.get("hora_salida") or ruta_doc.get("hora_salida") or "--:--").strip()
+        fecha_viaje = str(v.get("fecha") or "").strip()
+
+        cupo_raw = v.get("asientos_disponibles")
+        if cupo_raw is None:
+            cupo_raw = v.get("capacidad_lugares") if v.get("capacidad_lugares") is not None else ruta_doc.get("lugares", 1)
+        asientos = int(cupo_raw or 0)
+
+        costo_raw = v.get("costo") if v.get("costo") is not None else ruta_doc.get("costo", 25)
+        costo_num = float(costo_raw or 0)
+
+        viajes_limpios.append(
+            {
+                "id_viaje": id_viaje,
+                "id_ruta": id_ruta,
+                "conductor": nombre_cond,
+                "calificacion": str(doc_cond.get("calificacion") or "5.0"),
+                "origen": origen,
+                "destino": destino,
+                "fecha": fecha_viaje,
+                "hora_salida": hora_salida,
+                "vehiculo": vehiculos_por_usuario.get(id_cond, "Vehículo registrado"),
+                "asientos_disponibles": asientos,
+                "aportacion": int(costo_num) if costo_num.is_integer() else costo_num,
+                "estado": estado_raw or "pendiente",
+            }
+        )
+
+    return JSONResponse(content={"ok": True, "viajes": viajes_limpios})
 
 
 @router.get("/")
