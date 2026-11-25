@@ -1,517 +1,592 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inteligencia Operativa - Velox UTVT</title>
+<!DOCTYPE html> <!-- Declara que el documento utiliza el estándar HTML5 -->
+<html lang="es"> <!-- Inicia la raíz del documento HTML configurando el idioma en español -->
+<head> <!-- Abre la sección de metadatos, enlaces a estilos y título de la pestaña -->
+    <meta charset="UTF-8"> <!-- Define la codificación de caracteres UTF-8 para soportar tildes y eñes -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Hace que la página sea responsiva en móviles y pantallas grandes -->
+    <title>Inteligencia Operativa - Velox UTVT</title> <!-- Define el título visible en la pestaña del navegador -->
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"> <!-- Carga la hoja de estilos de Bootstrap 5.3.3 desde CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> <!-- Carga la librería de iconos vectoriales Bootstrap Icons -->
 
-    <style>
-        body {
-            background-color: #FFFFFF !important;
-            color: #212529;
-        }
+    <style> /* Abre el bloque de estilos CSS personalizados de la página */
+        body { /* Selecciona el cuerpo principal del documento */
+            background-color: #FFFFFF !important; /* Fuerza el fondo blanco puro en toda la página */
+            color: #212529; /* Establece el color gris oscuro estándar para la tipografía */
+        } /* Cierra la regla de body */
 
-        #mainContent {
-            background-color: #FFFFFF !important;
-            transition: margin-left 0.28s ease-in-out;
-        }
+        #mainContent { /* Selecciona el contenedor principal situado junto a la barra lateral */
+            background-color: #FFFFFF !important; /* Asegura fondo blanco en el área de trabajo */
+            transition: margin-left 0.28s ease-in-out; /* Suaviza el desplazamiento cuando se abre o cierra el sidebar */
+        } /* Cierra la regla de #mainContent */
 
-        #mainContent .card {
-            background-color: #FFFFFF !important;
-        }
+        #mainContent .card { /* Selecciona todas las tarjetas dentro del área principal */
+            background-color: #FFFFFF !important; /* Mantiene el fondo blanco en las tarjetas */
+        } /* Cierra la regla de .card */
 
-        #mainContent .btn-verde-custom {
-            background-color: #018701 !important;
-            color: #ffffff !important;
-            border: none;
-            transition: all 0.2s ease-in-out;
-        }
-        #mainContent .btn-verde-custom:hover {
-            background-color: #005200 !important;
-            color: #ffffff !important;
-            transform: translateY(-2px);
-        }
+        #mainContent .btn-verde-custom { /* Define el estilo de los botones principales verde institucional Velox */
+            background-color: #018701 !important; /* Aplica color de fondo verde brillante institucional */
+            color: #ffffff !important; /* Establece texto blanco para alto contraste */
+            border: none; /* Elimina el borde predeterminado del botón */
+            transition: all 0.2s ease-in-out; /* Anima suavemente los cambios de color y elevación */
+        } /* Cierra la regla de .btn-verde-custom */
+        #mainContent .btn-verde-custom:hover { /* Define el estado al pasar el cursor sobre el botón verde */
+            background-color: #005200 !important; /* Oscurece el verde al tono institucional profundo */
+            color: #ffffff !important; /* Conserva el texto en blanco */
+            transform: translateY(-2px); /* Eleva ligeramente el botón 2 píxeles hacia arriba */
+        } /* Cierra la regla :hover */
 
-        #mainContent .stat-card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            border-left: 4px solid #018701;
-        }
-        #mainContent .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 .5rem 1rem rgba(0,0,0,.12) !important;
-        }
+        #mainContent .stat-card { /* Estilo de las tarjetas de indicadores KPI superiores */
+            transition: transform 0.2s ease, box-shadow 0.2s ease; /* Anima la elevación y sombra al pasar el mouse */
+            border-left: 4px solid #018701 !important; /* Dibuja la franja verde distintiva en el borde izquierdo */
+        } /* Cierra la regla de .stat-card */
+        #mainContent .stat-card:hover { /* Efecto visual al pasar el puntero sobre una tarjeta KPI */
+            transform: translateY(-3px); /* Eleva la tarjeta 3 píxeles */
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.12) !important; /* Proyecta una sombra suave debajo de la tarjeta */
+        } /* Cierra la regla :hover de .stat-card */
 
-        #mainContent .nav-pills .nav-link {
-            color: #005200;
-            background-color: #FFFFFF;
-            border: 1px solid #dee2e6;
-            border-radius: 50rem;
-            font-weight: 600;
-            font-size: 0.88rem;
-            padding: 0.55rem 1.1rem;
-            transition: all 0.2s ease;
-        }
-        #mainContent .nav-pills .nav-link:hover {
-            background-color: #f8f9fa;
-            color: #005200;
-        }
-        #mainContent .nav-pills .nav-link.active {
-            background-color: #005200 !important;
-            color: #ffffff !important;
-            border-color: #005200 !important;
-        }
+        #mainContent .nav-pills .nav-link { /* Estiliza las pestañas de navegación tipo píldora en estado inactivo */
+            color: #005200; /* Texto en verde institucional oscuro */
+            background-color: #FFFFFF; /* Fondo blanco */
+            border: 1px solid #dee2e6; /* Borde gris sutil */
+            border-radius: 50rem; /* Redondea completamente los extremos en forma de cápsula */
+            font-weight: 600; /* Aplica tipografía seminegrita */
+            font-size: 0.88rem; /* Ajusta el tamaño de fuente de las pestañas */
+            padding: 0.55rem 1.1rem; /* Define el relleno interno vertical y horizontal */
+            transition: all 0.2s ease; /* Suaviza la transición entre estados */
+        } /* Cierra la regla de .nav-link */
+        #mainContent .nav-pills .nav-link:hover { /* Estado hover de las pestañas inactivas */
+            background-color: #f8f9fa; /* Cambia el fondo a gris muy claro */
+            color: #005200; /* Mantiene el color de texto verde oscuro */
+        } /* Cierra la regla :hover de .nav-link */
+        #mainContent .nav-pills .nav-link.active { /* Estilo de la pestaña seleccionada actualmente */
+            background-color: #005200 !important; /* Rellena la cápsula con verde oscuro institucional */
+            color: #ffffff !important; /* Cambia el texto e icono a blanco */
+            border-color: #005200 !important; /* Iguala el color del borde al fondo */
+        } /* Cierra la regla .active */
 
-        #mainContent .grafica-card img {
-            width: 100%;
-            height: 220px;
-            object-fit: contain;
-            background: #FFFFFF;
-            border-radius: 10px;
-            border: 1px solid #dee2e6;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        #mainContent .grafica-card img:hover {
-            transform: scale(1.02);
-        }
-    </style>
-</head>
-<body>
+        #mainContent .grafica-card img { /* Estiliza las miniaturas de las gráficas PNG generadas */
+            width: 100%; /* Ocupa todo el ancho disponible de su tarjeta */
+            height: 220px; /* Fija una altura uniforme de 220 píxeles */
+            object-fit: contain; /* Ajusta la gráfica completa sin recortar ejes ni etiquetas */
+            background: #FFFFFF; /* Fondo blanco detrás de la imagen */
+            border-radius: 10px; /* Redondea las esquinas de la imagen */
+            border: 1px solid #dee2e6; /* Agrega un marco gris claro */
+            cursor: pointer; /* Muestra cursor de mano indicando que se puede ampliar */
+            transition: transform 0.2s ease; /* Suaviza el efecto de acercamiento */
+        } /* Cierra la regla de .grafica-card img */
+        #mainContent .grafica-card img:hover { /* Efecto al pasar el mouse sobre una gráfica */
+            transform: scale(1.02); /* Amplía ligeramente la imagen un 2% */
+        } /* Cierra la regla :hover de imagen */
 
-    {% include 'components/sidebar.html' %}
+        .badge-exitoso { /* Estilo de insignia verde para estados o predicciones positivas */
+            background-color: #198754; /* Fondo verde éxito */
+            color: #ffffff; /* Texto blanco */
+            font-weight: 600; /* Texto seminegrita */
+            padding: 0.35em 0.75em; /* Relleno interno proporcional */
+            border-radius: 50rem; /* Forma redondeada tipo píldora */
+            font-size: 0.78rem; /* Tamaño de letra compacto para tablas */
+        } /* Cierra la regla .badge-exitoso */
+        .badge-no-exitoso { /* Estilo de insignia roja para estados o predicciones negativas */
+            background-color: #dc3545; /* Fondo rojo alerta */
+            color: #ffffff; /* Texto blanco */
+            font-weight: 600; /* Texto seminegrita */
+            padding: 0.35em 0.75em; /* Relleno interno proporcional */
+            border-radius: 50rem; /* Forma redondeada tipo píldora */
+            font-size: 0.78rem; /* Tamaño de letra compacto para tablas */
+        } /* Cierra la regla .badge-no-exitoso */
+    </style> <!-- Cierra el bloque de estilos CSS -->
+</head> <!-- Cierra la cabecera del documento -->
+<body> <!-- Inicia el cuerpo visible de la interfaz web -->
 
-    <div id="mainContent" class="p-4 bg-white min-vh-100">
+    {% include 'components/sidebar.html' %} <!-- Inserta la barra lateral de navegación compartida mediante Jinja2 -->
 
-        <div class="container-fluid px-0" style="max-width: 1250px;">
+    <div id="mainContent" class="p-4 bg-white min-vh-100"> <!-- Contenedor principal con relleno interno y altura mínima de pantalla completa -->
 
-            <!-- Encabezado -->
-            <div class="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-end flex-wrap gap-2">
-                <div>
-                    <h3 class="fw-bold mb-1" style="color: #005200;">
-                        <i class="bi bi-cpu-fill me-2" style="color: #005200;"></i>Centro de Inteligencia y Analítica Velox
-                    </h3>
-                    <p class="text-muted small mb-0">
-                        Predicción de ocupación, segmentación de movilidad, gráficas analíticas y exportación de reportes.
-                    </p>
-                </div>
-                <span class="badge bg-light text-secondary border rounded-pill px-3 py-2 fw-semibold">
-                    <i class="bi bi-cloud-check-fill me-1" style="color: #018701;"></i> Velox Cloud Conectado
-                </span>
-            </div>
+        <div class="container-fluid px-0" style="max-width: 1280px;"> <!-- Contenedor fluido centrado con ancho máximo de 1280px -->
 
-            <!-- Botones de navegación por área funcional -->
-            <ul class="nav nav-pills gap-2 mb-4" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-operacion" type="button">
-                        <i class="bi bi-speedometer2 me-1"></i> Operación y Datos
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-predictor" type="button">
-                        <i class="bi bi-magic me-1"></i> Predictor de Viajes
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-ml" type="button">
-                        <i class="bi bi-diagram-3-fill me-1"></i> Clasificación y Segmentación
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-bigdata" type="button">
-                        <i class="bi bi-hdd-network-fill me-1"></i> Procesamiento Masivo
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-redes" type="button">
-                        <i class="bi bi-graph-up-arrow me-1"></i> Redes Neuronales
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-archivos" type="button">
-                        <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Gráficas y Reportes CSV
-                    </button>
-                </li>
-            </ul>
+            <div class="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-end flex-wrap gap-2"> <!-- Cabecera superior del módulo con borde inferior -->
+                <div> <!-- Agrupa el título y subtítulo a la izquierda -->
+                    <h3 class="fw-bold mb-1" style="color: #005200;"> <!-- Título principal en verde institucional -->
+                        <i class="bi bi-cpu-fill me-2" style="color: #005200;"></i>Centro de Inteligencia y Analítica Velox <!-- Icono de procesador y nombre del panel -->
+                    </h3> <!-- Cierra título principal -->
+                    <p class="text-muted small mb-0"> <!-- Subtítulo descriptivo en texto atenuado -->
+                        Predicción de ocupación, segmentación de movilidad, gráficas analíticas y exportación de reportes. <!-- Descripción del alcance del panel -->
+                    </p> <!-- Cierra subtítulo -->
+                </div> <!-- Cierra contenedor izquierdo -->
+                <span class="badge bg-light text-secondary border rounded-pill px-3 py-2 fw-semibold"> <!-- Insignia de estado de conexión en la esquina derecha -->
+                    <i class="bi bi-cloud-check-fill me-1" style="color: #018701;"></i> Velox Cloud Conectado <!-- Icono de nube y texto de estado -->
+                </span> <!-- Cierra insignia -->
+            </div> <!-- Cierra cabecera superior -->
 
-            <div class="tab-content">
+            <ul class="nav nav-pills gap-2 mb-4" role="tablist"> <!-- Barra de pestañas horizontales para alternar entre secciones -->
+                <li class="nav-item"> <!-- Primer elemento de navegación -->
+                    <button class="nav-link active shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-operacion" type="button"> <!-- Botón activo por defecto que abre Operación y Datos -->
+                        <i class="bi bi-speedometer2 me-1"></i> Operación y Datos <!-- Icono y etiqueta de pestaña 1 -->
+                    </button> <!-- Cierra botón 1 -->
+                </li> <!-- Cierra item 1 -->
+                <li class="nav-item"> <!-- Segundo elemento de navegación -->
+                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-predictor" type="button"> <!-- Botón que abre el Predictor de Viajes -->
+                        <i class="bi bi-magic me-1"></i> Predictor de Viajes <!-- Icono y etiqueta de pestaña 2 -->
+                    </button> <!-- Cierra botón 2 -->
+                </li> <!-- Cierra item 2 -->
+                <li class="nav-item"> <!-- Tercer elemento de navegación -->
+                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-ml" type="button"> <!-- Botón que abre Clasificación y Segmentación -->
+                        <i class="bi bi-diagram-3-fill me-1"></i> Clasificación y Segmentación <!-- Icono y etiqueta de pestaña 3 -->
+                    </button> <!-- Cierra botón 3 -->
+                </li> <!-- Cierra item 3 -->
+                <li class="nav-item"> <!-- Cuarto elemento de navegación -->
+                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-bigdata" type="button"> <!-- Botón que abre Procesamiento Masivo -->
+                        <i class="bi bi-hdd-network-fill me-1"></i> Procesamiento Masivo <!-- Icono y etiqueta de pestaña 4 -->
+                    </button> <!-- Cierra botón 4 -->
+                </li> <!-- Cierra item 4 -->
+                <li class="nav-item"> <!-- Quinto elemento de navegación -->
+                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-redes" type="button"> <!-- Botón que abre Redes Neuronales -->
+                        <i class="bi bi-graph-up-arrow me-1"></i> Redes Neuronales <!-- Icono y etiqueta de pestaña 5 -->
+                    </button> <!-- Cierra botón 5 -->
+                </li> <!-- Cierra item 5 -->
+                <li class="nav-item"> <!-- Sexto elemento de navegación -->
+                    <button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-archivos" type="button"> <!-- Botón que abre Gráficas y Reportes CSV -->
+                        <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Gráficas y Reportes CSV <!-- Icono y etiqueta de pestaña 6 -->
+                    </button> <!-- Cierra botón 6 -->
+                </li> <!-- Cierra item 6 -->
+            </ul> <!-- Cierra barra de pestañas -->
 
-                <!-- ================================================= -->
-                <!-- 1. OPERACIÓN Y DATOS REALES                       -->
-                <!-- ================================================= -->
-                <div class="tab-pane fade show active" id="tab-operacion">
-                    <div class="row g-3 mb-4">
-                        <div class="col-6 col-lg">
-                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
-                                <p class="text-muted small fw-bold mb-1 text-uppercase">Viajes Reales</p>
-                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-viajes">—</h3>
-                            </div>
-                        </div>
-                        <div class="col-6 col-lg">
-                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
-                                <p class="text-muted small fw-bold mb-1 text-uppercase">
-                                    <i class="bi bi-people-fill me-1" style="color: #005200;"></i>Usuarios
-                                </p>
-                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-usuarios">—</h3>
-                            </div>
-                        </div>
-                        <div class="col-6 col-lg">
-                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
-                                <p class="text-muted small fw-bold mb-1 text-uppercase">Reservas</p>
-                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-reservas">—</h3>
-                            </div>
-                        </div>
-                        <div class="col-6 col-lg">
-                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
-                                <p class="text-muted small fw-bold mb-1 text-uppercase">Tarifa Media</p>
-                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-costo">—</h3>
-                            </div>
-                        </div>
-                        <div class="col-12 col-lg">
-                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
-                                <p class="text-muted small fw-bold mb-1 text-uppercase">Cupo Medio</p>
-                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-asientos">—</h3>
-                            </div>
-                        </div>
-                    </div>
+            <div class="tab-content"> <!-- Contenedor de los 6 paneles correspondientes a cada pestaña -->
 
-                    <div class="row g-4">
-                        <div class="col-lg-5">
-                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
-                                <h5 class="fw-bold mb-2" style="color: #005200;">
-                                    <i class="bi bi-sliders2-vertical me-2"></i>Acciones de Datos y Reglas
-                                </h5>
-                                <p class="text-muted small mb-3">
-                                    Actualiza la depuración de usuarios, valida reglas de tarifa y exporta los registros reales de Velox.
-                                </p>
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-verde-custom fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('reglas_motor')">
-                                        <i class="bi bi-check2-square me-2"></i>Validar Reglas Operativas
-                                    </button>
-                                    <button class="btn btn-outline-secondary fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('limpieza_datos')">
-                                        <i class="bi bi-funnel-fill me-2" style="color: #018701;"></i>Depurar Base de Usuarios
-                                    </button>
-                                    <button class="btn btn-outline-secondary fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('modelo_base')">
-                                        <i class="bi bi-cpu me-2" style="color: #018701;"></i>Calibrar Modelo Inicial
-                                    </button>
-                                    <button class="btn btn-outline-secondary fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('extraccion_atlas')">
-                                        <i class="bi bi-cloud-download-fill me-2" style="color: #018701;"></i>Sincronizar y Exportar Datos Cloud
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                <div class="tab-pane fade show active" id="tab-operacion"> <!-- Panel 1: visible al cargar la página -->
+                    <div class="bg-light rounded-4 p-3 mb-4 border-start border-4" style="border-left-color: #018701 !important;"> <!-- Banner informativo superior -->
+                        <p class="text-secondary small mb-0"> <!-- Párrafo explicativo de la pestaña -->
+                            <i class="bi bi-info-circle-fill me-1" style="color: #005200;"></i> <!-- Icono de información -->
+                            <strong>Resumen general en tiempo real:</strong> Consulta los números actuales de la plataforma, revisa los viajes publicados y ejecuta acciones de validación o depuración. <!-- Texto guía -->
+                        </p> <!-- Cierra párrafo -->
+                    </div> <!-- Cierra banner informativo -->
 
-                        <div class="col-lg-7">
-                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
-                                <h5 class="fw-bold mb-3" style="color: #005200;">
-                                    <i class="bi bi-clock-history me-2"></i>Viajes Registrados en Plataforma
-                                </h5>
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0">
-                                        <thead class="bg-light">
-                                            <tr><th>Trayecto</th><th>Cooperación</th><th>Lugares</th><th>Estatus</th></tr>
-                                        </thead>
-                                        <tbody id="tabla-historial"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    <div class="row g-3 mb-4"> <!-- Fila responsiva de 5 tarjetas KPI alimentadas desde MongoDB Atlas -->
+                        <div class="col-6 col-lg"> <!-- Columna adaptable para KPI 1 -->
+                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100"> <!-- Tarjeta KPI 1 -->
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Viajes Reales</p> <!-- Etiqueta del indicador -->
+                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-viajes">—</h3> <!-- Valor numérico inyectado por JS -->
+                            </div> <!-- Cierra tarjeta 1 -->
+                        </div> <!-- Cierra columna 1 -->
+                        <div class="col-6 col-lg"> <!-- Columna adaptable para KPI 2 -->
+                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100"> <!-- Tarjeta KPI 2 -->
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Usuarios</p> <!-- Etiqueta del indicador -->
+                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-usuarios">—</h3> <!-- Total de usuarios inyectado por JS -->
+                            </div> <!-- Cierra tarjeta 2 -->
+                        </div> <!-- Cierra columna 2 -->
+                        <div class="col-6 col-lg"> <!-- Columna adaptable para KPI 3 -->
+                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100"> <!-- Tarjeta KPI 3 -->
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Reservas</p> <!-- Etiqueta del indicador -->
+                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-reservas">—</h3> <!-- Total de reservas inyectado por JS -->
+                            </div> <!-- Cierra tarjeta 3 -->
+                        </div> <!-- Cierra columna 3 -->
+                        <div class="col-6 col-lg"> <!-- Columna adaptable para KPI 4 -->
+                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100"> <!-- Tarjeta KPI 4 -->
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Tarifa Media</p> <!-- Etiqueta del indicador -->
+                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-costo">—</h3> <!-- Promedio de costo inyectado por JS -->
+                            </div> <!-- Cierra tarjeta 4 -->
+                        </div> <!-- Cierra columna 4 -->
+                        <div class="col-12 col-lg"> <!-- Columna adaptable para KPI 5 -->
+                            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100"> <!-- Tarjeta KPI 5 -->
+                                <p class="text-muted small fw-bold mb-1 text-uppercase">Cupo Medio</p> <!-- Etiqueta del indicador -->
+                                <h3 class="fw-bold mb-0" style="color: #005200;" id="kpi-asientos">—</h3> <!-- Promedio de asientos inyectado por JS -->
+                            </div> <!-- Cierra tarjeta 5 -->
+                        </div> <!-- Cierra columna 5 -->
+                    </div> <!-- Cierra fila de KPIs -->
 
-                <!-- ================================================= -->
-                <!-- 2. PREDICTOR INTERACTIVO DE OCUPACIÓN             -->
-                <!-- ================================================= -->
-                <div class="tab-pane fade" id="tab-predictor">
-                    <div class="row g-4">
-                        <div class="col-lg-7">
-                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
-                                <h5 class="fw-bold mb-1" style="color: #005200;">
-                                    <i class="bi bi-sliders me-2"></i>Simulador de Aceptación de Viaje
-                                </h5>
-                                <p class="text-muted small mb-4">
-                                    Evalúa en vivo la probabilidad de que tu salida hacia Campus UTVT consiga pasajeros.
-                                </p>
-                                <div class="row g-3">
-                                    <div class="col-sm-6">
-                                        <label class="form-label fw-semibold small text-secondary">COOPERACIÓN ($ MXN)</label>
-                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-costo" value="15" min="5" max="200">
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="form-label fw-semibold small text-secondary">ASIENTOS DISPONIBLES</label>
-                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-asientos" value="3" min="1" max="6">
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="form-label fw-semibold small text-secondary">DISTANCIA AL CAMPUS (KM)</label>
-                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-distancia" value="16.5" step="0.5">
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="form-label fw-semibold small text-secondary">PUNTUALIDAD CONDUCTOR (%)</label>
-                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-puntualidad" value="92" min="0" max="100">
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-verde-custom fw-bold rounded-pill px-4 py-2 mt-4 shadow-sm" onclick="predecirViaje()">
-                                    <i class="bi bi-lightning-charge-fill me-2"></i>Calcular Probabilidad
-                                </button>
-                            </div>
-                        </div>
+                    <div class="row g-4"> <!-- Fila de 2 columnas: acciones de datos a la izquierda e historial a la derecha -->
+                        <div class="col-lg-5"> <!-- Columna izquierda (5/12 del ancho en escritorio) -->
+                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100"> <!-- Tarjeta de botones de ejecución -->
+                                <h5 class="fw-bold mb-2" style="color: #005200;"> <!-- Encabezado de tarjeta -->
+                                    <i class="bi bi-sliders2-vertical me-2"></i>Acciones de Datos y Reglas <!-- Título de acciones -->
+                                </h5> <!-- Cierra encabezado -->
+                                <p class="text-muted small mb-3"> <!-- Texto explicativo -->
+                                    Ejecuta la depuración de usuarios, valida reglas operativas y exporta los datos reales de Velox. <!-- Instrucción -->
+                                </p> <!-- Cierra párrafo -->
+                                <div class="d-grid gap-2"> <!-- Contenedor de botones apilados verticalmente -->
+                                    <button class="btn btn-verde-custom fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('reglas_motor')"> <!-- Ejecuta p01_regla_fija.py -->
+                                        <i class="bi bi-check2-square me-2"></i>Validar Reglas Operativas <!-- Etiqueta botón 1 -->
+                                    </button> <!-- Cierra botón -->
+                                    <button class="btn btn-outline-secondary fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('limpieza_datos')"> <!-- Ejecuta p02limpiezaguardadodatos_d.py -->
+                                        <i class="bi bi-funnel-fill me-2" style="color: #018701;"></i>Depurar Base de Usuarios <!-- Etiqueta botón 2 -->
+                                    </button> <!-- Cierra botón -->
+                                    <button class="btn btn-outline-secondary fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('modelo_base')"> <!-- Ejecuta p03primermodelo.py -->
+                                        <i class="bi bi-cpu me-2" style="color: #018701;"></i>Calibrar Modelo Inicial <!-- Etiqueta botón 3 -->
+                                    </button> <!-- Cierra botón -->
+                                    <button class="btn btn-outline-secondary fw-semibold rounded-pill text-start px-3 py-2" onclick="ejecutarProceso('extraccion_atlas')"> <!-- Ejecuta p16consultasinteligentes.py -->
+                                        <i class="bi bi-cloud-download-fill me-2" style="color: #018701;"></i>Sincronizar y Exportar Datos Cloud <!-- Etiqueta botón 4 -->
+                                    </button> <!-- Cierra botón -->
+                                </div> <!-- Cierra contenedor de botones -->
+                            </div> <!-- Cierra tarjeta izquierda -->
+                        </div> <!-- Cierra columna izquierda -->
 
-                        <div class="col-lg-5">
-                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-center text-center" id="panel-resultado">
-                                <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3" style="width: 70px; height: 70px;">
-                                    <i class="bi bi-stars fs-2" style="color: #018701;"></i>
-                                </div>
-                                <h5 class="fw-bold" style="color: #005200;">Listo para analizar</h5>
-                                <p class="text-muted small mb-0">Configura los parámetros y presiona calcular.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        <div class="col-lg-7"> <!-- Columna derecha (7/12 del ancho en escritorio) -->
+                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100"> <!-- Tarjeta de viajes en vivo -->
+                                <h5 class="fw-bold mb-3" style="color: #005200;"> <!-- Encabezado de tabla -->
+                                    <i class="bi bi-clock-history me-2"></i>Viajes Registrados en Plataforma <!-- Título de tabla -->
+                                </h5> <!-- Cierra encabezado -->
+                                <div class="table-responsive"> <!-- Hace que la tabla tenga scroll horizontal en pantallas pequeñas -->
+                                    <table class="table table-hover align-middle mb-0"> <!-- Tabla estilizada con efecto hover -->
+                                        <thead class="bg-light"> <!-- Cabecera de tabla con fondo claro -->
+                                            <tr><th>Trayecto</th><th>Cooperación</th><th>Lugares</th><th>Estatus</th></tr> <!-- Columnas de la tabla -->
+                                        </thead> <!-- Cierra cabecera -->
+                                        <tbody id="tabla-historial"></tbody> <!-- Cuerpo vacío que se llena dinámicamente desde /api/estado -->
+                                    </table> <!-- Cierra tabla -->
+                                </div> <!-- Cierra contenedor responsivo -->
+                            </div> <!-- Cierra tarjeta derecha -->
+                        </div> <!-- Cierra columna derecha -->
+                    </div> <!-- Cierra fila de operación -->
+                </div> <!-- Cierra Panel 1 -->
 
-                <!-- ================================================= -->
-                <!-- 3. CLASIFICACIÓN Y SEGMENTACIÓN                   -->
-                <!-- ================================================= -->
-                <div class="tab-pane fade" id="tab-ml">
-                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
-                        <h5 class="fw-bold mb-1" style="color: #005200;">
-                            <i class="bi bi-diagram-3-fill me-2"></i>Clasificación y Segmentación de Rutas
-                        </h5>
-                        <p class="text-muted small mb-4">
-                            Selecciona un análisis para generar sus gráficas comparativas, matrices de confusión y perfiles de viaje.
-                        </p>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('arbol_decision')">
-                                    <i class="bi bi-diagram-2-fill d-block fs-4 mb-1"></i>
-                                    Árboles de Decisión
-                                </button>
-                            </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('comparativa_algoritmos')">
-                                    <i class="bi bi-bar-chart-steps d-block fs-4 mb-1"></i>
-                                    Comparativa de Algoritmos
-                                </button>
-                            </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('hiperparametros')">
-                                    <i class="bi bi-sliders2 d-block fs-4 mb-1"></i>
-                                    Ajuste de Hiperparámetros
-                                </button>
-                            </div>
-                            <div class="col-md-6">
-                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('optimizacion_clusters')">
-                                    <i class="bi bi-bullseye d-block fs-4 mb-1 text-primary"></i>
-                                    Segmentación de Perfiles (K-Means)
-                                </button>
-                            </div>
-                            <div class="col-md-6">
-                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('reduccion_pca')">
-                                    <i class="bi bi-bounding-box d-block fs-4 mb-1 text-warning"></i>
-                                    Proyección de Componentes (PCA)
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div class="tab-pane fade" id="tab-predictor"> <!-- Panel 2: Simulador interactivo en tiempo real -->
+                    <div class="bg-light rounded-4 p-3 mb-4 border-start border-4" style="border-left-color: #018701 !important;"> <!-- Banner informativo -->
+                        <p class="text-secondary small mb-0"> <!-- Texto guía -->
+                            <i class="bi bi-info-circle-fill me-1" style="color: #005200;"></i> <!-- Icono info -->
+                            <strong>Simulador antes de publicar:</strong> Ingresa la tarifa, los lugares disponibles, la distancia y la puntualidad para calcular qué tan probable es que tu viaje se llene. <!-- Explicación -->
+                        </p> <!-- Cierra párrafo -->
+                    </div> <!-- Cierra banner -->
 
-                <!-- ================================================= -->
-                <!-- 4. PROCESAMIENTO MASIVO                           -->
-                <!-- ================================================= -->
-                <div class="tab-pane fade" id="tab-bigdata">
-                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
-                        <h5 class="fw-bold mb-1" style="color: #005200;">
-                            <i class="bi bi-hdd-network-fill me-2"></i>Análisis de Demanda a Gran Escala (50,000 Trayectos)
-                        </h5>
-                        <p class="text-muted small mb-4">
-                            Procesa el historial masivo del Valle de Toluca hacia Campus UTVT y descarga los resúmenes por zona.
-                        </p>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('generador_masivo')">
-                                    <i class="bi bi-database-fill-add d-block fs-4 mb-1 text-primary"></i>
-                                    1. Generar Historial Masivo
-                                </button>
-                            </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('conversion_parquet')">
-                                    <i class="bi bi-file-earmark-zip-fill d-block fs-4 mb-1 text-warning"></i>
-                                    2. Optimizar Almacenamiento Parquet
-                                </button>
-                            </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('spark_procesamiento')">
-                                    <i class="bi bi-lightning-fill d-block fs-4 mb-1"></i>
-                                    3. Demanda por Punto de Origen
-                                </button>
-                            </div>
-                            <div class="col-md-6">
-                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('spark_mllib')">
-                                    <i class="bi bi-cpu-fill d-block fs-4 mb-1"></i>
-                                    4. Clasificación Distribuida Masiva
-                                </button>
-                            </div>
-                            <div class="col-md-6">
-                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('benchmark_bigdata')">
-                                    <i class="bi bi-speedometer d-block fs-4 mb-1 text-primary"></i>
-                                    5. Comparativa de Rendimiento y Velocidad
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    <div class="row g-4"> <!-- Fila de 2 columnas: formulario a la izquierda y resultado a la derecha -->
+                        <div class="col-lg-7"> <!-- Columna izquierda con campos de entrada -->
+                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100"> <!-- Tarjeta del formulario -->
+                                <h5 class="fw-bold mb-1" style="color: #005200;"> <!-- Título del simulador -->
+                                    <i class="bi bi-sliders me-2"></i>Simulador de Aceptación de Viaje <!-- Icono y nombre -->
+                                </h5> <!-- Cierra título -->
+                                <p class="text-muted small mb-4"> <!-- Subtítulo -->
+                                    Evalúa en vivo la probabilidad de que tu salida hacia Campus UTVT consiga pasajeros. <!-- Descripción -->
+                                </p> <!-- Cierra subtítulo -->
+                                <div class="row g-3"> <!-- Cuadrícula de 2x2 para los 4 parámetros -->
+                                    <div class="col-sm-6"> <!-- Campo 1: Cooperación económica -->
+                                        <label class="form-label fw-semibold small text-secondary">COOPERACIÓN ($ MXN)</label> <!-- Etiqueta -->
+                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-costo" value="15" min="5" max="200"> <!-- Input numérico con valor inicial 15 -->
+                                    </div> <!-- Cierra campo 1 -->
+                                    <div class="col-sm-6"> <!-- Campo 2: Asientos disponibles -->
+                                        <label class="form-label fw-semibold small text-secondary">ASIENTOS DISPONIBLES</label> <!-- Etiqueta -->
+                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-asientos" value="3" min="1" max="6"> <!-- Input numérico con valor inicial 3 -->
+                                    </div> <!-- Cierra campo 2 -->
+                                    <div class="col-sm-6"> <!-- Campo 3: Distancia en kilómetros -->
+                                        <label class="form-label fw-semibold small text-secondary">DISTANCIA AL CAMPUS (KM)</label> <!-- Etiqueta -->
+                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-distancia" value="16.5" step="0.5"> <!-- Input decimal con valor inicial 16.5 -->
+                                    </div> <!-- Cierra campo 3 -->
+                                    <div class="col-sm-6"> <!-- Campo 4: Puntualidad del conductor -->
+                                        <label class="form-label fw-semibold small text-secondary">PUNTUALIDAD CONDUCTOR (%)</label> <!-- Etiqueta -->
+                                        <input type="number" class="form-control form-control-lg rounded-3" id="in-puntualidad" value="92" min="0" max="100"> <!-- Input porcentual con valor inicial 92 -->
+                                    </div> <!-- Cierra campo 4 -->
+                                </div> <!-- Cierra cuadrícula de inputs -->
+                                <button type="button" class="btn btn-verde-custom fw-bold rounded-pill px-4 py-2 mt-4 shadow-sm" onclick="predecirViaje()"> <!-- Botón que llama a la API /api/predecir -->
+                                    <i class="bi bi-lightning-charge-fill me-2"></i>Calcular Probabilidad <!-- Etiqueta del botón -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra tarjeta izquierda -->
+                        </div> <!-- Cierra columna izquierda -->
 
-                <!-- ================================================= -->
-                <!-- 5. REDES NEURONALES                               -->
-                <!-- ================================================= -->
-                <div class="tab-pane fade" id="tab-redes">
-                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
-                        <h5 class="fw-bold mb-1" style="color: #005200;">
-                            <i class="bi bi-graph-up-arrow me-2"></i>Entrenamiento de Redes Neuronales
-                        </h5>
-                        <p class="text-muted small mb-4">
-                            Ejecuta los modelos neuronales para visualizar sus curvas de aprendizaje, precisión y métricas de validación.
-                        </p>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('perceptron_lineal')">
-                                    <i class="bi bi-node-plus-fill d-block fs-4 mb-1 text-primary"></i>
-                                    1. Neurona Perceptrón Base
-                                </button>
-                            </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('red_mlp')">
-                                    <i class="bi bi-diagram-3-fill d-block fs-4 mb-1 text-warning"></i>
-                                    2. Red Multicapa (MLP)
-                                </button>
-                            </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('deep_learning_pytorch')">
-                                    <i class="bi bi-fire d-block fs-4 mb-1"></i>
-                                    3. Red Neuronal Profunda (PyTorch)
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        <div class="col-lg-5"> <!-- Columna derecha donde se muestra la probabilidad calculada -->
+                            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100 d-flex flex-column justify-content-center text-center" id="panel-resultado"> <!-- Tarjeta de resultado -->
+                                <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3" style="width: 70px; height: 70px;"> <!-- Círculo decorativo -->
+                                    <i class="bi bi-stars fs-2" style="color: #018701;"></i> <!-- Icono de estrellas -->
+                                </div> <!-- Cierra círculo -->
+                                <h5 class="fw-bold" style="color: #005200;">Listo para analizar</h5> <!-- Estado inicial -->
+                                <p class="text-muted small mb-0">Configura los parámetros y presiona calcular.</p> <!-- Instrucción inicial -->
+                            </div> <!-- Cierra tarjeta derecha -->
+                        </div> <!-- Cierra columna derecha -->
+                    </div> <!-- Cierra fila del predictor -->
+                </div> <!-- Cierra Panel 2 -->
 
-                <!-- ================================================= -->
-                <!-- 6. GRÁFICAS REALES Y DESCARGAS CSV                -->
-                <!-- ================================================= -->
-                <div class="tab-pane fade" id="tab-archivos">
-                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold mb-0" style="color: #005200;">
-                                <i class="bi bi-images me-2"></i>Galería de Gráficas Analíticas (<span id="count-imgs">0</span>)
-                            </h5>
-                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="cargarEstado()">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
-                            </button>
-                        </div>
-                        <div class="row g-3" id="galeria-imagenes"></div>
-                    </div>
+                <div class="tab-pane fade" id="tab-ml"> <!-- Panel 3: Modelos supervisados y no supervisados -->
+                    <div class="bg-light rounded-4 p-3 mb-4 border-start border-4" style="border-left-color: #018701 !important;"> <!-- Banner informativo -->
+                        <p class="text-secondary small mb-0"> <!-- Texto guía -->
+                            <i class="bi bi-info-circle-fill me-1" style="color: #005200;"></i> <!-- Icono -->
+                            <strong>Patrones y grupos de rutas:</strong> Analiza los viajes históricos para descubrir qué condiciones logran mayor éxito y agrupa los trayectos por perfiles similares. <!-- Descripción -->
+                        </p> <!-- Cierra párrafo -->
+                    </div> <!-- Cierra banner -->
 
-                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white">
-                        <h5 class="fw-bold mb-3" style="color: #005200;">
-                            <i class="bi bi-file-earmark-arrow-down-fill me-2"></i>Reportes y Datasets CSV (<span id="count-csvs">0</span>)
-                        </h5>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th>Nombre del Reporte</th>
-                                        <th>Tamaño</th>
-                                        <th class="text-end">Opciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabla-csvs"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white"> <!-- Tarjeta contenedora de los 5 botones ML -->
+                        <h5 class="fw-bold mb-1" style="color: #005200;"> <!-- Título de sección -->
+                            <i class="bi bi-diagram-3-fill me-2"></i>Clasificación y Segmentación de Rutas <!-- Nombre -->
+                        </h5> <!-- Cierra título -->
+                        <p class="text-muted small mb-4"> <!-- Subtítulo -->
+                            Selecciona un análisis para generar sus indicadores, comparativas y matriz de aciertos. <!-- Instrucción -->
+                        </p> <!-- Cierra subtítulo -->
+                        <div class="row g-3"> <!-- Cuadrícula de botones -->
+                            <div class="col-md-4"> <!-- Columna 1 -->
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('arbol_decision')"> <!-- Ejecuta p04.py -->
+                                    <i class="bi bi-diagram-2-fill d-block fs-4 mb-1"></i> <!-- Icono superior -->
+                                    Árboles de Decisión <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra columna 1 -->
+                            <div class="col-md-4"> <!-- Columna 2 -->
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('comparativa_algoritmos')"> <!-- Ejecuta p05.py -->
+                                    <i class="bi bi-bar-chart-steps d-block fs-4 mb-1"></i> <!-- Icono superior -->
+                                    Comparativa de Algoritmos <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra columna 2 -->
+                            <div class="col-md-4"> <!-- Columna 3 -->
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('hiperparametros')"> <!-- Ejecuta P06.py -->
+                                    <i class="bi bi-sliders2 d-block fs-4 mb-1"></i> <!-- Icono superior -->
+                                    Ajuste de Hiperparámetros <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra columna 3 -->
+                            <div class="col-md-6"> <!-- Columna 4 -->
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('optimizacion_clusters')"> <!-- Ejecuta p08.py -->
+                                    <i class="bi bi-bullseye d-block fs-4 mb-1 text-primary"></i> <!-- Icono superior -->
+                                    Segmentación de Perfiles (K-Means) <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra columna 4 -->
+                            <div class="col-md-6"> <!-- Columna 5 -->
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('reduccion_pca')"> <!-- Ejecuta p09.py -->
+                                    <i class="bi bi-bounding-box d-block fs-4 mb-1 text-warning"></i> <!-- Icono superior -->
+                                    Proyección de Componentes (PCA) <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra columna 5 -->
+                        </div> <!-- Cierra cuadrícula -->
+                    </div> <!-- Cierra tarjeta -->
+                </div> <!-- Cierra Panel 3 -->
 
-            </div>
+                <div class="tab-pane fade" id="tab-bigdata"> <!-- Panel 4: Pipeline de Big Data con PySpark y Parquet -->
+                    <div class="bg-light rounded-4 p-3 mb-4 border-start border-4" style="border-left-color: #018701 !important;"> <!-- Banner informativo -->
+                        <p class="text-secondary small mb-0"> <!-- Texto guía -->
+                            <i class="bi bi-info-circle-fill me-1" style="color: #005200;"></i> <!-- Icono -->
+                            <strong>Análisis a gran escala:</strong> Evalúa 50,000 traslados en el Valle de Toluca hacia Campus UTVT para medir demanda por zona, compresión Parquet y velocidad de respuesta. <!-- Descripción -->
+                        </p> <!-- Cierra párrafo -->
+                    </div> <!-- Cierra banner -->
 
-            <!-- ===================================================== -->
-            <!-- PANEL VISUAL DE RESULTADOS Y JUSTIFICACIÓN            -->
-            <!-- ===================================================== -->
-            <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mt-4 border-top border-4" style="border-top-color: #018701 !important; display:none;" id="tarjeta-resultado-accion">
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-                    <div>
-                        <span class="badge rounded-pill px-3 py-1 mb-2" id="res-estado-badge">Completado</span>
-                        <h5 class="fw-bold mb-1" style="color: #005200;" id="res-titulo">Resultado del Análisis</h5>
-                        <p class="text-muted small mb-0" id="res-descripcion"></p>
-                    </div>
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="cerrarTarjetaResultado()">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white"> <!-- Tarjeta contenedora de los 5 pasos Big Data -->
+                        <h5 class="fw-bold mb-1" style="color: #005200;"> <!-- Título -->
+                            <i class="bi bi-hdd-network-fill me-2"></i>Análisis de Demanda a Gran Escala (50,000 Trayectos) <!-- Nombre -->
+                        </h5> <!-- Cierra título -->
+                        <p class="text-muted small mb-4"> <!-- Subtítulo -->
+                            Ejecuta cada etapa del flujo masivo y descarga los resúmenes por zona de origen. <!-- Instrucción -->
+                        </p> <!-- Cierra subtítulo -->
+                        <div class="row g-3"> <!-- Cuadrícula de botones -->
+                            <div class="col-md-4"> <!-- Etapa 1 -->
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('generador_masivo')"> <!-- Ejecuta p20generador_datos_masivos_velox.py -->
+                                    <i class="bi bi-database-fill-add d-block fs-4 mb-1 text-primary"></i> <!-- Icono -->
+1. Generar Historial Masivo <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra etapa 1 -->
+                            <div class="col-md-4"> <!-- Etapa 2 -->
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('conversion_parquet')"> <!-- Ejecuta p21conversion_parquet_velox.py -->
+                                    <i class="bi bi-file-earmark-zip-fill d-block fs-4 mb-1 text-warning"></i> <!-- Icono -->
+2. Optimizar Almacenamiento Parquet <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra etapa 2 -->
+                            <div class="col-md-4"> <!-- Etapa 3 -->
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('spark_procesamiento')"> <!-- Ejecuta p22spark_procesamiento_velox.py -->
+                                    <i class="bi bi-lightning-fill d-block fs-4 mb-1"></i> <!-- Icono -->
+3. Demanda por Punto de Origen <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra etapa 3 -->
+                            <div class="col-md-6"> <!-- Etapa 4 -->
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('spark_mllib')"> <!-- Ejecuta p23spark_mllib_velox.py -->
+                                    <i class="bi bi-cpu-fill d-block fs-4 mb-1"></i> <!-- Icono -->
+4. Clasificación Distribuida Masiva <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra etapa 4 -->
+                            <div class="col-md-6"> <!-- Etapa 5 -->
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('benchmark_bigdata')"> <!-- Ejecuta p24bigdata_vs_tradicional_velox.py -->
+                                    <i class="bi bi-speedometer d-block fs-4 mb-1 text-primary"></i> <!-- Icono -->
+5. Comparativa de Rendimiento y Velocidad <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra etapa 5 -->
+                        </div> <!-- Cierra cuadrícula -->
+                    </div> <!-- Cierra tarjeta -->
+                </div> <!-- Cierra Panel 4 -->
 
-                <!-- Indicadores KPI extraídos automáticamente -->
-                <div class="row g-3 mb-4" id="res-indicadores"></div>
+                <div class="tab-pane fade" id="tab-redes"> <!-- Panel 5: Modelos de Redes Neuronales y Deep Learning -->
+                    <div class="bg-light rounded-4 p-3 mb-4 border-start border-4" style="border-left-color: #018701 !important;"> <!-- Banner informativo -->
+                        <p class="text-secondary small mb-0"> <!-- Texto guía -->
+                            <i class="bi bi-info-circle-fill me-1" style="color: #005200;"></i> <!-- Icono -->
+                            <strong>Aprendizaje profundo:</strong> Entrena modelos neuronales desde una neurona básica hasta redes profundas en PyTorch y visualiza sus curvas de aprendizaje. <!-- Descripción -->
+                        </p> <!-- Cierra párrafo -->
+                    </div> <!-- Cierra banner -->
 
-                <!-- Justificación y explicación operativa -->
-                <div class="row g-3 mb-4" id="res-bloque-explicacion" style="display:none;">
-                    <div class="col-lg-7">
-                        <div class="p-3 rounded-4 bg-light border-start border-4 h-100" style="border-left-color: #018701 !important;">
-                            <h6 class="fw-bold mb-2" style="color: #005200;">
-                                <i class="bi bi-info-circle-fill me-2" style="color: #7097a8;"></i>Interpretación de Resultados
-                            </h6>
-                            <p class="text-secondary small mb-2" id="res-justificacion"></p>
-                            <ul class="small text-muted mb-0 ps-3" id="res-hallazgos"></ul>
-                        </div>
-                    </div>
-                    <div class="col-lg-5">
-                        <div class="p-3 rounded-4 bg-light border h-100">
-                            <h6 class="fw-bold mb-2" style="color: #005200;">
-                                <i class="bi bi-lightbulb-fill me-2 text-warning"></i>Recomendación Operativa
-                            </h6>
-                            <p class="text-secondary small mb-0" id="res-recomendacion"></p>
-                        </div>
-                    </div>
-                </div>
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white"> <!-- Tarjeta contenedora de redes neuronales -->
+                        <h5 class="fw-bold mb-1" style="color: #005200;"> <!-- Título -->
+                            <i class="bi bi-graph-up-arrow me-2"></i>Entrenamiento de Redes Neuronales <!-- Nombre -->
+                        </h5> <!-- Cierra título -->
+                        <p class="text-muted small mb-4"> <!-- Subtítulo -->
+                            Selecciona una arquitectura neuronal para medir su precisión y curvas de convergencia. <!-- Instrucción -->
+                        </p> <!-- Cierra subtítulo -->
+                        <div class="row g-3"> <!-- Cuadrícula de 3 botones -->
+                            <div class="col-md-4"> <!-- Modelo 1 -->
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('perceptron_lineal')"> <!-- Ejecuta p25neurona_perceptron_velox.py -->
+                                    <i class="bi bi-node-plus-fill d-block fs-4 mb-1 text-primary"></i> <!-- Icono -->
+1. Neurona Perceptrón Base <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra modelo 1 -->
+                            <div class="col-md-4"> <!-- Modelo 2 -->
+                                <button class="btn btn-outline-secondary w-100 py-3 rounded-4 fw-semibold" onclick="ejecutarProceso('red_mlp')"> <!-- Ejecuta p26red_neuronal_mlp_velox.py -->
+                                    <i class="bi bi-diagram-3-fill d-block fs-4 mb-1 text-warning"></i> <!-- Icono -->
+2. Red Multicapa (MLP) <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra modelo 2 -->
+                            <div class="col-md-4"> <!-- Modelo 3 -->
+                                <button class="btn btn-verde-custom w-100 py-3 rounded-4 fw-semibold shadow-sm" onclick="ejecutarProceso('deep_learning_pytorch')"> <!-- Ejecuta p27deep_learning_pytorch_velox.py -->
+                                    <i class="bi bi-fire d-block fs-4 mb-1"></i> <!-- Icono -->
+3. Red Neuronal Profunda (PyTorch) <!-- Etiqueta -->
+                                </button> <!-- Cierra botón -->
+                            </div> <!-- Cierra modelo 3 -->
+                        </div> <!-- Cierra cuadrícula -->
+                    </div> <!-- Cierra tarjeta -->
+                </div> <!-- Cierra Panel 5 -->
 
-                <!-- Gráficas generadas/actualizadas -->
-                <div class="mb-3" id="res-bloque-graficas" style="display:none;">
-                    <h6 class="fw-bold mb-2" style="color: #005200;">
-                        <i class="bi bi-bar-chart-fill me-2 text-primary"></i>Visualizaciones Generadas
-                    </h6>
-                    <div class="row g-3" id="res-graficas-grid"></div>
-                </div>
+                <div class="tab-pane fade" id="tab-archivos"> <!-- Panel 6: Repositorio visual de gráficas y archivos CSV -->
+                    <div class="bg-light rounded-4 p-3 mb-4 border-start border-4" style="border-left-color: #018701 !important;"> <!-- Banner informativo -->
+                        <p class="text-secondary small mb-0"> <!-- Texto guía -->
+                            <i class="bi bi-info-circle-fill me-1" style="color: #005200;"></i> <!-- Icono -->
+                            <strong>Evidencias visuales y reportes:</strong> Amplía las gráficas generadas o descarga los archivos CSV con los datos procesados. <!-- Descripción -->
+                        </p> <!-- Cierra párrafo -->
+                    </div> <!-- Cierra banner -->
 
-                <!-- Botones directos de descarga CSV -->
-                <div id="res-bloque-csvs" style="display:none;">
-                    <h6 class="fw-bold mb-2" style="color: #005200;">
-                        <i class="bi bi-file-earmark-spreadsheet me-2" style="color: #018701;"></i>Archivos Listos para Descargar
-                    </h6>
-                    <div class="d-flex flex-wrap gap-2" id="res-csvs-lista"></div>
-                </div>
-            </div>
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mb-4"> <!-- Tarjeta de galería de imágenes -->
+                        <div class="d-flex justify-content-between align-items-center mb-3"> <!-- Encabezado con botón de recarga -->
+                            <h5 class="fw-bold mb-0" style="color: #005200;"> <!-- Título con contador dinámico -->
+                                <i class="bi bi-images me-2"></i>Galería de Gráficas Analíticas (<span id="count-imgs">0</span>) <!-- Contador de imágenes -->
+                            </h5> <!-- Cierra título -->
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="cargarEstado()"> <!-- Recarga la lista desde el servidor -->
+                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar <!-- Etiqueta -->
+                            </button> <!-- Cierra botón -->
+                        </div> <!-- Cierra cabecera -->
+                        <div class="row g-3" id="galeria-imagenes"></div> <!-- Cuadrícula rellenada por JS con tarjetas de gráficas -->
+                    </div> <!-- Cierra tarjeta de galería -->
 
-        </div>
-    </div>
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white"> <!-- Tarjeta de tabla de archivos CSV -->
+                        <h5 class="fw-bold mb-3" style="color: #005200;"> <!-- Título con contador dinámico de CSVs -->
+                            <i class="bi bi-file-earmark-arrow-down-fill me-2"></i>Reportes y Datasets CSV (<span id="count-csvs">0</span>) <!-- Contador de archivos -->
+                        </h5> <!-- Cierra título -->
+                        <div class="table-responsive"> <!-- Contenedor responsivo de tabla -->
+                            <table class="table table-hover align-middle mb-0"> <!-- Tabla de archivos descargables -->
+                                <thead class="bg-light"> <!-- Cabecera de tabla -->
+                                    <tr> <!-- Fila de encabezados -->
+                                        <th>Nombre del Reporte</th> <!-- Columna 1 -->
+                                        <th>Tamaño</th> <!-- Columna 2 -->
+                                        <th class="text-end">Opciones</th> <!-- Columna 3 alineada a la derecha -->
+                                    </tr> <!-- Cierra fila -->
+                                </thead> <!-- Cierra cabecera -->
+                                <tbody id="tabla-csvs"></tbody> <!-- Cuerpo llenado por JS con vista previa y descarga -->
+                            </table> <!-- Cierra tabla -->
+                        </div> <!-- Cierra contenedor responsivo -->
+                    </div> <!-- Cierra tarjeta CSV -->
+                </div> <!-- Cierra Panel 6 -->
 
-    <!-- Modal para ampliar gráficas o previsualizar CSV -->
-    <div class="modal fade" id="modalVisor" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content bg-white rounded-4 border-0 shadow">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" style="color: #005200;" id="modalVisorTitulo">Vista Previa</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="modalVisorCuerpo"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+            </div> <!-- Cierra contenedor de pestañas -->
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <div class="mt-4 pt-3 border-top" id="panel-dashboard-resultados" style="display:none;"> <!-- Sección dinámica oculta hasta ejecutar un análisis -->
+
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4"> <!-- Encabezado del dashboard de resultados -->
+                    <div> <!-- Bloque izquierdo con título y descripción del módulo ejecutado -->
+                        <h4 class="fw-bold mb-1" style="color: #005200;"> <!-- Título principal del análisis -->
+                            <i class="bi bi-cpu-fill me-2" style="color: #018701;"></i><span id="dash-titulo">Resultado del Análisis</span> <!-- Nombre dinámico -->
+                        </h4> <!-- Cierra título -->
+                        <p class="text-muted small mb-0" id="dash-descripcion"></p> <!-- Descripción dinámica del script -->
+                    </div> <!-- Cierra bloque izquierdo -->
+                    <div class="d-flex align-items-center gap-2"> <!-- Bloque derecho con botones de acción -->
+                        <a href="#" id="dash-btn-csv-principal" class="btn btn-verde-custom rounded-pill px-3 py-2 fw-semibold shadow-sm" style="display:none;"> <!-- Botón verde para descargar el CSV principal -->
+                            <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Descargar CSV <!-- Texto del botón -->
+                        </a> <!-- Cierra enlace descarga -->
+                        <button class="btn btn-outline-secondary rounded-pill px-3 py-2" onclick="cerrarDashboardResultados()"> <!-- Botón 'X' para ocultar resultados -->
+                            <i class="bi bi-x-lg"></i> <!-- Icono cerrar -->
+                        </button> <!-- Cierra botón cerrar -->
+                    </div> <!-- Cierra bloque derecho -->
+                </div> <!-- Cierra cabecera de resultados -->
+
+                <div class="row g-3 mb-4" id="dash-tarjetas-kpi"></div> <!-- Fila dinámica de tarjetas KPI extraídas del análisis -->
+
+                <div id="dash-contenedor-tablas"></div> <!-- Contenedor dinámico para tablas con badges de estado -->
+
+                <div class="row g-4 mb-4" id="dash-fila-central" style="display:none;"> <!-- Fila central adaptativa (Reporte + Matriz de Confusión) -->
+                    <div id="dash-col-izquierda"></div> <!-- Columna izquierda para el Reporte de Clasificación -->
+                    <div id="dash-col-derecha"></div> <!-- Columna derecha para la Matriz de Confusión -->
+                </div> <!-- Cierra fila central -->
+
+                <div class="row g-4 mb-4"> <!-- Fila inferior de 2 columnas con hallazgos y conclusiones -->
+                    <div class="col-lg-6"> <!-- Columna izquierda: Resultados Principales -->
+                        <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100"> <!-- Tarjeta de hallazgos -->
+                            <h6 class="fw-bold mb-3" style="color: #005200;"> <!-- Título de tarjeta -->
+                                <i class="bi bi-card-checklist me-2" style="color: #018701;"></i>Resultados Principales <!-- Icono y texto -->
+                            </h6> <!-- Cierra título -->
+                            <div id="dash-bloques-resumen"></div> <!-- Contenedor de viñetas traducidas al español -->
+                        </div> <!-- Cierra tarjeta -->
+                    </div> <!-- Cierra columna izquierda -->
+                    <div class="col-lg-6"> <!-- Columna derecha: Conclusiones -->
+                        <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100"> <!-- Tarjeta de conclusiones -->
+                            <h6 class="fw-bold mb-3" style="color: #005200;"> <!-- Título de tarjeta -->
+                                <i class="bi bi-check2-square me-2" style="color: #018701;"></i>Conclusiones <!-- Icono y texto -->
+                            </h6> <!-- Cierra título -->
+                            <ul class="small text-secondary mb-0 ps-3" id="dash-lista-conclusiones"></ul> <!-- Lista de conclusiones ejecutivas -->
+                        </div> <!-- Cierra tarjeta -->
+                    </div> <!-- Cierra columna derecha -->
+                </div> <!-- Cierra fila inferior -->
+
+                <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mb-4" id="dash-bloque-graficas" style="display:none;"> <!-- Bloque de gráficas generadas por el script -->
+                    <h6 class="fw-bold mb-3" style="color: #005200;"> <!-- Título -->
+                        <i class="bi bi-bar-chart-fill me-2" style="color: #018701;"></i>Gráficas Generadas <!-- Icono y texto -->
+                    </h6> <!-- Cierra título -->
+                    <div class="row g-3" id="dash-graficas-grid"></div> <!-- Cuadrícula de gráficas de la ejecución -->
+                </div> <!-- Cierra bloque de gráficas -->
+
+                <div class="accordion" id="acordeonAuditoria"> <!-- Acordeón colapsado por defecto para bitácora técnica -->
+                    <div class="accordion-item border rounded-4 overflow-hidden"> <!-- Elemento de acordeón con bordes redondeados -->
+                        <h2 class="accordion-header"> <!-- Cabecera desplegable -->
+                            <button class="accordion-button collapsed bg-light text-secondary fw-semibold small" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAuditoria"> <!-- Botón que despliega o contrae la bitácora -->
+                                <i class="bi bi-shield-check me-2" style="color: #018701;"></i> <!-- Icono de escudo -->
+                                Registro Técnico de Consola — Solo Auditoría (<span id="dash-count-auditoria">0</span> líneas) <!-- Texto y contador -->
+                            </button> <!-- Cierra botón acordeón -->
+                        </h2> <!-- Cierra cabecera -->
+                        <div id="collapseAuditoria" class="accordion-collapse collapse"> <!-- Contenido colapsado -->
+                            <div class="accordion-body bg-white"> <!-- Cuerpo del acordeón -->
+                                <ul class="list-group list-group-flush small" id="dash-lista-auditoria"></ul> <!-- Lista numerada con las líneas literales de consola -->
+                            </div> <!-- Cierra cuerpo -->
+                        </div> <!-- Cierra contenedor colapsable -->
+                    </div> <!-- Cierra item de acordeón -->
+                </div> <!-- Cierra acordeón -->
+
+            </div> <!-- Cierra dashboard de resultados -->
+
+        </div> <!-- Cierra contenedor fluido -->
+    </div> <!-- Cierra #mainContent -->
+
+    <div class="modal fade" id="modalVisor" tabindex="-1" aria-hidden="true"> <!-- Ventana modal emergente para ampliar gráficas o ver CSV -->
+        <div class="modal-dialog modal-xl modal-dialog-centered"> <!-- Modal extra grande centrado verticalmente -->
+            <div class="modal-content bg-white rounded-4 border-0 shadow"> <!-- Contenido blanco con sombra -->
+                <div class="modal-header"> <!-- Cabecera del modal -->
+                    <h5 class="modal-title fw-bold" style="color: #005200;" id="modalVisorTitulo">Vista Previa</h5> <!-- Título dinámico -->
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button> <!-- Botón estándar de cierre -->
+                </div> <!-- Cierra cabecera -->
+                <div class="modal-body" id="modalVisorCuerpo"></div> <!-- Cuerpo donde se inyecta la imagen ampliada o la tabla CSV -->
+                <div class="modal-footer"> <!-- Pie del modal -->
+                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button> <!-- Botón cerrar -->
+                </div> <!-- Cierra pie -->
+            </div> <!-- Cierra contenido modal -->
+        </div> <!-- Cierra diálogo modal -->
+    </div> <!-- Cierra modal -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> <!-- Carga el JS de Bootstrap (pestañas, modal y acordeón) -->
     <script>
+        // Instancia el controlador del modal de vista previa
         const modalVisor = new bootstrap.Modal(document.getElementById('modalVisor'));
 
+        // Sanitiza cadenas de texto para evitar inyección de HTML/XSS
+        function escaparHtml(texto) {
+            return String(texto ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        // Convierte palabras clave de estado en badges verdes o rojos
+        function formatearCeldaVisual(valor) {
+            const txt = String(valor ?? '').trim();
+            const low = txt.toLowerCase();
+            if (low === 'exitoso' || low === 'activo' || low === 'aprobado' || low === 'viable') {
+                return `<span class="badge-exitoso">${escaparHtml(txt)}</span>`;
+            }
+            if (low === 'no exitoso' || low === 'inactivo' || low === 'rechazado' || low === 'no viable') {
+                return `<span class="badge-no-exitoso">${escaparHtml(txt)}</span>`;
+            }
+            return escaparHtml(txt);
+        }
+
+        // Dibuja la galería de gráficas y la tabla de reportes CSV
         function renderizarArtefactos(imagenes, csvs) {
             document.getElementById('count-imgs').textContent = imagenes.length;
             document.getElementById('count-csvs').textContent = csvs.length;
@@ -520,12 +595,12 @@
                 <div class="col-sm-6 col-lg-4">
                     <div class="card border rounded-4 p-3 h-100 grafica-card">
                         <img src="/ia-integral/archivo/imagen?ruta=${encodeURIComponent(img.ruta_rel)}&t=${Date.now()}"
-                             alt="${img.nombre}"
-                             onclick="ampliarImagen('${img.nombre}', '${img.ruta_rel}')">
+                             alt="${escaparHtml(img.nombre)}"
+                             onclick="ampliarImagen('${escaparHtml(img.nombre)}', '${img.ruta_rel}')">
                         <div class="mt-2 d-flex justify-content-between align-items-center">
-                            <strong class="text-truncate small" style="color: #005200;">${img.nombre}</strong>
+                            <strong class="text-truncate small" style="color: #005200;">${escaparHtml(img.nombre)}</strong>
                             <button class="btn btn-sm btn-outline-secondary rounded-pill ms-2"
-                                    onclick="ampliarImagen('${img.nombre}', '${img.ruta_rel}')">
+                                    onclick="ampliarImagen('${escaparHtml(img.nombre)}', '${img.ruta_rel}')">
                                 <i class="bi bi-arrows-fullscreen"></i>
                             </button>
                         </div>
@@ -535,7 +610,7 @@
 
             document.getElementById('tabla-csvs').innerHTML = csvs.map(c => `
                 <tr>
-                    <td class="fw-semibold" style="color: #005200;">${c.nombre}</td>
+                    <td class="fw-semibold" style="color: #005200;">${escaparHtml(c.nombre)}</td>
                     <td><span class="badge bg-light text-secondary border">${c.tam_kb} KB</span></td>
                     <td class="text-end">
                         <button class="btn btn-sm btn-outline-secondary rounded-pill me-1"
@@ -551,6 +626,7 @@
             `).join('') || '<tr><td colspan="3" class="text-muted">No hay archivos CSV disponibles todavía.</td></tr>';
         }
 
+        // Obtiene desde el backend los datos reales de MongoDB Atlas al iniciar
         async function cargarEstado() {
             const res = await fetch('/ia-integral/api/estado');
             const data = await res.json();
@@ -563,36 +639,42 @@
 
             document.getElementById('tabla-historial').innerHTML = data.historial.map(v => `
                 <tr>
-                    <td><span class="fw-semibold" style="color: #005200;">${v.origen}</span> <i class="bi bi-arrow-right mx-1" style="color: #018701;"></i> ${v.destino}</td>
+                    <td><span class="fw-semibold" style="color: #005200;">${escaparHtml(v.origen)}</span> <i class="bi bi-arrow-right mx-1" style="color: #018701;"></i> ${escaparHtml(v.destino)}</td>
                     <td class="fw-bold" style="color: #018701;">$${v.costo.toFixed(2)}</td>
                     <td class="text-secondary">${v.asientos} lugares</td>
-                    <td><span class="badge bg-light border rounded-pill px-3" style="color: #005200;">${v.estado}</span></td>
+                    <td><span class="badge bg-light border rounded-pill px-3" style="color: #005200;">${escaparHtml(v.estado)}</span></td>
                 </tr>
             `).join('') || '<tr><td colspan="4" class="text-muted">Sin viajes registrados.</td></tr>';
 
             renderizarArtefactos(data.imagenes, data.csvs);
         }
 
+        // Envía la orden al backend para ejecutar un script de IA y renderiza su dashboard
         async function ejecutarProceso(clave) {
-            const tarjeta = document.getElementById('tarjeta-resultado-accion');
-            const badge = document.getElementById('res-estado-badge');
-            const titulo = document.getElementById('res-titulo');
-            const desc = document.getElementById('res-descripcion');
-            const contInd = document.getElementById('res-indicadores');
-            const bloqueExp = document.getElementById('res-bloque-explicacion');
-            const bloqueGraf = document.getElementById('res-bloque-graficas');
-            const bloqueCsv = document.getElementById('res-bloque-csvs');
+            const panel = document.getElementById('panel-dashboard-resultados');
+            const titulo = document.getElementById('dash-titulo');
+            const desc = document.getElementById('dash-descripcion');
+            const btnCsv = document.getElementById('dash-btn-csv-principal');
+            const contKpi = document.getElementById('dash-tarjetas-kpi');
+            const contTablas = document.getElementById('dash-contenedor-tablas');
+            const filaCentral = document.getElementById('dash-fila-central');
+            const colIzq = document.getElementById('dash-col-izquierda');
+            const colDer = document.getElementById('dash-col-derecha');
+            const bloqueResumen = document.getElementById('dash-bloques-resumen');
+            const listaConclusiones = document.getElementById('dash-lista-conclusiones');
+            const bloqueGraficas = document.getElementById('dash-bloque-graficas');
 
-            tarjeta.style.display = 'block';
-            badge.className = 'badge bg-warning text-dark rounded-pill px-3 py-1 mb-2';
-            badge.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Procesando...';
-            titulo.textContent = 'Ejecutando análisis inteligente';
-            desc.textContent = 'Calculando indicadores, redactando diagnóstico y actualizando visualizaciones...';
-            contInd.innerHTML = '';
-            bloqueExp.style.display = 'none';
-            bloqueGraf.style.display = 'none';
-            bloqueCsv.style.display = 'none';
-            tarjeta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            panel.style.display = 'block';
+            titulo.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando análisis...';
+            desc.textContent = 'Extrayendo métricas, organizando tablas y preparando visualizaciones...';
+            btnCsv.style.display = 'none';
+            contKpi.innerHTML = '';
+            contTablas.innerHTML = '';
+            filaCentral.style.display = 'none';
+            bloqueResumen.innerHTML = '';
+            listaConclusiones.innerHTML = '';
+            bloqueGraficas.style.display = 'none';
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
             try {
                 const res = await fetch('/ia-integral/api/ejecutar', {
@@ -601,109 +683,200 @@
                     body: JSON.stringify({ clave_proceso: clave })
                 });
                 const data = await res.json();
-
-                badge.className = data.ok
-                    ? 'badge rounded-pill px-3 py-1 mb-2'
-                    : 'badge bg-warning text-dark rounded-pill px-3 py-1 mb-2';
-                if (data.ok) {
-                    badge.style.backgroundColor = '#018701';
-                    badge.style.color = '#ffffff';
-                } else {
-                    badge.style.backgroundColor = '';
-                    badge.style.color = '';
-                }
-                badge.innerHTML = data.ok
-                    ? '<i class="bi bi-check-circle-fill me-1"></i> Análisis Completado'
-                    : '<i class="bi bi-exclamation-triangle-fill me-1"></i> Revisar Datos';
+                const analisis = data.analisis || {};
 
                 titulo.textContent = data.titulo;
                 desc.textContent = data.descripcion;
 
-                if (data.indicadores && data.indicadores.length) {
-                    contInd.innerHTML = data.indicadores.map(ind => `
-                        <div class="col-6 col-md-3">
-                            <div class="p-3 rounded-4 bg-light border-start border-4" style="border-left-color: #018701 !important;">
-                                <small class="text-muted fw-bold d-block text-uppercase" style="font-size:0.72rem;">${ind.etiqueta}</small>
-                                <span class="fs-4 fw-bold" style="color: #005200;">${ind.valor}</span>
+                // Muestra botón superior de descarga si hay CSV asociado
+                if (data.csvs_nuevos && data.csvs_nuevos.length) {
+                    btnCsv.style.display = 'inline-block';
+                    btnCsv.href = `/ia-integral/archivo/descargar-csv?ruta=${encodeURIComponent(data.csvs_nuevos[0].ruta_rel)}`;
+                }
+
+                // Dibuja tarjetas KPI con borde verde izquierdo
+                const kpis = analisis.tarjetas_kpi || [];
+                contKpi.innerHTML = kpis.map(k => `
+                    <div class="col-md-4 col-lg-3">
+                        <div class="card shadow-sm border-0 rounded-4 p-3 bg-white stat-card h-100">
+                            <small class="text-muted fw-semibold mb-1 d-block">${escaparHtml(k.etiqueta)}</small>
+                            <h4 class="fw-bold mb-0" style="color: #005200;">${escaparHtml(k.valor)}</h4>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Renderiza tablas con encabezados traducidos y badges
+                const tablas = analisis.tablas || [];
+                contTablas.innerHTML = tablas.map(t => `
+                    <div class="card shadow-sm border-0 rounded-4 p-4 bg-white mb-4">
+                        <h6 class="fw-bold mb-3" style="color: #005200;">
+                            <i class="bi bi-table me-2" style="color: #018701;"></i>${escaparHtml(t.titulo)}
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead class="bg-light">
+                                    <tr>${t.columnas.map(c => `<th style="color:#212529;">${escaparHtml(c)}</th>`).join('')}</tr>
+                                </thead>
+                                <tbody>
+                                    ${t.filas.map(fila => `
+                                        <tr>${fila.map(celda => `<td>${formatearCeldaVisual(celda)}</td>`).join('')}</tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Configura Reporte de Clasificación y Matriz de Confusión sin huecos
+                const reporte = analisis.reporte_clasificacion;
+                const matriz = analisis.matriz_confusion;
+                if (reporte || matriz) {
+                    filaCentral.style.display = 'flex';
+                    const claseCol = (reporte && matriz) ? 'col-lg-6' : 'col-12';
+
+                    colIzq.className = reporte ? claseCol : 'd-none';
+                    colIzq.innerHTML = reporte ? `
+                        <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                            <h6 class="fw-bold mb-3" style="color: #005200;">
+                                <i class="bi bi-file-earmark-text me-2" style="color: #018701;"></i>Reporte de Clasificación
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0 small">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Categoría</th>
+                                            <th>Precisión</th>
+                                            <th>Cobertura</th>
+                                            <th>Puntaje F1</th>
+                                            <th>Registros</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${reporte.map(r => `
+                                            <tr>
+                                                <td class="fw-semibold">${escaparHtml(r.clase)}</td>
+                                                <td>${escaparHtml(r.precision)}</td>
+                                                <td>${escaparHtml(r.recall)}</td>
+                                                <td class="fw-bold" style="color:#005200;">${escaparHtml(r.f1)}</td>
+                                                <td>${escaparHtml(r.soporte)}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    `).join('');
+                    ` : '';
+
+                    colDer.className = matriz ? claseCol : 'd-none';
+                    colDer.innerHTML = matriz ? `
+                        <div class="card shadow-sm border-0 rounded-4 p-4 bg-white h-100">
+                            <h6 class="fw-bold mb-3" style="color: #005200;">
+                                <i class="bi bi-grid-3x3-gap-fill me-2" style="color: #018701;"></i>Matriz de Confusión
+                            </h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered text-center align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th></th>
+                                            <th>Predicho: No Exitoso (0)</th>
+                                            <th>Predicho: Exitoso (1)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th class="bg-light">Real: No Exitoso (0)</th>
+                                            <td class="fs-5 fw-bold" style="color:#018701;">${escaparHtml(matriz[0][0])}</td>
+                                            <td class="fs-5 text-secondary">${escaparHtml(matriz[0][1])}</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="bg-light">Real: Exitoso (1)</th>
+                                            <td class="fs-5 text-secondary">${escaparHtml(matriz[1][0])}</td>
+                                            <td class="fs-5 fw-bold" style="color:#018701;">${escaparHtml(matriz[1][1])}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ` : '';
+                } else {
+                    filaCentral.style.display = 'none';
                 }
 
-                if (data.narrativa) {
-                    bloqueExp.style.display = 'flex';
-                    document.getElementById('res-justificacion').textContent = data.narrativa.justificacion || '';
-                    document.getElementById('res-recomendacion').textContent = data.narrativa.recomendacion || '';
-                    const listaHallazgos = document.getElementById('res-hallazgos');
-                    if (data.narrativa.hallazgos && data.narrativa.hallazgos.length) {
-                        listaHallazgos.innerHTML = data.narrativa.hallazgos
-                            .map(h => `<li class="mb-1">${h}</li>`)
-                            .join('');
-                    } else {
-                        listaHallazgos.innerHTML = '';
-                    }
-                }
+                // Pinta resultados principales y conclusiones ejecutivas
+                const bloques = analisis.bloques_detalle || [];
+                bloqueResumen.innerHTML = bloques.map(b => `
+                    <div class="mb-3">
+                        <small class="fw-bold text-uppercase d-block mb-1" style="color:#005200;">${escaparHtml(b.titulo)}</small>
+                        <ul class="small text-secondary mb-0 ps-3">
+                            ${b.items.map(it => `<li class="mb-1">${escaparHtml(it)}</li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('') || '<p class="text-muted small mb-0">Proceso ejecutado correctamente.</p>';
 
+                listaConclusiones.innerHTML = (data.conclusiones || [])
+                    .map(c => `<li class="mb-2">${escaparHtml(c)}</li>`)
+                    .join('');
+
+                // Renderiza gráficas generadas en la ejecución
                 if (data.imagenes_nuevas && data.imagenes_nuevas.length) {
-                    bloqueGraf.style.display = 'block';
-                    document.getElementById('res-graficas-grid').innerHTML = data.imagenes_nuevas.map(img => `
+                    bloqueGraficas.style.display = 'block';
+                    document.getElementById('dash-graficas-grid').innerHTML = data.imagenes_nuevas.map(img => `
                         <div class="col-md-4">
                             <div class="card border rounded-4 p-2 grafica-card">
                                 <img src="/ia-integral/archivo/imagen?ruta=${encodeURIComponent(img.ruta_rel)}&t=${Date.now()}"
-                                     alt="${img.nombre}"
-                                     onclick="ampliarImagen('${img.nombre}', '${img.ruta_rel}')">
-                                <small class="fw-semibold text-center mt-2 d-block text-truncate" style="color: #005200;">${img.nombre}</small>
+                                     alt="${escaparHtml(img.nombre)}"
+                                     onclick="ampliarImagen('${escaparHtml(img.nombre)}', '${img.ruta_rel}')">
+                                <small class="fw-semibold text-center mt-2 d-block text-truncate" style="color: #005200;">${escaparHtml(img.nombre)}</small>
                             </div>
                         </div>
                     `).join('');
                 }
 
-                if (data.csvs_nuevos && data.csvs_nuevos.length) {
-                    bloqueCsv.style.display = 'block';
-                    document.getElementById('res-csvs-lista').innerHTML = data.csvs_nuevos.map(c => `
-                        <div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 py-2 gap-2">
-                            <span class="fw-semibold small" style="color: #005200;">${c.nombre} (${c.tam_kb} KB)</span>
-                            <button class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2"
-                                    onclick="verPreviewCsv('${c.ruta_rel}')">Ver</button>
-                            <a href="/ia-integral/archivo/descargar-csv?ruta=${encodeURIComponent(c.ruta_rel)}"
-                               class="btn btn-sm btn-verde-custom rounded-pill py-0 px-2">Descargar</a>
-                        </div>
-                    `).join('');
-                }
+                // Renderiza bitácora técnica colapsada
+                const aud = analisis.lineas_auditoria || [];
+                document.getElementById('dash-count-auditoria').textContent = aud.length;
+                document.getElementById('dash-lista-auditoria').innerHTML = aud.map((ln, idx) => `
+                    <li class="list-group-item px-2 py-1 d-flex align-items-start gap-2 font-monospace" style="font-size: 0.78rem;">
+                        <span class="badge bg-light text-secondary border">${idx + 1}</span>
+                        <span class="text-secondary">${escaparHtml(ln)}</span>
+                    </li>
+                `).join('');
 
                 if (data.imagenes && data.csvs) {
                     renderizarArtefactos(data.imagenes, data.csvs);
                 }
             } catch (err) {
-                badge.className = 'badge bg-warning text-dark rounded-pill px-3 py-1 mb-2';
-                badge.textContent = 'Error de conexión';
+                titulo.textContent = 'Error de conexión';
                 desc.textContent = 'No se pudo completar la operación con el servidor.';
             }
         }
 
-        function cerrarTarjetaResultado() {
-            document.getElementById('tarjeta-resultado-accion').style.display = 'none';
+        // Oculta el panel de resultados al pulsar el botón cerrar
+        function cerrarDashboardResultados() {
+            document.getElementById('panel-dashboard-resultados').style.display = 'none';
         }
 
+        // Abre una gráfica en tamaño completo dentro del modal
         function ampliarImagen(titulo, rutaRel) {
             document.getElementById('modalVisorTitulo').textContent = titulo;
             document.getElementById('modalVisorCuerpo').innerHTML = `
                 <div class="text-center">
                     <img src="/ia-integral/archivo/imagen?ruta=${encodeURIComponent(rutaRel)}&t=${Date.now()}"
-                         class="img-fluid rounded-3" alt="${titulo}">
+                         class="img-fluid rounded-3" alt="${escaparHtml(titulo)}">
                 </div>
             `;
             modalVisor.show();
         }
 
+        // Consulta las primeras 15 filas de un CSV y las muestra en una tabla modal
         async function verPreviewCsv(rutaRel) {
             const res = await fetch(`/ia-integral/api/vista-previa-csv?ruta=${encodeURIComponent(rutaRel)}`);
             const data = await res.json();
 
             document.getElementById('modalVisorTitulo').textContent = `${data.nombre} (primeros 15 registros)`;
-            const ths = data.columnas.map(c => `<th>${c}</th>`).join('');
+            const ths = data.columnas.map(c => `<th>${escaparHtml(c)}</th>`).join('');
             const trs = data.filas.map(fila => `
-                <tr>${data.columnas.map(c => `<td>${fila[c]}</td>`).join('')}</tr>
+                <tr>${data.columnas.map(c => `<td>${escaparHtml(fila[c])}</td>`).join('')}</tr>
             `).join('');
 
             document.getElementById('modalVisorCuerpo').innerHTML = `
@@ -717,6 +890,7 @@
             modalVisor.show();
         }
 
+        // Envía los datos del simulador al modelo Random Forest y muestra la probabilidad
         async function predecirViaje() {
             const payload = {
                 costo: parseFloat(document.getElementById('in-costo').value),
@@ -734,7 +908,7 @@
             const colorEstilo = r.viable ? 'color: #018701;' : 'color: #d39e00;';
             const icono = r.viable ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
             const factoresHtml = (r.factores || [])
-                .map(f => `<li class="mb-1">${f}</li>`)
+                .map(f => `<li class="mb-1">${escaparHtml(f)}</li>`)
                 .join('');
 
             document.getElementById('panel-resultado').innerHTML = `
@@ -743,7 +917,7 @@
                 </div>
                 <span class="text-muted small fw-bold text-uppercase">Probabilidad Estimada de Ocupación</span>
                 <h1 class="fw-bold my-1" style="font-size: 2.8rem; ${colorEstilo}">${r.probabilidad_exito}%</h1>
-                <p class="text-secondary fw-semibold small mb-3">${r.recomendacion}</p>
+                <p class="text-secondary fw-semibold small mb-3">${escaparHtml(r.recomendacion)}</p>
                 <div class="text-start bg-light rounded-3 p-3 border-start border-4" style="border-left-color: #018701 !important;">
                     <small class="fw-bold text-uppercase d-block mb-1" style="color:#005200;font-size:0.72rem;">Justificación del cálculo</small>
                     <ul class="small text-muted mb-0 ps-3">${factoresHtml}</ul>
@@ -751,7 +925,8 @@
             `;
         }
 
+        // Ejecuta la carga inicial de KPIs, viajes reales, gráficas y CSVs al abrir la página
         cargarEstado();
-    </script>
-</body>
-</html>
+    </script> <!-- Cierra el bloque de script JS -->
+</body> <!-- Cierra el cuerpo del documento HTML -->
+</html> <!-- Cierra la etiqueta raíz del documento -->
